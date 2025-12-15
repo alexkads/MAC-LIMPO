@@ -200,8 +200,6 @@ class IDECacheCleaningService: BaseCleaningService, CleaningService {
                 let size = self.fileHelper.sizeOfDirectory(atPath: expandedPath)
                 let name = (expandedPath as NSString).lastPathComponent
                 
-                // Para versões antigas, remover completamente
-                // Para caches/logs, limpar conteúdo
                 do {
                     try self.fileHelper.removeItem(atPath: expandedPath)
                     bytesRemoved += size
@@ -214,12 +212,8 @@ class IDECacheCleaningService: BaseCleaningService, CleaningService {
             }
         }
         
-        // Limpar VS Code (apenas caches, não workspaceStorage inteiro por segurança)
-        // WorkspaceStorage contém dados importantes - limpar apenas os muito antigos
-        await self.cleanOldWorkspaceStorage(basePath: "~/Library/Application Support/Code/User/workspaceStorage", bytesRemoved: &bytesRemoved, filesRemoved: &filesRemoved, errors: &errors)
-        
-        // Limpar outros caches do VS Code
-        for path in self.vscodePaths.filter({ !$0.contains("workspaceStorage") }) {
+        // Limpar VS Code (incluindo workspaceStorage)
+        for path in self.vscodePaths {
             let expandedPath = self.fileHelper.expandPath(path)
             if self.fileHelper.fileExists(atPath: expandedPath) {
                 let size = self.fileHelper.sizeOfDirectory(atPath: expandedPath)
@@ -229,15 +223,13 @@ class IDECacheCleaningService: BaseCleaningService, CleaningService {
                     filesRemoved += 1
                     logger.log("Removido VS Code cache: \(self.fileHelper.formatBytes(size))", level: .debug)
                 } catch {
-                    // Ignorar erros em caches
+                    logger.log("Falha ao remover VS Code cache: \(path)", level: .error)
                 }
             }
         }
         
-        // Limpar Cursor
-        await self.cleanOldWorkspaceStorage(basePath: "~/Library/Application Support/Cursor/User/workspaceStorage", bytesRemoved: &bytesRemoved, filesRemoved: &filesRemoved, errors: &errors)
-        
-        for path in self.cursorPaths.filter({ !$0.contains("workspaceStorage") }) {
+        // Limpar Cursor (incluindo workspaceStorage)
+        for path in self.cursorPaths {
             let expandedPath = self.fileHelper.expandPath(path)
             if self.fileHelper.fileExists(atPath: expandedPath) {
                 let size = self.fileHelper.sizeOfDirectory(atPath: expandedPath)
@@ -245,8 +237,9 @@ class IDECacheCleaningService: BaseCleaningService, CleaningService {
                     try self.fileHelper.removeItem(atPath: expandedPath)
                     bytesRemoved += size
                     filesRemoved += 1
+                    logger.log("Removido Cursor cache: \(self.fileHelper.formatBytes(size))", level: .debug)
                 } catch {
-                    // Ignorar erros
+                    logger.log("Falha ao remover Cursor cache: \(path)", level: .error)
                 }
             }
         }
