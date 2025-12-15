@@ -42,9 +42,20 @@ class FileSystemHelper {
         return totalSize
     }
     
-    // Remove diretório ou arquivo
+    // Remove diretório ou arquivo com fallback para rm -rf
     func removeItem(atPath path: String) throws {
-        try fileManager.removeItem(atPath: path)
+        do {
+            try fileManager.removeItem(atPath: path)
+        } catch {
+            // Se falhar (ex: permissão ou locked), tenta forçar via shell
+            let command = "rm -rf '\(path)'"
+            let result = ShellExecutor.shared.execute(command)
+            
+            if result.exitCode != 0 {
+                // Se ambos falharem, retorna o erro original
+                throw error
+            }
+        }
     }
     
     // Lista conteúdo de diretório
