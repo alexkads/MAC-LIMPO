@@ -6,7 +6,7 @@ class DownloadsCleaningService: BaseCleaningService, CleaningService {
     private let downloadsPath = "~/Downloads"
     private let daysOld = 30
     
-    func scan() async -> ScanResult {
+    func scan(progress: ((String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
         

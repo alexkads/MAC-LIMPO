@@ -13,7 +13,7 @@ class LargeFilesCleaningService: BaseCleaningService, CleaningService {
     
     private var foundFiles: [(path: String, size: Int64)] = []
     
-    func scan() async -> ScanResult {
+    func scan(progress: ((String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
         foundFiles.removeAll()

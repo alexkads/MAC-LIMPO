@@ -19,10 +19,25 @@ let package = Package(
             exclude: [
                 "README.md",
                 "XCODE_SETUP.md",
+                "ADICIONAR_LOGGER.md",
+                "CORRECAO_PERMISSOES.md",
                 "Info.plist",
                 "create_xcode_project.sh",
+                "create_installer.sh",
                 "Assets.xcassets",
-                "Design"
+                "Design",
+                "MAC-LIMPO.app",
+                "MAC-LIMPO.dmg",
+                "Services/COMO_VER_LOGS.md",
+                "Services/CORRECAO_APLICADA.md",
+                "Services/CORRECAO_TEMPFILES.md",
+                "Services/GUIA_INSTALACAO.md",
+                "Services/IDEIAS_FUTURAS.md",
+                "Services/NOVAS_CATEGORIAS.md",
+                "Services/PROBLEMAS_E_CORRECOES.md",
+                "Services/capture_errors.sh",
+                "Services/check_files.sh",
+                "Services/Logger 2.swift"
             ],
             sources: [
                 "MACLIMPOApp.swift",
@@ -33,14 +48,32 @@ let package = Package(
                 "Services/DevPackagesCleaningService.swift",
                 "Services/TempFilesCleaningService.swift",
                 "Services/LogsCleaningService.swift",
-                "Services/LogsCleaningService.swift",
                 "Services/AppCacheCleaningService.swift",
                 "Services/LaunchAtLoginService.swift",
+                "Services/Logger.swift",
+                // Novos serviços de limpeza
+                "Services/XcodeCacheCleaningService.swift",
+                "Services/IOSSimulatorsCleaningService.swift",
+                "Services/DownloadsCleaningService.swift",
+                "Services/TrashCleaningService.swift",
+                "Services/BrowserCacheCleaningService.swift",
+                "Services/SpotifyCacheCleaningService.swift",
+                "Services/SlackCacheCleaningService.swift",
+                "Services/LargeFilesCleaningService.swift",
+                "Services/DuplicateFilesCleaningService.swift",
+                "Services/MailAttachmentsCleaningService.swift",
+                "Services/MessagesAttachmentsCleaningService.swift",
+                // Serviços para limpeza adicional de espaço
+                "Services/IDECacheCleaningService.swift",
+                "Services/AndroidSDKCleaningService.swift",
+                "Services/MessagingAppsCleaningService.swift",
+                // Views
                 "Views/MenuBarView.swift",
                 "Views/Components/CleaningCategoryCard.swift",
                 "Views/Components/StorageStatsView.swift",
                 "Views/Components/CleaningProgressView.swift",
                 "Views/Components/ResultsView.swift",
+                // Utilities
                 "Utilities/FileSystemHelper.swift",
                 "Utilities/ShellExecutor.swift"
             ]

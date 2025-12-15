@@ -12,7 +12,7 @@ class SlackCacheCleaningService: BaseCleaningService, CleaningService {
         "~/Library/Caches/com.tinyspeck.slackmacgap.ShipIt"
     ]
     
-    func scan() async -> ScanResult {
+    func scan(progress: ((String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
         

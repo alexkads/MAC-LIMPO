@@ -11,7 +11,7 @@ class DevPackagesCleaningService: BaseCleaningService, CleaningService {
         ("CocoaPods", "~/Library/Caches/CocoaPods")
     ]
     
-    func scan() async -> ScanResult {
+    func scan(progress: ((String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
         

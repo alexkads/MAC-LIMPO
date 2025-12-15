@@ -3,7 +3,7 @@ import Foundation
 class DockerCleaningService: BaseCleaningService, CleaningService {
     let category: CleaningCategory = .docker
     
-    func scan() async -> ScanResult {
+    func scan(progress: ((String) -> Void)?) async -> ScanResult {
         var estimatedSize: Int64 = 0
         var items: [String] = []
         

@@ -26,20 +26,22 @@ class MenuBarViewModel: ObservableObject {
         .devPackages: DevPackagesCleaningService(),
         .tempFiles: TempFilesCleaningService(),
         .logs: LogsCleaningService(),
-        .appCache: AppCacheCleaningService()
-        
-        // DESCOMENTE DEPOIS DE ADICIONAR OS ARQUIVOS:
-        // .xcodeCache: XcodeCacheCleaningService(),
-        // .iosSimulators: IOSSimulatorsCleaningService(),
-        // .downloads: DownloadsCleaningService(),
-        // .trash: TrashCleaningService(),
-        // .browserCache: BrowserCacheCleaningService(),
-        // .spotifyCache: SpotifyCacheCleaningService(),
-        // .slackCache: SlackCacheCleaningService(),
-        // .largeFiles: LargeFilesCleaningService(),
-        // .duplicateFiles: DuplicateFilesCleaningService(),
-        // .mailAttachments: MailAttachmentsCleaningService(),
-        // .messagesAttachments: MessagesAttachmentsCleaningService()
+        .appCache: AppCacheCleaningService(),
+        .xcodeCache: XcodeCacheCleaningService(),
+        .iosSimulators: IOSSimulatorsCleaningService(),
+        .downloads: DownloadsCleaningService(),
+        .trash: TrashCleaningService(),
+        .browserCache: BrowserCacheCleaningService(),
+        .spotifyCache: SpotifyCacheCleaningService(),
+        .slackCache: SlackCacheCleaningService(),
+        .largeFiles: LargeFilesCleaningService(),
+        .duplicateFiles: DuplicateFilesCleaningService(),
+        .mailAttachments: MailAttachmentsCleaningService(),
+        .messagesAttachments: MessagesAttachmentsCleaningService(),
+        // Novos serviços para espaço adicional
+        .ideCache: IDECacheCleaningService(),
+        .androidSDK: AndroidSDKCleaningService(),
+        .messagingApps: MessagingAppsCleaningService()
     ]
     
     init() {
@@ -60,17 +62,27 @@ class MenuBarViewModel: ObservableObject {
         }
     }
     
+    @Published var scanningStatus: [CleaningCategory: String] = [:]
+    
+    // ... existing properties ...
+
     func scanCategory(_ category: CleaningCategory) {
         guard let service = services[category] else { return }
         
         isScanning[category] = true
+        scanningStatus[category] = "Starting..."
         
         Task {
-            let result = await service.scan()
+            let result = await service.scan(progress: { [weak self] status in
+                Task { @MainActor in
+                    self?.scanningStatus[category] = status
+                }
+            })
             
             await MainActor.run {
                 scanResults[category] = result
                 isScanning[category] = false
+                scanningStatus[category] = nil
             }
         }
     }
@@ -206,6 +218,7 @@ struct MenuBarView: View {
                                 category: category,
                                 estimatedSize: viewModel.scanResults[category]?.formattedSize ?? "...",
                                 isScanning: viewModel.isScanning[category] ?? false,
+                                scanningStatus: viewModel.scanningStatus[category],
                                 action: {
                                     viewModel.cleanCategory(category)
                                 }

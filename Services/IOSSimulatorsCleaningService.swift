@@ -3,7 +3,7 @@ import Foundation
 class IOSSimulatorsCleaningService: BaseCleaningService, CleaningService {
     let category: CleaningCategory = .iosSimulators
     
-    func scan() async -> ScanResult {
+    func scan(progress: ((String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
         

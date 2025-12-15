@@ -4,6 +4,7 @@ struct CleaningCategoryCard: View {
     let category: CleaningCategory
     let estimatedSize: String
     let isScanning: Bool
+    let scanningStatus: String?
     let action: () -> Void
     
     @State private var isHovered = false
@@ -11,7 +12,7 @@ struct CleaningCategoryCard: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 16) {
-                // Ícone com gradiente
+                // ... (existing icon code) ...
                 ZStack {
                     Circle()
                         .fill(category.gradient)
@@ -38,9 +39,17 @@ struct CleaningCategoryCard: View {
                 Spacer()
                 
                 if isScanning {
-                    ProgressView()
-                        .controlSize(.small)
-                        .frame(width: 16, height: 16)
+                    HStack(spacing: 8) {
+                        if let status = scanningStatus {
+                            Text(status)
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                        }
+                        ProgressView()
+                            .controlSize(.small)
+                            .frame(width: 16, height: 16)
+                    }
                 } else {
                     Text(estimatedSize)
                         .font(.system(size: 14, weight: .bold))

@@ -1,6 +1,14 @@
 import Foundation
 import os.log
 
+/// Níveis de log
+enum LogLevel {
+    case debug
+    case info
+    case warning
+    case error
+}
+
 /// Helper para logging consistente em toda a aplicação
 class Logger {
     static let shared = Logger()
@@ -10,6 +18,21 @@ class Logger {
     
     private init() {
         self.log = OSLog(subsystem: subsystem, category: "general")
+    }
+    
+    // MARK: - Log genérico com level
+    
+    func log(_ message: String, level: LogLevel) {
+        switch level {
+        case .debug:
+            debug(message)
+        case .info:
+            info(message)
+        case .warning:
+            warning(message)
+        case .error:
+            error(message)
+        }
     }
     
     // MARK: - Log Levels
@@ -49,3 +72,6 @@ class Logger {
         os_log(.info, log: log, "🧹 [%{public}@] %{public}@", category, message)
     }
 }
+
+/// Logger global para uso em toda a aplicação
+let logger = Logger.shared

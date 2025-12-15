@@ -21,7 +21,7 @@ class TempFilesCleaningService: BaseCleaningService, CleaningService {
         "com.apple.Photos"
     ]
     
-    func scan() async -> ScanResult {
+    func scan(progress: ((String) -> Void)?) async -> ScanResult {
         Logger.shared.scan(category: "TempFiles", message: "Starting scan")
         
         var totalSize: Int64 = 0

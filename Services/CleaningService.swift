@@ -4,7 +4,7 @@ import Combine
 protocol CleaningService {
     var category: CleaningCategory { get }
     
-    func scan() async -> ScanResult
+    func scan(progress: ((String) -> Void)?) async -> ScanResult
     func clean() async -> CleaningResult
 }
 

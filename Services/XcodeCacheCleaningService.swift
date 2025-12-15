@@ -44,20 +44,22 @@ class XcodeCacheCleaningService: BaseCleaningService, CleaningService {
         "~/Library/Developer/Xcode/Products"
     ]
     
-    func scan() async -> ScanResult {
+    func scan(progress: ((String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
         
         logger.log("Iniciando escaneamento do ambiente de desenvolvimento Xcode", level: .info)
+        progress?("Checking Xcode paths...")
         
         for path in xcodePaths {
             let expandedPath = fileHelper.expandPath(path)
             if fileHelper.fileExists(atPath: expandedPath) {
+                let readablePath = getReadableName(for: path)
+                progress?("Scanning \(readablePath)...")
+                
                 let size = fileHelper.sizeOfDirectory(atPath: expandedPath)
                 if size > 0 {
                     totalSize += size
-                    let pathName = (path as NSString).lastPathComponent
-                    let readablePath = getReadableName(for: path)
                     items.append("\(readablePath): \(fileHelper.formatBytes(size))")
                     logger.log("Encontrado: \(readablePath) - \(fileHelper.formatBytes(size))", level: .debug)
                 }
@@ -279,7 +281,7 @@ class XcodeCacheCleaningService: BaseCleaningService, CleaningService {
             
             // Usar find para localizar diretórios .build
             let findCommand = "find '\(searchPath)' -type d -name '.build' -maxdepth 5 2>/dev/null"
-            if let result = try? ShellExecutor.shared.execute(command: findCommand),
+            if let result = try? ShellExecutor.shared.execute(findCommand),
                !result.output.isEmpty {
                 let buildDirs = result.output.components(separatedBy: "\n").filter { !$0.isEmpty }
                 

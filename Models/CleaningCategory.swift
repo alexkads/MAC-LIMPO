@@ -6,6 +6,8 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
     case devPackages = "Dev Packages"
     case xcodeCache = "Xcode Cache"
     case iosSimulators = "iOS Simulators"
+    case ideCache = "IDE Cache"
+    case androidSDK = "Android SDK"
     
     // Sistema
     case tempFiles = "Temp Files"
@@ -18,6 +20,7 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
     case browserCache = "Browser Cache"
     case spotifyCache = "Spotify Cache"
     case slackCache = "Slack Cache"
+    case messagingApps = "Messaging Apps"
     
     // Arquivos grandes e duplicados
     case largeFiles = "Large Files"
@@ -35,6 +38,8 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .devPackages: return "hammer.fill"
         case .xcodeCache: return "chevron.left.forwardslash.chevron.right"
         case .iosSimulators: return "iphone.gen3"
+        case .ideCache: return "laptopcomputer"
+        case .androidSDK: return "apps.iphone"
         case .tempFiles: return "doc.fill"
         case .logs: return "list.bullet.rectangle.fill"
         case .appCache: return "tray.full.fill"
@@ -43,6 +48,7 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .browserCache: return "network"
         case .spotifyCache: return "music.note"
         case .slackCache: return "bubble.left.and.bubble.right.fill"
+        case .messagingApps: return "bubble.left.and.text.bubble.right.fill"
         case .largeFiles: return "doc.badge.ellipsis"
         case .duplicateFiles: return "doc.on.doc.fill"
         case .mailAttachments: return "envelope.fill"
@@ -56,6 +62,8 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .devPackages: return Color(hex: "FF6F00")
         case .xcodeCache: return Color(hex: "147EFB")
         case .iosSimulators: return Color(hex: "5AC8FA")
+        case .ideCache: return Color(hex: "007ACC")
+        case .androidSDK: return Color(hex: "3DDC84")
         case .tempFiles: return Color(hex: "9C27B0")
         case .logs: return Color(hex: "00BCD4")
         case .appCache: return Color(hex: "4CAF50")
@@ -64,6 +72,7 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .browserCache: return Color(hex: "3F51B5")
         case .spotifyCache: return Color(hex: "1DB954")
         case .slackCache: return Color(hex: "4A154B")
+        case .messagingApps: return Color(hex: "25D366")
         case .largeFiles: return Color(hex: "E91E63")
         case .duplicateFiles: return Color(hex: "9E9E9E")
         case .mailAttachments: return Color(hex: "2196F3")
@@ -89,6 +98,10 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
             return "Clean DerivedData, Archives, and build caches"
         case .iosSimulators:
             return "Remove old iOS Simulator devices and data"
+        case .ideCache:
+            return "Clean JetBrains, VS Code, Cursor caches"
+        case .androidSDK:
+            return "Clean Gradle cache and old Android SDK data"
         case .tempFiles:
             return "Delete temporary files and caches"
         case .logs:
@@ -105,6 +118,8 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
             return "Clean Spotify offline cache"
         case .slackCache:
             return "Clear Slack cache and temp files"
+        case .messagingApps:
+            return "Clean WhatsApp, Teams, Discord caches"
         case .largeFiles:
             return "Find files larger than 500MB"
         case .duplicateFiles:
