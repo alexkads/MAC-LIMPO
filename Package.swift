@@ -67,6 +67,10 @@ let package = Package(
                 "Services/IDECacheCleaningService.swift",
                 "Services/AndroidSDKCleaningService.swift",
                 "Services/MessagingAppsCleaningService.swift",
+                "Services/PlaywrightCleaningService.swift",
+                "Services/CargoCleaningService.swift",
+                "Services/HomebrewCleaningService.swift",
+                "Services/TerminalLogsCleaningService.swift",
                 // Views
                 "Views/MenuBarView.swift",
                 "Views/Components/CleaningCategoryCard.swift",

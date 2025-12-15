@@ -38,10 +38,14 @@ class MenuBarViewModel: ObservableObject {
         .duplicateFiles: DuplicateFilesCleaningService(),
         .mailAttachments: MailAttachmentsCleaningService(),
         .messagesAttachments: MessagesAttachmentsCleaningService(),
-        // Novos serviços para espaço adicional
         .ideCache: IDECacheCleaningService(),
         .androidSDK: AndroidSDKCleaningService(),
-        .messagingApps: MessagingAppsCleaningService()
+        .messagingApps: MessagingAppsCleaningService(),
+        // New cleaning services
+        .playwright: PlaywrightCleaningService(),
+        .cargo: CargoCleaningService(),
+        .homebrew: HomebrewCleaningService(),
+        .terminalLogs: TerminalLogsCleaningService()
     ]
     
     init() {

@@ -8,6 +8,10 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
     case iosSimulators = "iOS Simulators"
     case ideCache = "IDE Cache"
     case androidSDK = "Android SDK"
+    case playwright = "Playwright"
+    case cargo = "Cargo/Rust"
+    case homebrew = "Homebrew"
+    case terminalLogs = "Terminal Logs"
     
     // Sistema
     case tempFiles = "Temp Files"
@@ -40,6 +44,10 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .iosSimulators: return "iphone.gen3"
         case .ideCache: return "laptopcomputer"
         case .androidSDK: return "apps.iphone"
+        case .playwright: return "theatermasks.fill"
+        case .cargo: return "shippingbox"
+        case .homebrew: return "mug.fill"
+        case .terminalLogs: return "terminal.fill"
         case .tempFiles: return "doc.fill"
         case .logs: return "list.bullet.rectangle.fill"
         case .appCache: return "tray.full.fill"
@@ -64,6 +72,10 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .iosSimulators: return Color(hex: "5AC8FA")
         case .ideCache: return Color(hex: "007ACC")
         case .androidSDK: return Color(hex: "3DDC84")
+        case .playwright: return Color(hex: "2EAD33")
+        case .cargo: return Color(hex: "FF6B35")
+        case .homebrew: return Color(hex: "FBB040")
+        case .terminalLogs: return Color(hex: "00C9A7")
         case .tempFiles: return Color(hex: "9C27B0")
         case .logs: return Color(hex: "00BCD4")
         case .appCache: return Color(hex: "4CAF50")
@@ -102,6 +114,14 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
             return "Clean JetBrains, VS Code, Cursor caches"
         case .androidSDK:
             return "Clean Gradle cache and old Android SDK data"
+        case .playwright:
+            return "Remove Playwright browser caches"
+        case .cargo:
+            return "Clean Rust/Cargo build cache and registry"
+        case .homebrew:
+            return "Clear Homebrew package download cache"
+        case .terminalLogs:
+            return "Remove old terminal log files"
         case .tempFiles:
             return "Delete temporary files and caches"
         case .logs:
