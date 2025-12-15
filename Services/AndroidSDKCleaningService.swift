@@ -102,11 +102,38 @@ class AndroidSDKCleaningService: BaseCleaningService, CleaningService {
         var filesRemoved = 0
         var errors: [String] = []
         
-        logger.log("Iniciando limpeza do Android SDK (modo conservador)", level: .info)
+        logger.log("Iniciando limpeza do Android SDK", level: .info)
         let startTime = Date()
         
-        // IMPORTANTE: Não vamos limpar system-images e AVDs automaticamente
-        // pois o usuário pode precisar deles. Apenas caches.
+        // Limpar System Images (emuladores - podem ser baixados novamente)
+        let systemImagesPath = fileHelper.expandPath("~/Library/Android/sdk/system-images")
+        if fileHelper.fileExists(atPath: systemImagesPath) {
+            let size = fileHelper.sizeOfDirectory(atPath: systemImagesPath)
+            do {
+                try fileHelper.removeItem(atPath: systemImagesPath)
+                bytesRemoved += size
+                filesRemoved += 1
+                logger.log("Removido System Images: \(fileHelper.formatBytes(size))", level: .debug)
+            } catch {
+                errors.append("Falha ao limpar System Images")
+                logger.log("Falha ao remover System Images: \(error.localizedDescription)", level: .error)
+            }
+        }
+        
+        // Limpar AVDs (emuladores criados)
+        let avdPath = fileHelper.expandPath("~/.android/avd")
+        if fileHelper.fileExists(atPath: avdPath) {
+            let size = fileHelper.sizeOfDirectory(atPath: avdPath)
+            do {
+                try fileHelper.removeItem(atPath: avdPath)
+                bytesRemoved += size
+                filesRemoved += 1
+                logger.log("Removido AVDs: \(fileHelper.formatBytes(size))", level: .debug)
+            } catch {
+                errors.append("Falha ao limpar AVDs")
+                logger.log("Falha ao remover AVDs: \(error.localizedDescription)", level: .error)
+            }
+        }
         
         // Limpar Gradle caches (seguros de limpar, serão recriados)
         let gradlePaths = ["~/.gradle/caches", "~/.gradle/daemon"]
