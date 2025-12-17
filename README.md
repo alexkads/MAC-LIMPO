@@ -314,6 +314,10 @@ Contribuições são muito bem-vindas! Este projeto está aberto para melhorias,
 - Foque no que é melhor para a comunidade
 - Mostre empatia com outros contribuidores
 
+### 📋 Changelog
+
+Todas as mudanças são documentadas no [CHANGELOG.md](CHANGELOG.md). Ao contribuir, adicione suas mudanças na seção `[Unreleased]`.
+
 Para mais detalhes, veja [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## 👨‍💻 Autor

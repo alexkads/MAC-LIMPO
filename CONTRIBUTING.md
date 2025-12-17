@@ -426,6 +426,50 @@ final class MyServiceTests: XCTestCase {
 }
 ```
 
+## 📋 Mantendo o Changelog
+
+Todas as mudanças notáveis devem ser documentadas no [CHANGELOG.md](CHANGELOG.md).
+
+### Ao Contribuir
+
+Quando seu PR adiciona funcionalidades ou corrige bugs:
+
+1. **Adicione uma entrada em `[Unreleased]`**
+   ```markdown
+   ## [Unreleased]
+   
+   ### Adicionado
+   - Nova categoria de limpeza para cache do VS Code (#123)
+   
+   ### Corrigido
+   - Crash ao escanear diretórios sem permissão (#124)
+   ```
+
+2. **Use o tipo apropriado:**
+   - `Adicionado`: Novas funcionalidades
+   - `Modificado`: Mudanças em funcionalidades existentes
+   - `Descontinuado`: Funcionalidades que serão removidas
+   - `Removido`: Funcionalidades removidas
+   - `Corrigido`: Correções de bugs
+   - `Segurança`: Vulnerabilidades corrigidas
+
+3. **Seja descritivo mas conciso**
+   - Explique o que mudou
+   - Referencie issues quando aplicável
+   - Use linguagem clara
+
+### Exemplo de Entrada
+
+```markdown
+### Adicionado
+- Suporte para limpeza de cache do VS Code com detecção automática de versões instaladas (#45)
+- Opção para excluir diretórios específicos da limpeza (#67)
+
+### Corrigido
+- Crash ao escanear diretórios protegidos do sistema (#89)
+- Progresso incorreto durante scan paralelo (#92)
+```
+
 ## 📚 Recursos Adicionais
 
 - [Swift Documentation](https://swift.org/documentation/)
