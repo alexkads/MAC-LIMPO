@@ -171,6 +171,11 @@ class MenuBarViewModel: ObservableObject {
 struct MenuBarView: View {
     @StateObject private var viewModel = MenuBarViewModel()
     @StateObject private var launchAtLoginService = LaunchAtLoginService()
+    let onOpenTreemap: () -> Void
+    
+    init(onOpenTreemap: @escaping () -> Void = {}) {
+        self.onOpenTreemap = onOpenTreemap
+    }
     
     var body: some View {
         ZStack {
@@ -195,6 +200,15 @@ struct MenuBarView: View {
                         }
                         
                         Spacer()
+                        
+                        Button(action: {
+                            onOpenTreemap()
+                        }) {
+                            Image(systemName: "square.grid.3x3.fill")
+                                .font(.system(size: 16, weight: .semibold))
+                        }
+                        .buttonStyle(.plain)
+                        .help("Disk Map")
                         
                         Button(action: {
                             viewModel.scanAllCategories()

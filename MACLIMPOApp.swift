@@ -15,6 +15,7 @@ struct MACLIMPOApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem!
     var popover: NSPopover!
+    var treemapWindow: NSWindow?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Garante instância única
@@ -51,7 +52,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         popover = NSPopover()
         popover.contentSize = NSSize(width: 420, height: 600)
         popover.behavior = .transient
-        popover.contentViewController = NSHostingController(rootView: MenuBarView())
+        popover.contentViewController = NSHostingController(rootView: MenuBarView(onOpenTreemap: { [weak self] in
+            self?.openTreemapWindow()
+        }))
     }
     
     @objc func togglePopover() {
@@ -64,5 +67,39 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 NSApp.activate(ignoringOtherApps: true)
             }
         }
+    }
+    
+    func openTreemapWindow() {
+        // Se a janela já existe, apenas traz para frente
+        if let window = treemapWindow {
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+        
+        // Cria nova janela
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 900, height: 700),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        
+        window.title = "Disk Map - MAC-LIMPO"
+        window.center()
+        window.isReleasedWhenClosed = false
+        
+        // Cria a view do treemap sem o overlay de fundo
+        let treemapView = TreemapWindowView(onClose: { [weak self] in
+            self?.treemapWindow?.close()
+        })
+        
+        window.contentView = NSHostingView(rootView: treemapView)
+        window.makeKeyAndOrderFront(nil)
+        
+        // Ativa a aplicação
+        NSApp.activate(ignoringOtherApps: true)
+        
+        treemapWindow = window
     }
 }

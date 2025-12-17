@@ -43,6 +43,7 @@ let package = Package(
                 "MACLIMPOApp.swift",
                 "Models/CleaningCategory.swift",
                 "Models/CleaningResult.swift",
+                "Models/FileNode.swift",
                 "Services/CleaningService.swift",
                 "Services/DockerCleaningService.swift",
                 "Services/DevPackagesCleaningService.swift",
@@ -51,6 +52,7 @@ let package = Package(
                 "Services/AppCacheCleaningService.swift",
                 "Services/LaunchAtLoginService.swift",
                 "Services/Logger.swift",
+                "Services/DiskMapService.swift",
                 // Novos serviços de limpeza
                 "Services/XcodeCacheCleaningService.swift",
                 "Services/IOSSimulatorsCleaningService.swift",
@@ -71,15 +73,21 @@ let package = Package(
                 "Services/CargoCleaningService.swift",
                 "Services/HomebrewCleaningService.swift",
                 "Services/TerminalLogsCleaningService.swift",
+                // ViewModels
+                "ViewModels/TreemapViewModel.swift",
                 // Views
                 "Views/MenuBarView.swift",
+                "Views/TreemapView.swift",
+                "Views/TreemapWindowView.swift",
                 "Views/Components/CleaningCategoryCard.swift",
                 "Views/Components/StorageStatsView.swift",
                 "Views/Components/CleaningProgressView.swift",
                 "Views/Components/ResultsView.swift",
+                "Views/Components/DirectoryCard.swift",
                 // Utilities
                 "Utilities/FileSystemHelper.swift",
-                "Utilities/ShellExecutor.swift"
+                "Utilities/ShellExecutor.swift",
+                "Utilities/TreemapLayout.swift"
             ]
         )
     ]
