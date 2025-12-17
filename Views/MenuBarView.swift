@@ -179,9 +179,10 @@ struct MenuBarView: View {
     
     var body: some View {
         ZStack {
-            ScrollView {
+            VStack(spacing: 0) {
+                // FIXED HEADER SECTION
                 VStack(spacing: 20) {
-                    // Header
+                    // Header Title & Buttons
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("MAC-LIMPO")
@@ -228,68 +229,73 @@ struct MenuBarView: View {
                         totalSpace: viewModel.totalDiskSpace
                     )
                     .padding(.horizontal, 20)
-                    
-                    // Cleaning Categories (apenas as implementadas)
-                    VStack(spacing: 12) {
-                        ForEach(Array(viewModel.services.keys).sorted(by: { $0.rawValue < $1.rawValue })) { category in
-                            CleaningCategoryCard(
-                                category: category,
-                                estimatedSize: viewModel.scanResults[category]?.formattedSize ?? "...",
-                                isScanning: viewModel.isScanning[category] ?? false,
-                                scanningStatus: viewModel.scanningStatus[category],
-                                action: {
-                                    viewModel.cleanCategory(category)
-                                }
-                            )
+                }
+                .padding(.bottom, 10)
+                
+                // SCROLLABLE LIST SECTION
+                ScrollView {
+                    VStack(spacing: 20) {
+                        // Cleaning Categories (apenas as implementadas)
+                        VStack(spacing: 12) {
+                            ForEach(Array(viewModel.services.keys).sorted(by: { $0.rawValue < $1.rawValue })) { category in
+                                CleaningCategoryCard(
+                                    category: category,
+                                    estimatedSize: viewModel.scanResults[category]?.formattedSize ?? "...",
+                                    isScanning: viewModel.isScanning[category] ?? false,
+                                    scanningStatus: viewModel.scanningStatus[category],
+                                    action: {
+                                        viewModel.cleanCategory(category)
+                                    }
+                                )
+                            }
                         }
-                    }
-                    .padding(.horizontal, 20)
-                    
-                    // Clean All Button
-                    Button(action: {
-                        viewModel.cleanAll()
-                    }) {
-                        HStack {
-                            Image(systemName: "sparkles")
-                                .font(.system(size: 16, weight: .semibold))
-                            Text("Clean All")
-                                .font(.system(size: 16, weight: .semibold))
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(
-                            LinearGradient(
-                                colors: [.blue, .purple],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 20)
-                    
-                    // Settings
-                    VStack(spacing: 12) {
-                        Toggle(isOn: $launchAtLoginService.isEnabled) {
-                            Text("Launch at Login")
-                                .font(.system(size: 14))
-                        }
-                        .toggleStyle(.switch)
                         .padding(.horizontal, 20)
+                        .padding(.top, 10)
+                        
+                        // Clean All Button
+                        Button(action: {
+                            viewModel.cleanAll()
+                        }) {
+                            HStack {
+                                Image(systemName: "sparkles")
+                                    .font(.system(size: 16, weight: .semibold))
+                                Text("Clean All")
+                                    .font(.system(size: 16, weight: .semibold))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(
+                                LinearGradient(
+                                    colors: [.blue, .purple],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, 20)
+                        
+                        // Settings
+                        VStack(spacing: 12) {
+                            Toggle(isOn: $launchAtLoginService.isEnabled) {
+                                Text("Launch at Login")
+                                    .font(.system(size: 14))
+                            }
+                            .toggleStyle(.switch)
+                            .padding(.horizontal, 20)
+                        }
+                        
+                        // Quit Button
+                        Button("Quit MAC-LIMPO") {
+                            NSApplication.shared.terminate(nil)
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 12))
+                        .padding(.bottom, 20)
                     }
-                    .padding(.bottom, 10)
-                    
-                    // Quit Button
-                    Button("Quit MAC-LIMPO") {
-                        NSApplication.shared.terminate(nil)
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundColor(.secondary)
-                    .font(.system(size: 12))
-                    .padding(.bottom, 12)
                 }
             }
             
