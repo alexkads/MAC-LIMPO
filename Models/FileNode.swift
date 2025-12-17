@@ -36,54 +36,58 @@ class FileNode: Identifiable, ObservableObject {
     // Cor baseada no tipo de arquivo
     var color: Color {
         if isDirectory {
-            return .gray.opacity(0.3)
+            // Diretórios agora têm cor baseada no nome para variedade visual, mas sutil
+            let hash = abs(name.hashValue)
+            let hue = Double(hash % 360) / 360.0
+            return Color(hue: hue, saturation: 0.05, brightness: 0.9) // Cinza sutil com toque de cor
         }
         
         guard let ext = fileExtension else {
-            return .gray
+            return Color(hex: "9E9E9E") // Cinza neutro
         }
         
-        // Código fonte
-        if ["swift", "js", "ts", "py", "java", "cpp", "c", "h", "m", "go", "rs", "rb"].contains(ext) {
-            return Color(hex: "2196F3") // Azul
+        // Código fonte - Azul Neon
+        if ["swift", "js", "ts", "py", "java", "cpp", "c", "h", "m", "go", "rs", "rb", "php", "html", "css"].contains(ext) {
+            return Color(hex: "007AFF") // System Blue vibrante
         }
         
-        // Documentos
-        if ["pdf", "doc", "docx", "txt", "md", "pages", "numbers", "key"].contains(ext) {
-            return Color(hex: "4CAF50") // Verde
+        // Documentos - Verde Esmeralda
+        if ["pdf", "doc", "docx", "txt", "md", "pages", "numbers", "key", "xls", "xlsx", "ppt", "pptx"].contains(ext) {
+            return Color(hex: "34C759") // System Green
         }
         
-        // Mídia (vídeo)
-        if ["mp4", "mov", "avi", "mkv", "m4v", "flv", "wmv"].contains(ext) {
-            return Color(hex: "F44336") // Vermelho
+        // Mídia (vídeo) - Laranja/Vermelho
+        if ["mp4", "mov", "avi", "mkv", "m4v", "flv", "wmv", "webm"].contains(ext) {
+            return Color(hex: "FF3B30") // System Red
         }
         
-        // Imagens
-        if ["jpg", "jpeg", "png", "gif", "bmp", "svg", "webp", "heic"].contains(ext) {
-            return Color(hex: "FF9800") // Amarelo/Laranja
+        // Imagens - Roxo/Rosa
+        if ["jpg", "jpeg", "png", "gif", "bmp", "svg", "webp", "heic", "tiff", "psd", "ai"].contains(ext) {
+            return Color(hex: "AF52DE") // System Purple
         }
         
-        // Áudio
+        // Áudio - Ciano
         if ["mp3", "wav", "aac", "flac", "m4a", "ogg"].contains(ext) {
-            return Color(hex: "E91E63") // Rosa
+            return Color(hex: "00C7BE") // System Teal
         }
         
-        // Compactados
-        if ["zip", "tar", "gz", "rar", "7z", "dmg", "pkg"].contains(ext) {
-            return Color(hex: "9C27B0") // Roxo
+        // Compactados - Amarelo/Laranja
+        if ["zip", "tar", "gz", "rar", "7z", "dmg", "pkg", "iso"].contains(ext) {
+            return Color(hex: "FF9500") // System Orange
         }
         
-        // Executáveis/Binários
-        if ["app", "exe", "bin", "dylib", "so", "dll"].contains(ext) {
-            return Color(hex: "607D8B") // Cinza azulado
+        // Executáveis/Binários - Indigo
+        if ["app", "exe", "bin", "dylib", "so", "dll", "sh"].contains(ext) {
+            return Color(hex: "5856D6") // System Indigo
         }
         
-        // Dados/Database
-        if ["db", "sqlite", "sql", "json", "xml", "csv", "plist"].contains(ext) {
-            return Color(hex: "00BCD4") // Ciano
+        // Dados/Database - Rosa
+        if ["db", "sqlite", "sql", "json", "xml", "csv", "plist", "yaml", "yml"].contains(ext) {
+            return Color(hex: "FF2D55") // System Pink
         }
         
-        return .gray
+        // Outros
+        return Color(hex: "8E8E93") // System Gray
     }
     
     // Formata o tamanho para exibição

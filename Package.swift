@@ -19,8 +19,9 @@ let package = Package(
             exclude: [
                 "README.md",
                 "XCODE_SETUP.md",
-                "ADICIONAR_LOGGER.md",
-                "CORRECAO_PERMISSOES.md",
+                "CHANGELOG.md",
+                "CONTRIBUTING.md",
+                "docs",
                 "Info.plist",
                 "create_xcode_project.sh",
                 "create_installer.sh",

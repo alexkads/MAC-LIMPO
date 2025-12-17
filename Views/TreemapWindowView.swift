@@ -79,16 +79,20 @@ struct TreemapWindowView: View {
                 .help("Go back to parent directory")
             }
             
+            // Botão Novo Scan (sempre visível quando tem resultado e não está na raiz)
             if viewModel.rootNode != nil && !viewModel.isScanning {
                 Button(action: {
-                    viewModel.reset()
-                    viewModel.rootNode = nil
+                    viewModel.clearScan()
                 }) {
-                    Image(systemName: "arrow.counterclockwise")
-                        .font(.system(size: 14))
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.counterclockwise")
+                            .font(.system(size: 12))
+                        Text("New Scan")
+                            .font(.system(size: 12))
+                    }
                 }
                 .buttonStyle(.plain)
-                .help("New scan")
+                .help("Start a new scan")
             }
         }
         .padding(20)
@@ -112,6 +116,13 @@ struct TreemapWindowView: View {
                 .foregroundColor(.secondary)
                 .lineLimit(1)
                 .truncationMode(.middle)
+            
+            Button("Cancel Scan") {
+                viewModel.cancelScanTask()
+            }
+            .buttonStyle(.plain)
+            .foregroundColor(.red)
+            .padding(.top, 10)
             
             Spacer()
         }
@@ -227,8 +238,20 @@ struct TreemapWindowView: View {
             )
             
             Canvas { context, size in
+                var hoveredRect: TreemapRect?
+                
+                // Desenha todos os retângulos normais
                 for rect in rects {
-                    drawRect(rect, in: context)
+                    if rect.node.id == viewModel.hoveredNode?.id {
+                        hoveredRect = rect
+                        continue
+                    }
+                    drawRect(rect, in: context, isHovered: false)
+                }
+                
+                // Desenha o retângulo sob hover por último (z-index topo)
+                if let hovered = hoveredRect {
+                    drawRect(hovered, in: context, isHovered: true)
                 }
             }
             .gesture(
@@ -236,7 +259,9 @@ struct TreemapWindowView: View {
                     .onChanged { value in
                         // Find hovered node
                         if let rect = rects.first(where: { $0.frame.contains(value.location) }) {
-                            viewModel.hoveredNode = rect.node
+                            if viewModel.hoveredNode?.id != rect.node.id {
+                                viewModel.hoveredNode = rect.node
+                            }
                         }
                     }
                     .onEnded { value in
@@ -252,34 +277,54 @@ struct TreemapWindowView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    
-    private func drawRect(_ rect: TreemapRect, in context: GraphicsContext) {
-        let path = Path(rect.frame)
+    private func drawRect(_ rect: TreemapRect, in context: GraphicsContext, isHovered: Bool) {
+        var context = context // Cria cópia mutável para aplicar filtros
+        let cornerRadius: CGFloat = 6.0
+        let path = Path(roundedRect: rect.frame, cornerRadius: cornerRadius)
         
-        // Fill
-        context.fill(path, with: .color(rect.color))
+        // Sombra
+        if isHovered {
+            context.addFilter(.shadow(color: .black.opacity(0.5), radius: 8, x: 0, y: 4))
+        } else {
+            context.addFilter(.shadow(color: .black.opacity(0.15), radius: 2, x: 0, y: 1))
+        }
         
-        // Border
-        context.stroke(
-            path,
-            with: .color(.white.opacity(0.3)),
-            lineWidth: 1
-        )
+        // Cor base e gradiente
+        let baseColor = rect.color
+        // Hover: mais brilhante; Normal: cor padrão
+        let gradientStart = isHovered ? baseColor.opacity(0.9) : baseColor
+        let gradientEnd = isHovered ? baseColor : baseColor.opacity(0.7)
         
-        // Label (se o retângulo for grande o suficiente)
-        if rect.frame.width > 60 && rect.frame.height > 30 {
-            let text = Text(rect.node.name)
-                .font(.system(size: 10))
-                .foregroundColor(.white)
+        let gradient = Gradient(colors: [gradientStart, gradientEnd])
+        
+        context.fill(path, with: .linearGradient(
+            gradient,
+            startPoint: CGPoint(x: rect.frame.minX, y: rect.frame.minY),
+            endPoint: CGPoint(x: rect.frame.maxX, y: rect.frame.maxY)
+        ))
+        
+        // Borda de destaque e brilho interno
+        if isHovered {
+            context.stroke(path, with: .color(.white), lineWidth: 2)
+            context.stroke(path, with: .color(.white.opacity(0.5)), lineWidth: 1)
+        } else {
+            context.stroke(path, with: .color(.white.opacity(0.1)), lineWidth: 0.5)
+        }
+        
+        // Texto
+        if rect.frame.width > 40 && rect.frame.height > 20 {
+            var text = Text(rect.node.name)
+            text = text.font(.system(size: 10, weight: isHovered ? .bold : .medium))
+            text = text.foregroundColor(.white)
             
-            context.draw(
-                text,
-                at: CGPoint(
-                    x: rect.frame.midX,
-                    y: rect.frame.midY
-                ),
-                anchor: .center
-            )
+            let resolvedText = context.resolve(text)
+            let textSize = resolvedText.measure(in: rect.frame.size)
+            
+            if textSize.width < rect.frame.width - 6 && textSize.height < rect.frame.height - 4 {
+                // Sombra do texto
+                context.draw(resolvedText, at: CGPoint(x: rect.frame.midX + 0.5, y: rect.frame.midY + 0.5), anchor: .center)
+                context.draw(resolvedText, at: CGPoint(x: rect.frame.midX, y: rect.frame.midY), anchor: .center)
+            }
         }
     }
     

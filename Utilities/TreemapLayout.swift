@@ -17,7 +17,7 @@ struct TreemapRect: Identifiable {
 struct TreemapLayout {
     
     // Layout principal - divide o espaço disponível entre os nós
-    static func layout(nodes: [FileNode], in rect: CGRect, depth: Int = 0) -> [TreemapRect] {
+    static func layout(nodes: [FileNode], in rect: CGRect, depth: Int = 0, inset: CGFloat = 2) -> [TreemapRect] {
         guard !nodes.isEmpty else { return [] }
         
         // Filtra nós com tamanho > 0
@@ -28,19 +28,21 @@ struct TreemapLayout {
         
         // Se há apenas um nó, retorna ele ocupando todo o espaço
         if validNodes.count == 1 {
-            return [TreemapRect(node: validNodes[0], frame: rect, depth: depth)]
+            let frame = rect.insetBy(dx: inset, dy: inset)
+            return [TreemapRect(node: validNodes[0], frame: frame, depth: depth)]
         }
         
         // Usa algoritmo squarified para melhor aspect ratio
-        return squarify(nodes: validNodes, totalSize: totalSize, in: rect, depth: depth)
+        return squarify(nodes: validNodes, totalSize: totalSize, in: rect, depth: depth, inset: inset)
     }
     
-    // Algoritmo squarified treemap
+    // Algoritmo squarified treemap (simplificado - slice/dice)
     private static func squarify(
         nodes: [FileNode],
         totalSize: Int64,
         in rect: CGRect,
-        depth: Int
+        depth: Int,
+        inset: CGFloat
     ) -> [TreemapRect] {
         var result: [TreemapRect] = []
         var remaining = nodes
@@ -85,16 +87,14 @@ struct TreemapLayout {
                 )
             }
             
-            result.append(TreemapRect(node: node, frame: nodeRect, depth: depth))
+            // Aplica inset para separação visual
+            let finalFrame = nodeRect.insetBy(dx: inset, dy: inset)
+            // Evita frames negativos ou zero se o inset for muito grande para o bloco
+            if finalFrame.width > 0 && finalFrame.height > 0 {
+                result.append(TreemapRect(node: node, frame: finalFrame, depth: depth))
+            }
         }
         
         return result
-    }
-    
-    // Calcula aspect ratio de um retângulo
-    private static func aspectRatio(of rect: CGRect) -> Double {
-        let width = Double(rect.width)
-        let height = Double(rect.height)
-        return max(width / height, height / width)
     }
 }

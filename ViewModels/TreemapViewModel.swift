@@ -14,17 +14,21 @@ class TreemapViewModel: ObservableObject {
     private let diskMapService = DiskMapService.shared
     private let maxDepth: Int
     
+    private var scanTask: Task<Void, Never>?
+    
     init(maxDepth: Int = 5) {
         self.maxDepth = maxDepth
     }
     
     // Inicia scan de um diretório
     func startScan(path: String) {
+        cancelScanTask() // Cancela scan anterior se houver
+        
         isScanning = true
         scanProgress = 0
         scanStatus = "Preparing scan..."
         
-        Task {
+        scanTask = Task {
             let node = await diskMapService.scanDirectory(
                 path: path,
                 maxDepth: maxDepth,
@@ -36,15 +40,27 @@ class TreemapViewModel: ObservableObject {
                 }
             )
             
-            await MainActor.run {
-                rootNode = node
-                currentNode = node
-                breadcrumbs = [node]
-                isScanning = false
-                scanStatus = "Scan complete!"
-                scanProgress = 1.0
+            // Verifica se a task foi cancelada antes de atualizar a UI
+            if !Task.isCancelled {
+                await MainActor.run {
+                    rootNode = node
+                    currentNode = node
+                    breadcrumbs = [node]
+                    isScanning = false
+                    scanStatus = "Scan complete!"
+                    scanProgress = 1.0
+                }
             }
         }
+    }
+    
+    // Cancela o scan atual
+    func cancelScanTask() {
+        scanTask?.cancel()
+        scanTask = nil
+        isScanning = false
+        scanStatus = "Scan cancelled"
+        scanProgress = 0
     }
     
     // Navega para um nó específico (zoom in)
@@ -81,6 +97,18 @@ class TreemapViewModel: ObservableObject {
         breadcrumbs = rootNode.map { [$0] } ?? []
         selectedNode = nil
         hoveredNode = nil
+    }
+    
+    // Limpa o scan atual e volta para a seleção
+    func clearScan() {
+        rootNode = nil
+        currentNode = nil
+        breadcrumbs = []
+        selectedNode = nil
+        hoveredNode = nil
+        isScanning = false
+        scanStatus = ""
+        scanProgress = 0
     }
     
     // Obtém diretórios de nível superior
