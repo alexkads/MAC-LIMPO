@@ -12,15 +12,15 @@
 ## 📸 Screenshots
 
 ### Interface Principal
-<!-- TODO: Adicionar screenshot da interface principal do menu bar -->
+![Interface Principal](docs/images/main_interface.png)
 *Interface limpa e moderna no menu bar com cards de categorias de limpeza*
 
 ### Disk Map - Visualização Treemap
-<!-- TODO: Adicionar screenshot do Disk Map treemap -->
+![Disk Map](docs/images/disk_map.png)
 *Visualização interativa de uso de disco estilo WinDirStat*
 
 ### Seleção de Diretórios
-<!-- TODO: Adicionar screenshot da seleção de diretórios -->
+![Seleção de Diretórios](docs/images/directory_selection.png)
 *Cards bonitos com gradientes para seleção de diretórios*
 
 ## ✨ Funcionalidades
