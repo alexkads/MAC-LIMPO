@@ -11,8 +11,8 @@ class FileSystemHelper {
         
         // Tenta usar du primeiro para performance
         let command = "du -sk '\(path)' | cut -f1"
-        if let result = ShellExecutor.shared.execute(command, timeout: 5),
-           let kbSize = Int64(result.output.trimmingCharacters(in: .whitespacesAndNewlines)) {
+        let result = ShellExecutor.shared.execute(command, timeout: 5)
+        if let kbSize = Int64(result.output.trimmingCharacters(in: .whitespacesAndNewlines)) {
             return kbSize * 1024 // Converter KB para Bytes
         }
         
