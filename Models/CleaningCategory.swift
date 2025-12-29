@@ -25,6 +25,7 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
     case spotifyCache = "Spotify Cache"
     case slackCache = "Slack Cache"
     case messagingApps = "Messaging Apps"
+    case adobeCache = "Adobe Cache"
     
     // Email e Mensagens
     case mailAttachments = "Mail Attachments"
@@ -53,6 +54,7 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .spotifyCache: return "music.note"
         case .slackCache: return "bubble.left.and.bubble.right.fill"
         case .messagingApps: return "bubble.left.and.text.bubble.right.fill"
+        case .adobeCache: return "paintbrush.fill"
         case .mailAttachments: return "envelope.fill"
         case .messagesAttachments: return "message.fill"
         }
@@ -79,6 +81,7 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .spotifyCache: return Color(hex: "1DB954")
         case .slackCache: return Color(hex: "4A154B")
         case .messagingApps: return Color(hex: "25D366")
+        case .adobeCache: return Color(hex: "FF0000")
         case .mailAttachments: return Color(hex: "2196F3")
         case .messagesAttachments: return Color(hex: "34C759")
         }
@@ -132,6 +135,8 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
             return "Clear Slack cache and temp files"
         case .messagingApps:
             return "Clean WhatsApp, Teams, Discord caches"
+        case .adobeCache:
+            return "Clear Adobe apps cache and media files"
         case .mailAttachments:
             return "Clean old Mail app attachments"
         case .messagesAttachments:

@@ -34,6 +34,7 @@ class MenuBarViewModel: ObservableObject {
         .browserCache: BrowserCacheCleaningService(),
         .spotifyCache: SpotifyCacheCleaningService(),
         .slackCache: SlackCacheCleaningService(),
+        .adobeCache: AdobeCleaningService(),
         .mailAttachments: MailAttachmentsCleaningService(),
         .messagesAttachments: MessagesAttachmentsCleaningService(),
         .ideCache: IDECacheCleaningService(),

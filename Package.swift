@@ -62,6 +62,7 @@ let package = Package(
                 "Services/BrowserCacheCleaningService.swift",
                 "Services/SpotifyCacheCleaningService.swift",
                 "Services/SlackCacheCleaningService.swift",
+                "Services/AdobeCleaningService.swift",
                 "Services/MailAttachmentsCleaningService.swift",
                 "Services/MessagesAttachmentsCleaningService.swift",
                 // Serviços para limpeza adicional de espaço
