@@ -87,7 +87,7 @@ class MessagingAppsCleaningService: BaseCleaningService, CleaningService {
     func clean() async -> CleaningResult {
         var bytesRemoved: Int64 = 0
         var filesRemoved = 0
-        var errors: [String] = []
+        let errors: [String] = []
         
         logger.log("Iniciando limpeza de caches de apps de mensagens", level: .info)
         let startTime = Date()

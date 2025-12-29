@@ -26,10 +26,6 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
     case slackCache = "Slack Cache"
     case messagingApps = "Messaging Apps"
     
-    // Arquivos grandes e duplicados
-    case largeFiles = "Large Files"
-    case duplicateFiles = "Duplicate Files"
-    
     // Email e Mensagens
     case mailAttachments = "Mail Attachments"
     case messagesAttachments = "Messages Attachments"
@@ -57,8 +53,6 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .spotifyCache: return "music.note"
         case .slackCache: return "bubble.left.and.bubble.right.fill"
         case .messagingApps: return "bubble.left.and.text.bubble.right.fill"
-        case .largeFiles: return "doc.badge.ellipsis"
-        case .duplicateFiles: return "doc.on.doc.fill"
         case .mailAttachments: return "envelope.fill"
         case .messagesAttachments: return "message.fill"
         }
@@ -85,8 +79,6 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .spotifyCache: return Color(hex: "1DB954")
         case .slackCache: return Color(hex: "4A154B")
         case .messagingApps: return Color(hex: "25D366")
-        case .largeFiles: return Color(hex: "E91E63")
-        case .duplicateFiles: return Color(hex: "9E9E9E")
         case .mailAttachments: return Color(hex: "2196F3")
         case .messagesAttachments: return Color(hex: "34C759")
         }
@@ -140,10 +132,6 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
             return "Clear Slack cache and temp files"
         case .messagingApps:
             return "Clean WhatsApp, Teams, Discord caches"
-        case .largeFiles:
-            return "Find files larger than 500MB"
-        case .duplicateFiles:
-            return "Detect duplicate files to remove"
         case .mailAttachments:
             return "Clean old Mail app attachments"
         case .messagesAttachments:

@@ -18,7 +18,7 @@ class IDECacheCleaningService: BaseCleaningService, CleaningService {
             
             for dir in contents {
                 // Extrair nome do produto e versão (ex: Rider2024.3 -> Rider, 2024.3)
-                if let match = dir.range(of: #"^([A-Za-z]+)(\d+\.\d+)$"#, options: .regularExpression) {
+                if dir.range(of: #"^([A-Za-z]+)(\d+\.\d+)$"#, options: .regularExpression) != nil {
                     let fullPath = (jetBrainsPath as NSString).appendingPathComponent(dir)
                     let product = String(dir[dir.startIndex..<dir.index(dir.startIndex, offsetBy: dir.count - 6)])
                     let version = String(dir.suffix(6))
@@ -31,7 +31,7 @@ class IDECacheCleaningService: BaseCleaningService, CleaningService {
             }
             
             // Para cada produto, manter apenas a versão mais recente
-            for (product, versions) in productVersions {
+            for (_, versions) in productVersions {
                 let sorted = versions.sorted { $0.version > $1.version }
                 if sorted.count > 1 {
                     // Adicionar todas exceto a mais recente

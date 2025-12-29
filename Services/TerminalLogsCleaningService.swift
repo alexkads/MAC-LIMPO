@@ -51,7 +51,7 @@ class TerminalLogsCleaningService: BaseCleaningService, CleaningService {
         let startTime = Date()
         var bytesRemoved: Int64 = 0
         var filesRemoved = 0
-        var errors: [String] = []
+        let errors: [String] = []
         
         logger.log("Iniciando limpeza de logs de terminal", level: .info)
         

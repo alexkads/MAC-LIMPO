@@ -281,7 +281,7 @@ class XcodeCacheCleaningService: BaseCleaningService, CleaningService {
             
             // Usar find para localizar diretórios .build
             let findCommand = "find '\(searchPath)' -type d -name '.build' -maxdepth 5 2>/dev/null"
-            if let result = try? ShellExecutor.shared.execute(findCommand),
+            if let result = ShellExecutor.shared.execute(findCommand),
                !result.output.isEmpty {
                 let buildDirs = result.output.components(separatedBy: "\n").filter { !$0.isEmpty }
                 

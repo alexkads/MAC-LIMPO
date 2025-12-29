@@ -28,7 +28,6 @@ class TrashCleaningService: BaseCleaningService, CleaningService {
         let startTime = Date()
         var bytesRemoved: Int64 = 0
         var filesRemoved = 0
-        var errors: [String] = []
         
         let expandedPath = fileHelper.expandPath(trashPath)
         
@@ -39,7 +38,8 @@ class TrashCleaningService: BaseCleaningService, CleaningService {
         }
         
         // Usa NSWorkspace para esvaziar a lixeira de forma segura
-        await MainActor.run {
+        let cleaningErrors = await MainActor.run { () -> [String] in
+            var errors: [String] = []
             do {
                 let url = URL(fileURLWithPath: expandedPath)
                 let contents = try FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil)
@@ -50,6 +50,7 @@ class TrashCleaningService: BaseCleaningService, CleaningService {
             } catch {
                 errors.append("Failed to empty trash: \(error.localizedDescription)")
             }
+            return errors
         }
         
         let executionTime = Date().timeIntervalSince(startTime)
@@ -58,9 +59,9 @@ class TrashCleaningService: BaseCleaningService, CleaningService {
             category: category,
             bytesRemoved: bytesRemoved,
             filesRemoved: filesRemoved,
-            errors: errors,
+            errors: cleaningErrors,
             executionTime: executionTime,
-            success: errors.isEmpty
+            success: cleaningErrors.isEmpty
         )
     }
 }
