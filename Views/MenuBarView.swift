@@ -44,7 +44,9 @@ class MenuBarViewModel: ObservableObject {
         .playwright: PlaywrightCleaningService(),
         .cargo: CargoCleaningService(),
         .homebrew: HomebrewCleaningService(),
-        .terminalLogs: TerminalLogsCleaningService()
+        .terminalLogs: TerminalLogsCleaningService(),
+        // System deep clean
+        .systemData: SystemDataCleaningService()
     ]
     
     init() {
@@ -91,6 +93,19 @@ class MenuBarViewModel: ObservableObject {
     }
     
     func cleanCategory(_ category: CleaningCategory) {
+        // Se for System Data, verifica permissões primeiro
+        if category == .systemData && !PermissionsHelper.hasFullDiskAccess() {
+            PermissionsHelper.requestFullDiskAccess {
+                // Depois de pedir permissão (ou pular), continua limpeza
+                self.performCleanCategory(category)
+            }
+            return
+        }
+        
+        performCleanCategory(category)
+    }
+    
+    private func performCleanCategory(_ category: CleaningCategory) {
         guard let service = services[category] else { return }
         
         currentCleaningCategory = category

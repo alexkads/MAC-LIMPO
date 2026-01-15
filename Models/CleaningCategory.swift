@@ -31,6 +31,9 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
     case mailAttachments = "Mail Attachments"
     case messagesAttachments = "Messages Attachments"
     
+    // System Deep Clean
+    case systemData = "System Data"
+    
     var id: String { rawValue }
     
     var icon: String {
@@ -57,6 +60,7 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .adobeCache: return "paintbrush.fill"
         case .mailAttachments: return "envelope.fill"
         case .messagesAttachments: return "message.fill"
+        case .systemData: return "internaldrive.fill"
         }
     }
     
@@ -84,6 +88,7 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .adobeCache: return Color(hex: "FF0000")
         case .mailAttachments: return Color(hex: "2196F3")
         case .messagesAttachments: return Color(hex: "34C759")
+        case .systemData: return Color(hex: "8E44AD")
         }
     }
     
@@ -141,6 +146,8 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
             return "Clean old Mail app attachments"
         case .messagesAttachments:
             return "Remove old Messages attachments"
+        case .systemData:
+            return "Deep clean system caches and temporary data"
         }
     }
 }

@@ -38,7 +38,9 @@ let package = Package(
                 "Services/PROBLEMAS_E_CORRECOES.md",
                 "Services/capture_errors.sh",
                 "Services/check_files.sh",
-                "Services/Logger 2.swift"
+                "Services/Logger 2.swift",
+                "analyze_system_data.sh",
+                "deep_analysis.sh"
             ],
             sources: [
                 "MACLIMPOApp.swift",
@@ -73,6 +75,7 @@ let package = Package(
                 "Services/CargoCleaningService.swift",
                 "Services/HomebrewCleaningService.swift",
                 "Services/TerminalLogsCleaningService.swift",
+                "Services/SystemDataCleaningService.swift",
                 // ViewModels
                 "ViewModels/TreemapViewModel.swift",
                 // Views
@@ -87,7 +90,8 @@ let package = Package(
                 // Utilities
                 "Utilities/FileSystemHelper.swift",
                 "Utilities/ShellExecutor.swift",
-                "Utilities/TreemapLayout.swift"
+                "Utilities/TreemapLayout.swift",
+                "Utilities/PermissionsHelper.swift"
             ]
         )
     ]
