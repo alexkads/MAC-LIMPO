@@ -15,6 +15,23 @@ class ShellExecutor {
         task.launchPath = "/bin/zsh"
         task.standardInput = nil
         
+        // Configura ambiente com PATH completo para encontrar tools (brew, docker, etc)
+        var env = ProcessInfo.processInfo.environment
+        let existingPath = env["PATH"] ?? ""
+        let additionalPaths = [
+            "/opt/homebrew/bin",
+            "/opt/homebrew/sbin",
+            "/usr/local/bin",
+            "/usr/bin",
+            "/bin",
+            "/usr/sbin",
+            "/sbin",
+            "\(NSHomeDirectory())/.cargo/bin"
+        ]
+        let newPath = additionalPaths.joined(separator: ":") + ":" + existingPath
+        env["PATH"] = newPath
+        task.environment = env
+        
         do {
             try task.run()
             

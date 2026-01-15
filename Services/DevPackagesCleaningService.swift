@@ -8,7 +8,12 @@ class DevPackagesCleaningService: BaseCleaningService, CleaningService {
         ("pip", "~/Library/Caches/pip"),
         ("Homebrew", "~/Library/Caches/Homebrew"),
         ("Cargo", "~/.cargo/registry/cache"),
-        ("CocoaPods", "~/Library/Caches/CocoaPods")
+        ("CocoaPods", "~/Library/Caches/CocoaPods"),
+        ("Yarn", "~/Library/Caches/Yarn"),
+        ("Gradle", "~/.gradle/caches"),
+        ("Go Build", "~/Library/Caches/go-build"),
+        ("TypeScript", "~/Library/Caches/typescript"),
+        ("Postman Updates", "~/Library/Caches/com.postmanlabs.mac.ShipIt")
     ]
     
     func scan(progress: ((String) -> Void)?) async -> ScanResult {
@@ -61,6 +66,22 @@ class DevPackagesCleaningService: BaseCleaningService, CleaningService {
             let npmResult = shell.execute("npm cache clean --force")
             if npmResult.exitCode != 0 {
                 errors.append("npm cache clean failed: \(npmResult.error)")
+            }
+        }
+
+        // Limpa Yarn cache via comando
+        if shell.checkCommandExists("yarn") {
+            let yarnResult = shell.execute("yarn cache clean")
+            if yarnResult.exitCode != 0 {
+                errors.append("yarn cache clean failed: \(yarnResult.error)")
+            }
+        }
+
+        // Limpa Go cache via comando
+        if shell.checkCommandExists("go") {
+            let goResult = shell.execute("go clean -cache -modcache")
+            if goResult.exitCode != 0 {
+                errors.append("go clean failed: \(goResult.error)")
             }
         }
         
