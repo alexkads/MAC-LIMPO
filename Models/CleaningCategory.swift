@@ -33,6 +33,23 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
     
     // System Deep Clean
     case systemData = "System Data"
+    case varFolders = "Var Folders"
+    case aiTools = "AI Tools"
+    
+    var group: CleaningGroup {
+        switch self {
+        case .docker, .xcodeCache, .devPackages, .ideCache, .androidSDK, .playwright, .cargo, .homebrew, .terminalLogs, .aiTools, .iosSimulators:
+            return .development
+        case .systemData, .tempFiles, .logs, .trash, .varFolders:
+            return .system
+        case .appCache, .browserCache, .adobeCache, .downloads:
+            return .apps
+        case .slackCache, .messagingApps, .mailAttachments, .messagesAttachments:
+            return .communication
+        case .spotifyCache:
+            return .media
+        }
+    }
     
     var id: String { rawValue }
     
@@ -61,6 +78,8 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .mailAttachments: return "envelope.fill"
         case .messagesAttachments: return "message.fill"
         case .systemData: return "internaldrive.fill"
+        case .varFolders: return "folder.fill"
+        case .aiTools: return "brain.head.profile"
         }
     }
     
@@ -89,6 +108,8 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .mailAttachments: return Color(hex: "2196F3")
         case .messagesAttachments: return Color(hex: "34C759")
         case .systemData: return Color(hex: "8E44AD")
+        case .varFolders: return Color(hex: "E67E22")
+        case .aiTools: return Color(hex: "9B59B6")
         }
     }
     
@@ -148,6 +169,30 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
             return "Remove old Messages attachments"
         case .systemData:
             return "Deep clean system caches and temporary data"
+        case .varFolders:
+            return "Clean /var/folders temp caches (Chrome, Metal, clang)"
+        case .aiTools:
+            return "Clear AI tools cache (Claude, Gemini, Cursor, Copilot)"
+        }
+    }
+}
+
+enum CleaningGroup: String, CaseIterable, Identifiable {
+    case development = "Development"
+    case system = "System"
+    case apps = "Apps & Browsers"
+    case communication = "Communication"
+    case media = "Media"
+    
+    var id: String { rawValue }
+    
+    var icon: String {
+        switch self {
+        case .development: return "hammer.fill"
+        case .system: return "gear"
+        case .apps: return "app.badge.fill"
+        case .communication: return "bubble.left.and.bubble.right.fill"
+        case .media: return "play.circle.fill"
         }
     }
 }

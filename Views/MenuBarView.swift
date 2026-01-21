@@ -46,7 +46,10 @@ class MenuBarViewModel: ObservableObject {
         .homebrew: HomebrewCleaningService(),
         .terminalLogs: TerminalLogsCleaningService(),
         // System deep clean
-        .systemData: SystemDataCleaningService()
+        .systemData: SystemDataCleaningService(),
+        // New services for temp files and AI tools
+        .varFolders: VarFoldersCleaningService(),
+        .aiTools: AIToolsCleaningService()
     ]
     
     init() {
@@ -250,17 +253,43 @@ struct MenuBarView: View {
                 ScrollView {
                     VStack(spacing: 20) {
                         // Cleaning Categories (apenas as implementadas)
-                        VStack(spacing: 12) {
-                            ForEach(Array(viewModel.services.keys).sorted(by: { $0.rawValue < $1.rawValue })) { category in
-                                CleaningCategoryCard(
-                                    category: category,
-                                    estimatedSize: viewModel.scanResults[category]?.formattedSize ?? "...",
-                                    isScanning: viewModel.isScanning[category] ?? false,
-                                    scanningStatus: viewModel.scanningStatus[category],
-                                    action: {
-                                        viewModel.cleanCategory(category)
+                        // Cleaning Categories by Group
+                        VStack(spacing: 20) {
+                            ForEach(CleaningGroup.allCases) { group in
+                                let categoriesInGroup = viewModel.services.keys
+                                    .filter { $0.group == group }
+                                    .sorted { $0.rawValue < $1.rawValue }
+                                
+                                if !categoriesInGroup.isEmpty {
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        // Group Header
+                                        HStack {
+                                            Image(systemName: group.icon)
+                                                .font(.system(size: 14))
+                                                .foregroundColor(.secondary)
+                                            Text(group.rawValue)
+                                                .font(.system(size: 13, weight: .semibold))
+                                                .foregroundColor(.secondary)
+                                            Spacer()
+                                        }
+                                        .padding(.horizontal, 4)
+                                        
+                                        // Categories Grid
+                                        VStack(spacing: 12) {
+                                            ForEach(categoriesInGroup) { category in
+                                                CleaningCategoryCard(
+                                                    category: category,
+                                                    estimatedSize: viewModel.scanResults[category]?.formattedSize ?? "...",
+                                                    isScanning: viewModel.isScanning[category] ?? false,
+                                                    scanningStatus: viewModel.scanningStatus[category],
+                                                    action: {
+                                                        viewModel.cleanCategory(category)
+                                                    }
+                                                )
+                                            }
+                                        }
                                     }
-                                )
+                                }
                             }
                         }
                         .padding(.horizontal, 20)

@@ -77,6 +77,9 @@ let package = Package(
                 "Services/HomebrewCleaningService.swift",
                 "Services/TerminalLogsCleaningService.swift",
                 "Services/SystemDataCleaningService.swift",
+                // Novos serviços para /var/folders e AI tools
+                "Services/VarFoldersCleaningService.swift",
+                "Services/AIToolsCleaningService.swift",
                 // ViewModels
                 "ViewModels/TreemapViewModel.swift",
                 // Views
