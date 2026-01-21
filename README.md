@@ -12,32 +12,61 @@
 ## 📸 Screenshots
 
 ### Interface Principal
+
 ![Interface Principal](docs/images/main_interface.png)
-*Interface limpa e moderna no menu bar com cards de categorias de limpeza*
+_Interface limpa e moderna no menu bar com cards de categorias de limpeza_
 
 ### Disk Map - Visualização Treemap
+
 ![Disk Map](docs/images/disk_map.png)
-*Visualização interativa de uso de disco estilo WinDirStat*
+_Visualização interativa de uso de disco estilo WinDirStat_
 
 ### Seleção de Diretórios
+
 ![Seleção de Diretórios](docs/images/directory_selection.png)
-*Cards bonitos com gradientes para seleção de diretórios*
+_Cards bonitos com gradientes para seleção de diretórios_
 
 ## ✨ Funcionalidades
 
-### 🧹 Módulos de Limpeza
+### 🧹 Módulos de Limpeza (22 Categorias)
 
-- **🐳 Docker**: Remove containers parados, imagens não utilizadas, volumes órfãos e build cache
-- **� Xcode Cache**: Limpa DerivedData, Archives, DeviceSupport e projetos antigos
-- **📦 Node Modules**: Remove node_modules de projetos antigos
-- **🍺 Homebrew Cache**: Limpa cache do Homebrew
-- **🔨 IDE Cache**: Remove cache de IDEs JetBrains (Rider, IntelliJ, etc.)
-- **📄 Temp Files**: Remove arquivos temporários e cache de apps
-- **📋 Terminal Logs**: Limpa logs de terminal (zsh, bash)
-- **💬 Messaging Apps**: Remove cache de WhatsApp, Telegram, Slack
-- **🗑️ Trash**: Esvazia a lixeira
-- **� Large Files**: Identifica e remove arquivos grandes (>100MB)
-- **🔄 Duplicate Files**: Encontra e remove arquivos duplicados
+#### 🛠️ Desenvolvimento
+
+- **🐳 Docker**: Remove containers parados, imagens dangling e build cache
+- **📦 Dev Packages**: Limpa caches de npm, pip, brew e cargo
+- **⚙️ Xcode Cache**: Limpa DerivedData, Archives, DeviceSupport e previews
+- **📱 iOS Simulators**: Remove simuladores antigos (não usados há 90+ dias)
+- **💻 IDE Cache**: Limpa caches de JetBrains (Rider, IntelliJ), VS Code, Cursor, Zed, Sublime
+- **🤖 Android SDK**: Limpa System Images, AVDs, Gradle cache e build cache
+- **🎭 Playwright**: Remove cache de browsers do Playwright
+- **🦀 Cargo/Rust**: Limpa cache de build e registry do Cargo
+- **🍺 Homebrew**: Limpa cache de downloads do Homebrew
+- **📋 Terminal Logs**: Remove logs antigos de terminal (zsh, bash)
+
+#### 💻 Sistema
+
+- **📄 Temp Files**: Remove arquivos temporários e caches do sistema
+- **📜 Logs**: Limpa logs antigos do sistema e apps (30+ dias)
+- **🗂️ App Cache**: Remove cache de aplicações
+- **📥 Old Downloads**: Remove downloads com mais de 30 dias
+- **🗑️ Trash Bin**: Esvazia a lixeira
+
+#### 🌐 Navegadores e Apps
+
+- **🌍 Browser Cache**: Limpa caches do Safari, Chrome, Firefox, Edge, Brave e Arc
+- **🎵 Spotify Cache**: Remove cache offline do Spotify
+- **💼 Slack Cache**: Limpa cache e arquivos temporários do Slack
+- **💬 Messaging Apps**: Remove cache de WhatsApp, Teams e Discord
+- **🎨 Adobe Cache**: Limpa cache e arquivos de mídia de apps Adobe
+
+#### ✉️ Email e Mensagens
+
+- **📧 Mail Attachments**: Limpa anexos antigos do app Mail
+- **💬 Messages Attachments**: Remove anexos antigos do Messages
+
+#### 🔧 System Deep Clean
+
+- **💾 System Data**: Limpeza profunda de caches do sistema, Safari, dados de desenvolvimento e Time Machine snapshots
 
 ### 🗺️ Disk Map - Visualização Treemap
 
@@ -83,17 +112,20 @@
 ### Compilação Manual
 
 1. Clone este repositório:
+
 ```bash
 git clone <repository_url>
 cd MAC-LIMPO
 ```
 
 2. Compile e gere o instalador:
+
 ```bash
 ./create_installer.sh
 ```
 
 3. Ou compile diretamente:
+
 ```bash
 swift build -c release
 swift run
@@ -102,12 +134,14 @@ swift run
 ### Uso
 
 #### Limpeza de Disco
+
 1. Clique no ícone de lixeira no menu bar
 2. Visualize as estimativas de espaço para cada categoria
 3. Clique em qualquer card para limpar aquela categoria
 4. Ou use "Scan All" para escanear todas as categorias
 
 #### Disk Map
+
 1. Clique no ícone de grid no menu bar
 2. Selecione um diretório para escanear (Home, Desktop, Documents, etc.)
 3. Aguarde o scan paralelo (muito rápido!)
@@ -127,7 +161,7 @@ MAC-LIMPO/
 ├── Services/
 │   ├── CleaningService.swift   # Protocolo base
 │   ├── DiskMapService.swift    # Scan paralelo de diretórios
-│   └── [15+ cleaning services]
+│   └── [22 cleaning services]  # Um para cada categoria
 ├── ViewModels/
 │   ├── MenuBarViewModel.swift
 │   └── TreemapViewModel.swift  # Estado do treemap
@@ -168,8 +202,9 @@ MAC-LIMPO/
 ## 🎯 Roadmap
 
 ### ✅ Implementado (v1.0)
+
 - [x] Interface moderna no menu bar
-- [x] 11+ categorias de limpeza
+- [x] 22 categorias de limpeza
 - [x] Visualização de espaço em disco
 - [x] Resultados detalhados de limpeza
 - [x] Disk Map com treemap interativo
@@ -181,6 +216,7 @@ MAC-LIMPO/
 - [x] Botão voltar para navegação
 
 ### 🚧 Em Desenvolvimento (v1.1)
+
 - [ ] Agendamento automático de limpeza
 - [ ] Notificações quando espaço está baixo
 - [ ] Exportação de relatórios de limpeza
@@ -188,6 +224,7 @@ MAC-LIMPO/
 - [ ] Preferências avançadas
 
 ### 📋 Planejado (v2.0)
+
 - [ ] Exclusão de diretórios específicos da limpeza
 - [ ] Análise de duplicatas mais inteligente
 - [ ] Sugestões automáticas de limpeza
@@ -201,6 +238,7 @@ MAC-LIMPO/
 - [ ] Cache de scans anteriores
 
 ### 💡 Ideias Futuras
+
 - [ ] Widget para Notification Center
 - [ ] Integração com iCloud Drive
 - [ ] Análise de uso de rede
@@ -221,6 +259,7 @@ Contribuições são muito bem-vindas! Este projeto está aberto para melhorias,
 ### Como Contribuir
 
 1. **Fork o projeto**
+
    ```bash
    # Clique em "Fork" no GitHub
    git clone https://github.com/seu-usuario/MAC-LIMPO.git
@@ -228,6 +267,7 @@ Contribuições são muito bem-vindas! Este projeto está aberto para melhorias,
    ```
 
 2. **Crie uma branch para sua feature**
+
    ```bash
    git checkout -b feature/MinhaNovaFeature
    # ou
@@ -240,12 +280,14 @@ Contribuições são muito bem-vindas! Este projeto está aberto para melhorias,
    - Mantenha o código limpo e legível
 
 4. **Teste suas mudanças**
+
    ```bash
    swift build
    swift run
    ```
 
 5. **Commit suas mudanças**
+
    ```bash
    git add .
    git commit -m "feat: adiciona nova funcionalidade X"
@@ -254,6 +296,7 @@ Contribuições são muito bem-vindas! Este projeto está aberto para melhorias,
    ```
 
 6. **Push para sua branch**
+
    ```bash
    git push origin feature/MinhaNovaFeature
    ```
@@ -274,24 +317,28 @@ Contribuições são muito bem-vindas! Este projeto está aberto para melhorias,
 ### Tipos de Contribuição
 
 #### 🐛 Reportar Bugs
+
 - Use o template de issue para bugs
 - Descreva o comportamento esperado vs atual
 - Inclua passos para reproduzir
 - Adicione screenshots se possível
 
 #### ✨ Sugerir Features
+
 - Use o template de issue para features
 - Explique o problema que resolve
 - Descreva a solução proposta
 - Considere alternativas
 
 #### 📝 Melhorar Documentação
+
 - Corrija erros de digitação
 - Adicione exemplos
 - Melhore explicações
 - Traduza para outros idiomas
 
 #### 🧹 Adicionar Novos Serviços de Limpeza
+
 1. Crie um novo arquivo em `Services/`
 2. Implemente o protocolo `CleaningService`
 3. Adicione a categoria em `CleaningCategory.swift`

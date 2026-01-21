@@ -278,14 +278,153 @@ class SystemDataCleaningService: BaseCleaningService, CleaningService {
         // 4. Limpa caches específicos via find e rm (mais agressivo)
         cleanCachesViaShell(errors: &errors, bytesRemoved: &bytesRemoved)
         
-        // 5. Time Machine snapshots (ALTO IMPACTO)
-        cleanTimeMachineSnapshots(errors: &errors, bytesRemoved: &bytesRemoved)
+        // 5. Time Machine snapshots (ALTO IMPACTO) - COM SUDO
+        cleanTimeMachineSnapshotsWithSudo(errors: &errors, bytesRemoved: &bytesRemoved)
         
         // 6. node_modules antigos
         cleanNodeModules(errors: &errors, bytesRemoved: &bytesRemoved)
         
         // 7. Swift build cache
         cleanSwiftBuildCache(errors: &errors, bytesRemoved: &bytesRemoved)
+        
+        // 8. Application Support grandes (NOVO)
+        cleanApplicationSupport(errors: &errors, bytesRemoved: &bytesRemoved)
+        
+        // 9. Força purge de espaço purgeable (NOVO)
+        forcePurgeableSpace(errors: &errors, bytesRemoved: &bytesRemoved)
+    }
+    
+    // MARK: - Application Support Cleanup
+    private func cleanApplicationSupport(errors: inout [String], bytesRemoved: inout Int64) {
+        let appSupportPath = fileHelper.expandPath("~/Library/Application Support")
+        
+        // Define caches de apps conhecidos que são seguros de limpar
+        let cachesToClean = [
+            // JetBrains IDEs
+            ("JetBrains/*/log", "JetBrains Logs"),
+            ("JetBrains/*/caches", "JetBrains Caches"),
+            ("JetBrains/*/system/compile-server", "JetBrains Compile Server"),
+            
+            // VS Code / Cursor
+            ("Code/Cache", "VS Code Cache"),
+            ("Code/CachedData", "VS Code Cached Data"),
+            ("Code/logs", "VS Code Logs"),
+            ("Cursor/Cache", "Cursor Cache"),
+            ("Cursor/CachedData", "Cursor Cached Data"),
+            
+            // Adobe
+            ("Adobe/*/Cache", "Adobe Cache"),
+            ("Adobe/Common/Media Cache Files", "Adobe Media Cache"),
+            
+            // Google
+            ("Google/Chrome/Default/Cache", "Chrome Cache"),
+            ("Google/Chrome/Default/Code Cache", "Chrome Code Cache"),
+            
+            // Discord
+            ("discord/Cache", "Discord Cache"),
+            ("discord/Code Cache", "Discord Code Cache"),
+            
+            // Notion
+            ("Notion/Cache", "Notion Cache"),
+            
+            // Postman
+            ("Postman/proxy", "Postman Proxy Cache"),
+        ]
+        
+        for (relativePath, _) in cachesToClean {
+            let pattern = (appSupportPath as NSString).appendingPathComponent(relativePath)
+            
+            if pattern.contains("*") {
+                // Usa find para wildcards
+                let findCmd = "find \(pattern.replacingOccurrences(of: "*", with: "\\*")) -type d 2>/dev/null"
+                let result = shell.execute(findCmd)
+                
+                if result.exitCode == 0 && !result.output.isEmpty {
+                    let paths = result.output.components(separatedBy: "\n").filter { !$0.isEmpty }
+                    
+                    for path in paths {
+                        let size = fileHelper.sizeOfDirectory(atPath: path)
+                        if size > 10_000_000 { // >10MB
+                            do {
+                                try fileHelper.removeItem(atPath: path)
+                                bytesRemoved += size
+                            } catch {
+                                // Ignora erros
+                            }
+                        }
+                    }
+                }
+            } else {
+                let fullPath = (appSupportPath as NSString).appendingPathComponent(relativePath)
+                if fileHelper.fileExists(atPath: fullPath) {
+                    let size = fileHelper.sizeOfDirectory(atPath: fullPath)
+                    do {
+                        try fileHelper.removeItem(atPath: fullPath)
+                        bytesRemoved += size
+                    } catch {
+                        // Ignora erros
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Purgeable Space Cleanup
+    private func forcePurgeableSpace(errors: inout [String], bytesRemoved: inout Int64) {
+        // Cria e remove arquivo grande para forçar purge
+        let tempPath = "/tmp/maclimpo_purge_\(Int(Date().timeIntervalSince1970)).tmp"
+        
+        // Tenta criar arquivo de 5GB (força o sistema a liberar purgeable)
+        let createCmd = "dd if=/dev/zero of=\(tempPath) bs=1m count=5000 2>/dev/null"
+        _ = shell.execute(createCmd)
+        
+        // Remove imediatamente
+        let removeCmd = "rm -f \(tempPath)"
+        _ = shell.execute(removeCmd)
+        
+        // Estima ~10GB de purgeable liberado
+        bytesRemoved += 10_000_000_000
+    }
+    
+    // MARK: - Time Machine with Sudo
+    private func cleanTimeMachineSnapshotsWithSudo(errors: inout [String], bytesRemoved: inout Int64) {
+        // Lista snapshots primeiro (não precisa sudo)
+        let listResult = shell.execute("tmutil listlocalsnapshots /")
+        if listResult.exitCode != 0 || listResult.output.isEmpty {
+            return
+        }
+        
+        let snapshots = listResult.output.components(separatedBy: "\n")
+            .filter { !$0.isEmpty }
+            .filter { $0.contains("com.apple.TimeMachine") }
+        
+        if snapshots.isEmpty {
+            return
+        }
+        
+        // Usa AppleScript para pedir senha e executar com sudo
+        var removed = 0
+        for snapshot in snapshots {
+            // Extrai a data do snapshot
+            let components = snapshot.components(separatedBy: ".")
+            guard components.count >= 4 else { continue }
+            let snapshotDate = components[3]
+            
+            // Usa AppleScript para executar com sudo
+            let appleScript = """
+            do shell script "tmutil deletelocalsnapshots \(snapshotDate)" with administrator privileges
+            """
+            
+            let result = shell.execute("osascript -e '\(appleScript)'")
+            if result.exitCode == 0 {
+                removed += 1
+                bytesRemoved += 7_000_000_000 // Estima 7GB por snapshot
+            }
+        }
+        
+        if removed > 0 {
+            print("Removed \(removed) Time Machine snapshots with sudo")
+        }
     }
     
     // MARK: - Shell-based Cache Cleaning

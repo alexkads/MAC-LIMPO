@@ -40,7 +40,8 @@ let package = Package(
                 "Services/check_files.sh",
                 "Services/Logger 2.swift",
                 "analyze_system_data.sh",
-                "deep_analysis.sh"
+                "deep_analysis.sh",
+                "deep_clean.sh"
             ],
             sources: [
                 "MACLIMPOApp.swift",

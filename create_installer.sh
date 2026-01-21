@@ -78,19 +78,81 @@ xattr -cr "$APP_BUNDLE"
 
 codesign --force --deep --sign - "$APP_BUNDLE"
 
-# 7. Create DMG
-echo "💿 Creating DMG..."
+# 8. Create Customized DMG
+echo "💿 Creating Customized DMG..."
 rm -f "$DMG_NAME"
-mkdir -p dmg_content
-cp -r "$APP_BUNDLE" dmg_content/
-ln -s /Applications dmg_content/Applications
+rm -f "pack.temp.dmg"
+rm -rf "dmg_staging"
 
-hdiutil create -volname "$APP_NAME" -srcfolder dmg_content -ov -format UDZO "$DMG_NAME"
+# Prepare staging directory
+echo "📂 Preparing staging area..."
+mkdir -p "dmg_staging"
+mkdir -p "dmg_staging/.background"
 
-# 8. Cleanup
-echo "🧹 Cleaning up..."
-rm -rf dmg_content
-# Optional: keep the .app for testing
-# rm -rf "$APP_BUNDLE"
+# Copy App
+cp -r "$APP_BUNDLE" "dmg_staging/"
+
+# Copy Background
+BACKGROUND_FILE="Design/Installer/dmg-background.png"
+if [ -f "$BACKGROUND_FILE" ]; then
+    echo "🖼️  Adding background image..."
+    cp "$BACKGROUND_FILE" "dmg_staging/.background/background.png"
+else
+    echo "⚠️ Background image not found at $BACKGROUND_FILE"
+fi
+
+# Link Applications
+ln -s /Applications "dmg_staging/Applications"
+
+# Create temporary writable DMG from staging
+echo "📀 Creating temporary DMG..."
+hdiutil create -srcfolder "dmg_staging" -volname "$APP_NAME" -fs HFS+ -fsargs "-c c=64,a=16,e=16" -format UDRW -size 200m pack.temp.dmg
+
+# Mount it
+echo "Mounting DMG..."
+device=$(hdiutil attach -readwrite -noverify -noautoopen "pack.temp.dmg" | grep -E '^/dev/' | sed 1q | awk '{print $1}')
+sleep 2
+
+# Run AppleScript to style the window
+echo "🎨 Styling DMG window..."
+osascript <<EOF
+tell application "Finder"
+    tell disk "$APP_NAME"
+        open
+        set current view of container window to icon view
+        set toolbar visible of container window to false
+        set statusbar visible of container window to false
+        set the bounds of container window to {400, 100, 940, 500}
+        set theViewOptions to the icon view options of container window
+        set arrangement of theViewOptions to not arranged
+        set icon size of theViewOptions to 100
+        
+        -- Set background
+        try
+            set background picture of theViewOptions to file "background.png" of folder ".background"
+        on error
+            display dialog "Could not set background" buttons {"OK"} default button 1
+        end try
+        
+        -- Position items
+        set position of item "$APP_NAME" of container window to {160, 200}
+        set position of item "Applications" of container window to {400, 200}
+        
+        update without registering applications
+        delay 2
+        close
+    end tell
+end tell
+EOF
+
+# Sync and Detach
+sync
+hdiutil detach "$device"
+
+# Convert to compressed DMG
+echo "📦 Compressing DMG..."
+hdiutil convert "pack.temp.dmg" -format UDZO -imagekey zlib-level=9 -o "$DMG_NAME"
+rm -f "pack.temp.dmg"
+rm -rf "dmg_staging"
 
 echo "✅ Installer created successfully: $DMG_NAME"
