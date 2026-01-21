@@ -36,7 +36,7 @@ struct TreemapLayout {
         return squarify(nodes: validNodes, totalSize: totalSize, in: rect, depth: depth, inset: inset)
     }
     
-    // Algoritmo squarified treemap (simplificado - slice/dice)
+    // Algoritmo squarified treemap (melhorado - preenche todo espaço)
     private static func squarify(
         nodes: [FileNode],
         totalSize: Int64,
@@ -44,52 +44,52 @@ struct TreemapLayout {
         depth: Int,
         inset: CGFloat
     ) -> [TreemapRect] {
-        var result: [TreemapRect] = []
-        var remaining = nodes
-        var currentRect = rect
+        guard !nodes.isEmpty, totalSize > 0 else { return [] }
         
-        while !remaining.isEmpty {
-            // Determina orientação (horizontal ou vertical) baseado no aspect ratio
-            let isHorizontal = currentRect.width >= currentRect.height
+        var result: [TreemapRect] = []
+        
+        // Determina orientação baseada no aspect ratio
+        let isHorizontal = rect.width >= rect.height
+        
+        // Calcula proporções normalizadas
+        var currentPos: CGFloat = 0
+        let totalDimension = isHorizontal ? rect.width : rect.height
+        
+        for (index, node) in nodes.enumerated() {
+            let ratio = CGFloat(node.totalSize) / CGFloat(totalSize)
             
-            // Pega o próximo nó
-            let node = remaining.removeFirst()
-            let ratio = Double(node.totalSize) / Double(totalSize)
+            // Para o último item, usa todo o espaço restante (evita gaps)
+            let dimension: CGFloat
+            if index == nodes.count - 1 {
+                dimension = totalDimension - currentPos
+            } else {
+                dimension = totalDimension * ratio
+            }
+            
+            // Garante dimensão mínima
+            guard dimension > 0 else { continue }
             
             let nodeRect: CGRect
             if isHorizontal {
-                let width = currentRect.width * ratio
                 nodeRect = CGRect(
-                    x: currentRect.minX,
-                    y: currentRect.minY,
-                    width: width,
-                    height: currentRect.height
-                )
-                currentRect = CGRect(
-                    x: currentRect.minX + width,
-                    y: currentRect.minY,
-                    width: currentRect.width - width,
-                    height: currentRect.height
+                    x: rect.minX + currentPos,
+                    y: rect.minY,
+                    width: dimension,
+                    height: rect.height
                 )
             } else {
-                let height = currentRect.height * ratio
                 nodeRect = CGRect(
-                    x: currentRect.minX,
-                    y: currentRect.minY,
-                    width: currentRect.width,
-                    height: height
-                )
-                currentRect = CGRect(
-                    x: currentRect.minX,
-                    y: currentRect.minY + height,
-                    width: currentRect.width,
-                    height: currentRect.height - height
+                    x: rect.minX,
+                    y: rect.minY + currentPos,
+                    width: rect.width,
+                    height: dimension
                 )
             }
             
+            currentPos += dimension
+            
             // Aplica inset para separação visual
             let finalFrame = nodeRect.insetBy(dx: inset, dy: inset)
-            // Evita frames negativos ou zero se o inset for muito grande para o bloco
             if finalFrame.width > 0 && finalFrame.height > 0 {
                 result.append(TreemapRect(node: node, frame: finalFrame, depth: depth))
             }

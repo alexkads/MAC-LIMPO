@@ -231,21 +231,24 @@ struct TreemapView: View {
                 depth: 0
             )
             
-            Canvas { context, size in
-                for rect in rects {
-                    drawRect(rect, in: context)
+            ZStack {
+                // Background to prevent black areas
+                Color(NSColor.windowBackgroundColor)
+                
+                Canvas { context, size in
+                    for rect in rects {
+                        drawRect(rect, in: context)
+                    }
                 }
             }
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { value in
-                        // Find hovered node
                         if let rect = rects.first(where: { $0.frame.contains(value.location) }) {
                             viewModel.hoveredNode = rect.node
                         }
                     }
                     .onEnded { value in
-                        // Find clicked node
                         if let rect = rects.first(where: { $0.frame.contains(value.location) }) {
                             if rect.node.isDirectory && !rect.node.children.isEmpty {
                                 viewModel.navigateToNode(rect.node)
