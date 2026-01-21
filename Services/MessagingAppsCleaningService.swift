@@ -16,7 +16,8 @@ class MessagingAppsCleaningService: BaseCleaningService, CleaningService {
             "~/Library/Application Support/Microsoft/Teams/Cache",
             "~/Library/Application Support/Microsoft/Teams/GPUCache",
             "~/Library/Application Support/Microsoft/Teams/Code Cache",
-            "~/Library/Application Support/Microsoft/Teams/Service Worker/CacheStorage"
+            "~/Library/Application Support/Microsoft/Teams/Service Worker/CacheStorage",
+            "~/Library/Group Containers/UBF8T346G9.com.microsoft.teams/Library/Caches"
         ]),
         ("Slack", [
             "~/Library/Application Support/Slack/Cache",

@@ -20,6 +20,10 @@ class SystemDataCleaningService: BaseCleaningService, CleaningService {
         ("Photos Cache", "~/Library/Caches/com.apple.photolibraryd", false),
         ("Photos Analysis", "~/Library/Caches/CloudKit/com.apple.photos.cloud", false),
         ("Photos Thumbnail", "~/Library/Caches/com.apple.Photos", false),
+        ("CoreSymbolication Cache", "~/Library/Caches/com.apple.coresymbolicationd", false),
+        ("Media Analysis Cache", "~/Library/Containers/com.apple.mediaanalysisd/Data/Library/Caches", false),
+        ("Apple Maps Cache", "~/Library/Containers/com.apple.geod/Data/Library/Caches", false),
+        ("Software Update Cache", "~/Library/Group Containers/group.com.apple.SoftwareUpdate", false),
         
         // === CONTAINERS DE APPS (GRANDE POTENCIAL) ===
         ("App Container Caches", "~/Library/Containers/*/Data/Library/Caches", false),
@@ -49,6 +53,19 @@ class SystemDataCleaningService: BaseCleaningService, CleaningService {
         
         // === MENSAGENS ===
         ("Messages Attachments Tmp", "~/Library/Messages/Attachments/*/tmp", false),
+        
+        ("Background Downloads", "~/Library/Caches/com.apple.nsurlsessiond", false),
+        
+        // === GLOBAL USER CACHE (UNIX/LINUX STYLE) ===
+        ("User Global Cache (.cache)", "~/.cache", false),
+        
+        // === SYSTEM GLOBAL (Careful - Scan mainly) ===
+        ("System Global Caches", "/Library/Caches", false),
+        ("System Global Logs", "/Library/Logs", false),
+        
+        // === LEGACY & MISC ===
+        ("Speech/Dictation", "~/Library/Speech", false),
+        ("Dictionaries", "~/Library/Dictionaries", false),
         
         // === FONT E SISTEMA ===
         ("Font Caches", "~/Library/Caches/com.apple.FontRegistry", false),

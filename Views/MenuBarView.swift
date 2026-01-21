@@ -49,7 +49,10 @@ class MenuBarViewModel: ObservableObject {
         .systemData: SystemDataCleaningService(),
         // New services for temp files and AI tools
         .varFolders: VarFoldersCleaningService(),
-        .aiTools: AIToolsCleaningService()
+        .aiTools: AIToolsCleaningService(),
+        // Niche services
+        .creativeApps: CreativeAppsCleaningService(),
+        .podcasts: PodcastsCleaningService()
     ]
     
     init() {

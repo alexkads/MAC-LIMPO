@@ -80,6 +80,8 @@ let package = Package(
                 // Novos serviços para /var/folders e AI tools
                 "Services/VarFoldersCleaningService.swift",
                 "Services/AIToolsCleaningService.swift",
+                "Services/CreativeAppsCleaningService.swift",
+                "Services/PodcastsCleaningService.swift",
                 // ViewModels
                 "ViewModels/TreemapViewModel.swift",
                 // Views

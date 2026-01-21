@@ -35,6 +35,8 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
     case systemData = "System Data"
     case varFolders = "Var Folders"
     case aiTools = "AI Tools"
+    case creativeApps = "Creative Apps"
+    case podcasts = "Podcasts"
     
     var group: CleaningGroup {
         switch self {
@@ -42,11 +44,11 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
             return .development
         case .systemData, .tempFiles, .logs, .trash, .varFolders:
             return .system
-        case .appCache, .browserCache, .adobeCache, .downloads:
+        case .appCache, .browserCache, .adobeCache, .downloads, .creativeApps:
             return .apps
         case .slackCache, .messagingApps, .mailAttachments, .messagesAttachments:
             return .communication
-        case .spotifyCache:
+        case .spotifyCache, .podcasts:
             return .media
         }
     }
@@ -80,6 +82,8 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .systemData: return "internaldrive.fill"
         case .varFolders: return "folder.fill"
         case .aiTools: return "brain.head.profile"
+        case .creativeApps: return "paintpalette.fill"
+        case .podcasts: return "mic.fill"
         }
     }
     
@@ -110,6 +114,8 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .systemData: return Color(hex: "8E44AD")
         case .varFolders: return Color(hex: "E67E22")
         case .aiTools: return Color(hex: "9B59B6")
+        case .creativeApps: return Color(hex: "E91E63")
+        case .podcasts: return Color(hex: "673AB7")
         }
     }
     
@@ -173,6 +179,10 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
             return "Clean /var/folders temp caches (Chrome, Metal, clang)"
         case .aiTools:
             return "Clear AI tools cache (Claude, Gemini, Cursor, Copilot)"
+        case .creativeApps:
+            return "Clean Canva, Affinity, Figma caches"
+        case .podcasts:
+            return "Remove downloaded episodes and caches"
         }
     }
 }
