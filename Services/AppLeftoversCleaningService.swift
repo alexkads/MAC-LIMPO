@@ -18,7 +18,10 @@ class AppLeftoversCleaningService: BaseCleaningService, CleaningService {
         ("Postman", "~/Library/Application Support/Postman", "/Applications/Postman.app"),
         ("Docker", "~/Library/Application Support/Docker Desktop", "/Applications/Docker.app"),
         // Added Android SDK Root (big 16GB leftover)
-        ("Android SDK", "~/Library/Android", "/Applications/Android Studio.app")
+        ("Android SDK", "~/Library/Android", "/Applications/Android Studio.app"),
+        // Additional Leftovers found
+        ("Visual Studio", "~/Library/Application Support/VisualStudio", "/Applications/Visual Studio.app"),
+        ("Zed", "~/Library/Application Support/Zed", "/Applications/Zed.app")
     ]
     
     // Map of JetBrains folder prefixes to their Application names
