@@ -53,7 +53,9 @@ class MenuBarViewModel: ObservableObject {
         // Niche services
         .creativeApps: CreativeAppsCleaningService(),
         .podcasts: PodcastsCleaningService(),
-        .appLeftovers: AppLeftoversCleaningService()
+        .appLeftovers: AppLeftoversCleaningService(),
+        // New Project Cleaner
+        .development: ProjectCleaningService()
     ]
     
     init() {

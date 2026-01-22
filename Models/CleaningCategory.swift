@@ -38,6 +38,7 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
     case creativeApps = "Creative Apps"
     case podcasts = "Podcasts"
     case appLeftovers = "App Leftovers"
+    case development = "Project Builds"
     
     var group: CleaningGroup {
         switch self {
@@ -45,6 +46,8 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
             return .development
         case .systemData, .tempFiles, .logs, .trash, .varFolders, .appLeftovers:
             return .system
+        case .development:
+            return .development
         case .appCache, .browserCache, .adobeCache, .downloads, .creativeApps:
             return .apps
         case .slackCache, .messagingApps, .mailAttachments, .messagesAttachments:
@@ -86,6 +89,7 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .creativeApps: return "paintpalette.fill"
         case .podcasts: return "mic.fill"
         case .appLeftovers: return "exclamationmark.triangle.fill"
+        case .development: return "hammer.fill"
         }
     }
     
@@ -119,6 +123,7 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .creativeApps: return Color(hex: "E91E63")
         case .podcasts: return Color(hex: "673AB7")
         case .appLeftovers: return Color(hex: "C0392B") // Red for leftovers
+        case .development: return Color(hex: "E67E22")
         }
     }
     
@@ -188,6 +193,8 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
             return "Remove downloaded episodes and caches"
         case .appLeftovers:
             return "Remove data from uninstalled apps (JetBrains, Trae, etc)"
+        case .development:
+            return "Clean node_modules, Rust targets, and build artifacts"
         }
     }
 }
