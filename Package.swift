@@ -82,6 +82,7 @@ let package = Package(
                 "Services/AIToolsCleaningService.swift",
                 "Services/CreativeAppsCleaningService.swift",
                 "Services/PodcastsCleaningService.swift",
+                "Services/AppLeftoversCleaningService.swift",
                 // ViewModels
                 "ViewModels/TreemapViewModel.swift",
                 // Views

@@ -37,12 +37,13 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
     case aiTools = "AI Tools"
     case creativeApps = "Creative Apps"
     case podcasts = "Podcasts"
+    case appLeftovers = "App Leftovers"
     
     var group: CleaningGroup {
         switch self {
         case .docker, .xcodeCache, .devPackages, .ideCache, .androidSDK, .playwright, .cargo, .homebrew, .terminalLogs, .aiTools, .iosSimulators:
             return .development
-        case .systemData, .tempFiles, .logs, .trash, .varFolders:
+        case .systemData, .tempFiles, .logs, .trash, .varFolders, .appLeftovers:
             return .system
         case .appCache, .browserCache, .adobeCache, .downloads, .creativeApps:
             return .apps
@@ -84,6 +85,7 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .aiTools: return "brain.head.profile"
         case .creativeApps: return "paintpalette.fill"
         case .podcasts: return "mic.fill"
+        case .appLeftovers: return "exclamationmark.triangle.fill"
         }
     }
     
@@ -116,6 +118,7 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .aiTools: return Color(hex: "9B59B6")
         case .creativeApps: return Color(hex: "E91E63")
         case .podcasts: return Color(hex: "673AB7")
+        case .appLeftovers: return Color(hex: "C0392B") // Red for leftovers
         }
     }
     
@@ -183,6 +186,8 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
             return "Clean Canva, Affinity, Figma caches"
         case .podcasts:
             return "Remove downloaded episodes and caches"
+        case .appLeftovers:
+            return "Remove data from uninstalled apps (JetBrains, Trae, etc)"
         }
     }
 }
