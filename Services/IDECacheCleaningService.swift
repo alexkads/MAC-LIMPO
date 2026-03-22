@@ -94,7 +94,13 @@ class IDECacheCleaningService: BaseCleaningService, CleaningService {
         "~/Library/Caches/com.sublimetext.4",
         // Atom (se ainda existir)
         "~/Library/Application Support/Atom/Cache",
-        "~/.atom/cache"
+        "~/.atom/cache",
+        // Warp terminal - pasta de autoupdate pode ficar grande
+        "~/Library/Application Support/dev.warp.Warp-Stable/autoupdate",
+        "~/Library/Caches/dev.warp.Warp-Stable",
+        // Lapce editor
+        "~/Library/Application Support/dev.lapce.Lapce-Stable/logs",
+        "~/Library/Caches/dev.lapce.Lapce-Stable"
     ]
     
     func scan(progress: ((String) -> Void)?) async -> ScanResult {

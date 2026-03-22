@@ -63,6 +63,14 @@ class SystemDataCleaningService: BaseCleaningService, CleaningService {
         ("System Global Caches", "/Library/Caches", false),
         ("System Global Logs", "/Library/Logs", false),
         
+        // === APPLE AI & SYSTEM CACHES (ALTO IMPACTO) ===
+        ("Siri TTS Cache", "~/Library/Caches/SiriTTS", false),
+        ("Call Intelligence Cache", "~/Library/Caches/com.apple.callintelligenced", false),
+        ("GeoServices Cache", "~/Library/Caches/GeoServices", false),
+        ("Apple Parse Cache", "~/Library/Caches/com.apple.parsecd", false),
+        ("Apple Help Cache", "~/Library/Caches/com.apple.helpd", false),
+        ("App Store Cache", "~/Library/Caches/com.apple.appstoreagent", false),
+        
         // === LEGACY & MISC ===
         ("Speech/Dictation", "~/Library/Speech", false),
         ("Dictionaries", "~/Library/Dictionaries", false),

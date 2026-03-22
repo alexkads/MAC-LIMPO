@@ -84,6 +84,12 @@ let package = Package(
                 "Services/PodcastsCleaningService.swift",
                 "Services/AppLeftoversCleaningService.swift",
                 "Services/ProjectCleaningService.swift",
+                // Novos serviços: pnpm, Go, API Tools, Notion, Cypress
+                "Services/PnpmCleaningService.swift",
+                "Services/GoCleaningService.swift",
+                "Services/DevApiToolsCleaningService.swift",
+                "Services/NotionCleaningService.swift",
+                "Services/CypressCleaningService.swift",
                 // ViewModels
                 "ViewModels/TreemapViewModel.swift",
                 // Views

@@ -40,15 +40,22 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
     case appLeftovers = "App Leftovers"
     case development = "Project Builds"
     
+    // Novos serviços
+    case pnpm = "pnpm Store"
+    case goCache = "Go Cache"
+    case devApiTools = "API Tools"
+    case notionCache = "Notion Cache"
+    case cypress = "Cypress"
+    
     var group: CleaningGroup {
         switch self {
-        case .docker, .xcodeCache, .devPackages, .ideCache, .androidSDK, .playwright, .cargo, .homebrew, .terminalLogs, .aiTools, .iosSimulators:
+        case .docker, .xcodeCache, .devPackages, .ideCache, .androidSDK, .playwright, .cargo, .homebrew, .terminalLogs, .aiTools, .iosSimulators, .pnpm, .goCache, .devApiTools, .cypress:
             return .development
         case .systemData, .tempFiles, .logs, .trash, .varFolders, .appLeftovers:
             return .system
         case .development:
             return .development
-        case .appCache, .browserCache, .adobeCache, .downloads, .creativeApps:
+        case .appCache, .browserCache, .adobeCache, .downloads, .creativeApps, .notionCache:
             return .apps
         case .slackCache, .messagingApps, .mailAttachments, .messagesAttachments:
             return .communication
@@ -90,6 +97,11 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .podcasts: return "mic.fill"
         case .appLeftovers: return "exclamationmark.triangle.fill"
         case .development: return "hammer.fill"
+        case .pnpm: return "shippingbox.and.arrow.backward.fill"
+        case .goCache: return "hare.fill"
+        case .devApiTools: return "network.badge.shield.half.filled"
+        case .notionCache: return "doc.richtext.fill"
+        case .cypress: return "checkmark.shield.fill"
         }
     }
     
@@ -124,6 +136,11 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .podcasts: return Color(hex: "673AB7")
         case .appLeftovers: return Color(hex: "C0392B") // Red for leftovers
         case .development: return Color(hex: "E67E22")
+        case .pnpm: return Color(hex: "F9A825") // pnpm orange/gold
+        case .goCache: return Color(hex: "00ACD7") // Go cyan
+        case .devApiTools: return Color(hex: "FF6C37") // Postman orange
+        case .notionCache: return Color(hex: "37352F") // Notion dark
+        case .cypress: return Color(hex: "04C38E") // Cypress teal
         }
     }
     
@@ -195,6 +212,16 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
             return "Remove data from uninstalled apps (JetBrains, Trae, etc)"
         case .development:
             return "Clean node_modules, Rust targets, and build artifacts"
+        case .pnpm:
+            return "Clean pnpm package store and dlx/metadata caches"
+        case .goCache:
+            return "Clean Go module cache, build cache, and gopls"
+        case .devApiTools:
+            return "Clean Postman, Insomnia, Bruno caches and logs"
+        case .notionCache:
+            return "Remove Notion asset cache and GPU caches"
+        case .cypress:
+            return "Clean Cypress test data and browser binary cache"
         }
     }
 }

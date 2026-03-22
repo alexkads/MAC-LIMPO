@@ -55,7 +55,13 @@ class MenuBarViewModel: ObservableObject {
         .podcasts: PodcastsCleaningService(),
         .appLeftovers: AppLeftoversCleaningService(),
         // New Project Cleaner
-        .development: ProjectCleaningService()
+        .development: ProjectCleaningService(),
+        // New services: pnpm, Go, API Tools, Notion, Cypress
+        .pnpm: PnpmCleaningService(),
+        .goCache: GoCleaningService(),
+        .devApiTools: DevApiToolsCleaningService(),
+        .notionCache: NotionCleaningService(),
+        .cypress: CypressCleaningService()
     ]
     
     init() {
