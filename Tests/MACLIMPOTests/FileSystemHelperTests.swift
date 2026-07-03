@@ -76,6 +76,18 @@ final class FileSystemHelperTests: XCTestCase {
         try? fm.removeItem(at: trashed)
     }
 
+    /// Regressão: a versão antiga interpolava o path em `du -sk '...'`, quebrando
+    /// em paths com aspa simples ou espaço. Agora o path vai como argumento.
+    func testSizeOfDirectoryHandlesPathWithQuotesAndSpaces() throws {
+        let fm = FileManager.default
+        let dir = fm.temporaryDirectory.appendingPathComponent("maclimpo it's a \"test\" \(UUID().uuidString)")
+        try fm.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? fm.removeItem(at: dir) }
+        try Data(repeating: 0, count: 120_000).write(to: dir.appendingPathComponent("f.bin"))
+
+        XCTAssertGreaterThan(FileSystemHelper.shared.sizeOfDirectory(atPath: dir.path), 0)
+    }
+
     func testSizeOfDirectoryOnMissingPathIsZero() {
         XCTAssertEqual(FileSystemHelper.shared.sizeOfDirectory(atPath: "/nonexistent/maclimpo/\(UUID().uuidString)"), 0)
     }

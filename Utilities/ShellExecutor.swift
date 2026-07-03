@@ -3,10 +3,23 @@ import Foundation
 class ShellExecutor {
     static let shared = ShellExecutor()
 
+    /// Executa um comando via `zsh -c`. Conveniente para pipelines, mas NÃO
+    /// interpole paths do usuário aqui (aspas/espaços quebram); use `run(_:_:)`.
     @discardableResult
     func execute(
         _ command: String,
         requiresSudo _: Bool = false,
+        timeout: TimeInterval = 60
+    ) -> (output: String, error: String, exitCode: Int32) {
+        run("/bin/zsh", ["-c", command], timeout: timeout)
+    }
+
+    /// Executa um binário diretamente com argumentos, sem passar por um shell.
+    /// Seguro para paths arbitrários (não há interpolação/escaping a acertar).
+    @discardableResult
+    func run(
+        _ launchPath: String,
+        _ arguments: [String],
         timeout: TimeInterval = 60
     ) -> (output: String, error: String, exitCode: Int32) {
         let task = Process()
@@ -15,8 +28,8 @@ class ShellExecutor {
 
         task.standardOutput = outputPipe
         task.standardError = errorPipe
-        task.arguments = ["-c", command]
-        task.launchPath = "/bin/zsh"
+        task.arguments = arguments
+        task.launchPath = launchPath
         task.standardInput = nil
 
         // Configura ambiente com PATH completo para encontrar tools (brew, docker, etc)

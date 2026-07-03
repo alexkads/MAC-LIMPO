@@ -15,9 +15,10 @@ class FileSystemHelper {
     func sizeOfDirectory(atPath path: String) -> Int64 {
         guard fileManager.fileExists(atPath: path) else { return 0 }
 
-        // Tenta usar du primeiro para performance
-        let command = "du -sk '\(path)' | cut -f1"
-        let result = ShellExecutor.shared.execute(command, timeout: Self.sizeMeasurementTimeout)
+        // Usa `du` por performance. Passa o path como argumento (sem shell) para
+        // não quebrar em paths com aspas/espaços. parseDuKilobytes ignora a coluna
+        // do path na saída "1234\t/path".
+        let result = ShellExecutor.shared.run("/usr/bin/du", ["-sk", path], timeout: Self.sizeMeasurementTimeout)
         if let bytes = Self.parseDuKilobytes(result.output) {
             return bytes
         }
@@ -64,9 +65,9 @@ class FileSystemHelper {
         do {
             try fileManager.removeItem(atPath: path)
         } catch {
-            // Se falhar (ex: permissão ou locked), tenta forçar via shell
-            let command = "rm -rf '\(path)'"
-            let result = ShellExecutor.shared.execute(command)
+            // Se falhar (ex: permissão ou locked), tenta forçar via rm.
+            // Path como argumento (sem shell) — seguro para aspas/espaços.
+            let result = ShellExecutor.shared.run("/bin/rm", ["-rf", path])
 
             if result.exitCode != 0 {
                 // Se ambos falharem, retorna o erro original
