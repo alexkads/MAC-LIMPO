@@ -49,6 +49,7 @@ let package = Package(
                 "Models/CleaningResult.swift",
                 "Models/FileNode.swift",
                 "Services/CleaningService.swift",
+                "Services/PathBasedCleaningService.swift",
                 "Services/DockerCleaningService.swift",
                 "Services/DevPackagesCleaningService.swift",
                 "Services/TempFilesCleaningService.swift",
