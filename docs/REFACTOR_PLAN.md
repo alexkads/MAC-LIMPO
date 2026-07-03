@@ -187,10 +187,25 @@ Trabalho em branch dedicada (`refactor/quality-safety`), commits por fase.
 
 ## Checklist de progresso
 
-- [ ] Fase 0 — Baseline & testes das funções puras
-- [ ] Fase 1 — `PathBasedCleaningService` + migração dos services
-- [ ] Fase 2 — Confirmação + Lixeira
-- [ ] Fase 3 — `du` sem subcontagem + shell async + limite de concorrência
-- [ ] Fase 4 — Erros visíveis + remoção de código morto
-- [ ] Fase 5 — Endurecer shell
-- [ ] Fase 6 — Testes de limpeza + verificação final
+- [x] Fase 0 — Baseline & testes das funções puras (test target via `@testable import`)
+- [x] Fase 1 — `PathBasedCleaningService` + migração de 12 services
+- [x] Fase 2 — Confirmação (NSAlert) + Lixeira (`trashItem`, flag `useTrash`)
+- [x] Fase 3 — `du` timeout 120s + cap de 4 scans + ShellExecutor sem busy-wait/deadlock
+- [x] Fase 4 — Erros de disco logados + remoção de código morto
+- [x] Fase 5 — `du`/`rm` por argumentos (`ShellExecutor.run`), sem interpolação
+- [x] Fase 6 — 19 testes verdes; build debug+release; format/lint sem erro; app sobe
+
+## Concluído — resumo
+
+19 testes (FileSystemHelper, PathBasedCleaningService, ShellExecutor). Services caíram
+~800 LOC. Deleção reversível (Lixeira) + confirmação para todas as categorias.
+
+## Diferido (follow-up, não bloqueante)
+
+- **Async real no ShellExecutor**: hoje é síncrono (sem busy-wait, mas ainda bloqueia a
+  thread chamadora). Cap de concorrência mitiga. Migração completa p/ `withCheckedContinuation`
+  fica para depois.
+- **Migrar services restantes** com lógica própria para helpers compartilhados quando fizer
+  sentido (ex.: age filter do Downloads/Logs já cabe no `CleanTarget.olderThanDays`).
+- **72 warnings de SwiftLint** de estilo (for_where, identifier_name, etc.) — incremental.
+- Backlog de features (Chrome multi-profile, Docker volumes, apps novos) — seção acima.

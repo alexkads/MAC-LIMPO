@@ -92,7 +92,12 @@ class PermissionsHelper {
             } else {
                 let warningAlert = NSAlert()
                 warningAlert.messageText = "⚠️ Permissão Não Detectada"
-                warningAlert.informativeText = "Não detectamos Full Disk Access ainda. Certifique-se de ter adicionado o MAC-LIMPO e marcado o checkbox.\n\nVocê pode continuar sem essa permissão, mas liberará menos espaço."
+                warningAlert.informativeText = """
+                Não detectamos Full Disk Access ainda. Certifique-se de ter adicionado o \
+                MAC-LIMPO e marcado o checkbox.
+
+                Você pode continuar sem essa permissão, mas liberará menos espaço.
+                """
                 warningAlert.alertStyle = .warning
                 warningAlert.addButton(withTitle: "OK")
                 warningAlert.runModal()

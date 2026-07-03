@@ -12,11 +12,13 @@ MAC-LIMPO is a native macOS menu-bar app (SwiftUI + AppKit) for freeing disk spa
 swift build                 # debug build
 swift build -c release      # release build
 swift run                   # build and launch the app (look for the trash icon in the menu bar)
+swift test                  # run unit tests (Tests/MACLIMPOTests)
 ./create_installer.sh       # release build → .app bundle (ad-hoc codesigned) → MAC-LIMPO.dmg
 ./create_xcode_project.sh   # generate an Xcode project if you need the IDE
+swiftformat . && swiftlint  # format + lint (configs: .swiftformat, .swiftlint.yml)
 ```
 
-There is **no test target** — `Package.swift` defines only the executable. VS Code launch configs live in `.vscode/launch.json` (Swift extension).
+The `MACLIMPOTests` target `@testable import MAC_LIMPO`s the executable (note the underscore — hyphens in the target name become underscores in the module name). VS Code launch configs live in `.vscode/launch.json` (Swift extension).
 
 Requires macOS 13+, Swift 5.9.
 
@@ -27,8 +29,10 @@ Requires macOS 13+, Swift 5.9.
 - `MACLIMPOApp.swift` — `@main` entry. `AppDelegate` sets `NSApp.setActivationPolicy(.accessory)` (no Dock icon), creates the `NSStatusItem`, hosts `MenuBarView` in an `NSPopover`, and lazily opens the treemap in a standalone `NSWindow`. Also enforces single-instance via `NSRunningApplication`.
 - `Views/MenuBarView.swift` — contains **both** `MenuBarViewModel` (the `ObservableObject`) and the SwiftUI view. The viewmodel holds `services: [CleaningCategory: CleaningService]` — **this dictionary is the service registry**.
 
+**Most cleaners subclass `PathBasedCleaningService`** (`Services/PathBasedCleaningService.swift`) — a tested base that implements `scan`/`clean` once for services that just measure and remove a list of paths. A subclass is ~10 lines: `super.init(category:targets:)` with `[CleanTarget]` (each has a path, optional label, `.removeItem`/`.removeContents` strategy, and optional age filter). Deletions go to the **Trash** (reversible) via `FileSystemHelper.trashItem`, falling back to permanent removal only if the Trash rejects the path. Only services with genuine custom logic (Docker/tool-based, `SystemDataCleaningService`, `VarFoldersCleaningService` allow/deny traversal, `ProjectCleaningService`, glob/enumerator-based ones) implement `CleaningService` directly.
+
 **Adding a new cleaning category** requires four coordinated edits:
-1. Create `Services/<Name>CleaningService.swift` implementing the `CleaningService` protocol.
+1. Create `Services/<Name>CleaningService.swift` — subclass `PathBasedCleaningService` (preferred) or implement `CleaningService` directly for custom logic. Use the `add-cleaning-service` skill.
 2. Add the `case` to the `CleaningCategory` enum in `Models/CleaningCategory.swift`, and fill in its `group`, `icon` (SF Symbol), `color` (hex), and `description` switches — the enum is `CaseIterable`, so a missing switch case fails to compile.
 3. Register it in the `services` dictionary in `Views/MenuBarView.swift`.
 4. Add the source file path to the `sources:` array in `Package.swift` — **SPM sources are listed explicitly, not globbed.** A new `.swift` file that isn't listed silently won't compile in.
