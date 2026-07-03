@@ -107,6 +107,11 @@ let package = Package(
                 "Utilities/TreemapLayout.swift",
                 "Utilities/PermissionsHelper.swift"
             ]
+        ),
+        .testTarget(
+            name: "MACLIMPOTests",
+            dependencies: ["MAC-LIMPO"],
+            path: "Tests/MACLIMPOTests"
         )
     ]
 )

@@ -12,12 +12,22 @@ class FileSystemHelper {
         // Tenta usar du primeiro para performance
         let command = "du -sk '\(path)' | cut -f1"
         let result = ShellExecutor.shared.execute(command, timeout: 5)
-        if let kbSize = Int64(result.output.trimmingCharacters(in: .whitespacesAndNewlines)) {
-            return kbSize * 1024 // Converter KB para Bytes
+        if let bytes = Self.parseDuKilobytes(result.output) {
+            return bytes
         }
 
         // Fallback para método lento se du falhar
         return sizeOfDirectoryFallback(atPath: path)
+    }
+
+    /// Converte a saída de `du -sk` (KB) em bytes. Função pura (testável).
+    /// Aceita saída com espaços/quebras de linha; retorna nil se não for numérica.
+    static func parseDuKilobytes(_ output: String) -> Int64? {
+        let trimmed = output.trimmingCharacters(in: .whitespacesAndNewlines)
+        // `du -sk 'path' | cut -f1` pode vir com espaços residuais; pega o primeiro token.
+        let firstToken = trimmed.split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "\n" }).first.map(String.init) ?? trimmed
+        guard let kb = Int64(firstToken) else { return nil }
+        return kb * 1024 // KB -> bytes
     }
 
     // Fallback: Calcula o tamanho recursivamente (lento)
