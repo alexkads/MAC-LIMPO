@@ -59,6 +59,23 @@ final class FileSystemHelperTests: XCTestCase {
         XCTAssertGreaterThan(size, 0, "diretório com conteúdo deve reportar tamanho > 0")
     }
 
+    // MARK: - trashItem
+
+    func testTrashItemMovesFileToTrashAndReportsSuccess() throws {
+        let fm = FileManager.default
+        let name = "maclimpo-trash-\(UUID().uuidString).bin"
+        let src = fm.temporaryDirectory.appendingPathComponent(name)
+        try Data(repeating: 1, count: 1024).write(to: src)
+
+        let ok = FileSystemHelper.shared.trashItem(atPath: src.path)
+        XCTAssertTrue(ok, "deve conseguir mover para a Lixeira")
+        XCTAssertFalse(fm.fileExists(atPath: src.path), "arquivo não deve mais estar no path original")
+
+        // Limpa o item da Lixeira (nome único evita colisão/renomeação).
+        let trashed = fm.homeDirectoryForCurrentUser.appendingPathComponent(".Trash/\(name)")
+        try? fm.removeItem(at: trashed)
+    }
+
     func testSizeOfDirectoryOnMissingPathIsZero() {
         XCTAssertEqual(FileSystemHelper.shared.sizeOfDirectory(atPath: "/nonexistent/maclimpo/\(UUID().uuidString)"), 0)
     }

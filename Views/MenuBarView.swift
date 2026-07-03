@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 class MenuBarViewModel: ObservableObject {
@@ -13,6 +14,9 @@ class MenuBarViewModel: ObservableObject {
 
     @Published var totalDiskSpace: Int64 = 0
     @Published var usedDiskSpace: Int64 = 0
+
+    /// Quando o usuário marca "não perguntar de novo", pulamos a confirmação nesta sessão.
+    private var skipCleaningConfirmation = false
 
     // TEMPORÁRIO: Apenas serviços originais até adicionar os novos arquivos ao Xcode
     // Para adicionar os novos serviços:
@@ -107,7 +111,40 @@ class MenuBarViewModel: ObservableObject {
         }
     }
 
+    /// Diálogo de confirmação antes de qualquer limpeza. Retorna `true` se pode prosseguir.
+    /// A maioria das categorias envia os itens para a Lixeira (restaurável).
+    private func confirmClean(_ categories: [CleaningCategory]) -> Bool {
+        if skipCleaningConfirmation { return true }
+
+        let totalSize = categories.reduce(Int64(0)) { $0 + (scanResults[$1]?.estimatedSize ?? 0) }
+        let sizeText = FileSystemHelper.shared.formatBytes(totalSize)
+
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.icon = NSImage(systemSymbolName: "trash", accessibilityDescription: "Limpar")
+        if categories.count == 1 {
+            alert.messageText = "Limpar \(categories[0].rawValue)?"
+        } else {
+            alert.messageText = "Limpar \(categories.count) categorias?"
+        }
+        alert.informativeText = """
+        Cerca de \(sizeText) serão liberados. Sempre que possível, os itens vão para a \
+        Lixeira e podem ser restaurados de lá.
+        """
+        alert.addButton(withTitle: "Limpar")
+        alert.addButton(withTitle: "Cancelar")
+        alert.showsSuppressionButton = true
+        alert.suppressionButton?.title = "Não perguntar de novo nesta sessão"
+
+        NSApp.activate(ignoringOtherApps: true)
+        let response = alert.runModal()
+        if alert.suppressionButton?.state == .on { skipCleaningConfirmation = true }
+        return response == .alertFirstButtonReturn
+    }
+
     func cleanCategory(_ category: CleaningCategory) {
+        guard confirmClean([category]) else { return }
+
         // Se for System Data, verifica permissões primeiro
         if category == .systemData, !PermissionsHelper.hasFullDiskAccess() {
             PermissionsHelper.requestFullDiskAccess {
@@ -153,6 +190,8 @@ class MenuBarViewModel: ObservableObject {
     }
 
     func cleanAll() {
+        guard confirmClean(Array(services.keys)) else { return }
+
         Task {
             // Limpa apenas categorias que têm serviços implementados
             for category in services.keys.sorted(by: { $0.rawValue < $1.rawValue }) {

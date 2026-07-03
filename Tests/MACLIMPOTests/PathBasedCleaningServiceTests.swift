@@ -25,9 +25,9 @@ final class PathBasedCleaningServiceTests: XCTestCase {
         return url
     }
 
-    /// A subclass concreta só p/ testar; usa o mesmo init da base.
+    /// Base direta p/ testar; useTrash:false apaga em tmp sem poluir a Lixeira real.
     private func service(_ targets: [CleanTarget]) -> PathBasedCleaningService {
-        PathBasedCleaningService(category: .homebrew, targets: targets)
+        PathBasedCleaningService(category: .homebrew, targets: targets, useTrash: false)
     }
 
     // MARK: - removeItem

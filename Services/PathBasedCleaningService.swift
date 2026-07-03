@@ -36,10 +36,14 @@ struct CleanTarget {
 class PathBasedCleaningService: BaseCleaningService, CleaningService {
     let category: CleaningCategory
     let targets: [CleanTarget]
+    /// Se `true` (produção), remoções vão para a Lixeira (reversível). Testes usam
+    /// `false` para apagar direto em diretório temporário sem poluir a Lixeira real.
+    let useTrash: Bool
 
-    init(category: CleaningCategory, targets: [CleanTarget]) {
+    init(category: CleaningCategory, targets: [CleanTarget], useTrash: Bool = true) {
         self.category = category
         self.targets = targets
+        self.useTrash = useTrash
     }
 
     // MARK: - Scan
@@ -78,6 +82,14 @@ class PathBasedCleaningService: BaseCleaningService, CleaningService {
 
             for itemPath in removablePaths(for: target, expanded: expanded) {
                 let size = fileHelper.sizeOfDirectory(atPath: itemPath)
+
+                // Preferimos a Lixeira (reversível); só apagamos de vez se a Lixeira falhar.
+                if useTrash, fileHelper.trashItem(atPath: itemPath) {
+                    bytesRemoved += size
+                    filesRemoved += 1
+                    continue
+                }
+
                 do {
                     try fileHelper.removeItem(atPath: itemPath)
                     bytesRemoved += size

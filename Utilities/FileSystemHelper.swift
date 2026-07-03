@@ -25,7 +25,8 @@ class FileSystemHelper {
     static func parseDuKilobytes(_ output: String) -> Int64? {
         let trimmed = output.trimmingCharacters(in: .whitespacesAndNewlines)
         // `du -sk 'path' | cut -f1` pode vir com espaços residuais; pega o primeiro token.
-        let firstToken = trimmed.split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "\n" }).first.map(String.init) ?? trimmed
+        let firstToken = trimmed.split(whereSeparator: { $0 == " " || $0 == "\t" || $0 == "\n" }).first
+            .map(String.init) ?? trimmed
         guard let kb = Int64(firstToken) else { return nil }
         return kb * 1024 // KB -> bytes
     }
@@ -65,6 +66,21 @@ class FileSystemHelper {
                 // Se ambos falharem, retorna o erro original
                 throw error
             }
+        }
+    }
+
+    /// Move um item para a Lixeira (reversível). Retorna `true` em caso de sucesso.
+    /// Preferível a `removeItem` para limpeza acionada pelo usuário: dá a chance de
+    /// restaurar. Falha (retorna false) em volumes/paths sem suporte a Lixeira.
+    @discardableResult
+    func trashItem(atPath path: String) -> Bool {
+        let url = URL(fileURLWithPath: path)
+        do {
+            try fileManager.trashItem(at: url, resultingItemURL: nil)
+            return true
+        } catch {
+            Logger.shared.log("Falha ao mover para a Lixeira: \(path) — \(error.localizedDescription)", level: .warning)
+            return false
         }
     }
 
