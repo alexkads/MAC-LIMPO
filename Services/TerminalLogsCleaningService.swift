@@ -2,7 +2,7 @@ import Foundation
 
 class TerminalLogsCleaningService: BaseCleaningService, CleaningService {
     let category: CleaningCategory = .terminalLogs
-    
+
     private let terminalLogPaths = [
         "~/Library/Logs/warp.log",
         "~/Library/Logs/warp.log.old.0",
@@ -11,14 +11,14 @@ class TerminalLogsCleaningService: BaseCleaningService, CleaningService {
         "~/Library/Logs/warp.log.old.3",
         "~/Library/Logs/warp.log.old.4"
     ]
-    
+
     func scan(progress: ((String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
-        
+
         logger.log("Iniciando escaneamento de logs de terminal", level: .info)
         progress?("Scanning terminal logs...")
-        
+
         for path in terminalLogPaths {
             let expandedPath = fileHelper.expandPath(path)
             if fileHelper.fileExists(atPath: expandedPath) {
@@ -32,13 +32,13 @@ class TerminalLogsCleaningService: BaseCleaningService, CleaningService {
                 }
             }
         }
-        
+
         if totalSize > 0 {
             items.append("Warp terminal logs: \(fileHelper.formatBytes(totalSize))")
         }
-        
+
         logger.log("Escaneamento terminal logs concluído: \(fileHelper.formatBytes(totalSize))", level: .info)
-        
+
         return ScanResult(
             category: category,
             estimatedSize: totalSize,
@@ -46,15 +46,15 @@ class TerminalLogsCleaningService: BaseCleaningService, CleaningService {
             items: items
         )
     }
-    
+
     func clean() async -> CleaningResult {
         let startTime = Date()
         var bytesRemoved: Int64 = 0
         var filesRemoved = 0
         let errors: [String] = []
-        
+
         logger.log("Iniciando limpeza de logs de terminal", level: .info)
-        
+
         for path in terminalLogPaths {
             let expandedPath = fileHelper.expandPath(path)
             if fileHelper.fileExists(atPath: expandedPath) {
@@ -70,10 +70,10 @@ class TerminalLogsCleaningService: BaseCleaningService, CleaningService {
                 }
             }
         }
-        
+
         let executionTime = Date().timeIntervalSince(startTime)
         logger.log("Limpeza terminal logs concluída: \(fileHelper.formatBytes(bytesRemoved)) liberados", level: .info)
-        
+
         return CleaningResult(
             category: category,
             bytesRemoved: bytesRemoved,

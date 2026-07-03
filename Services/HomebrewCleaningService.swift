@@ -2,18 +2,18 @@ import Foundation
 
 class HomebrewCleaningService: BaseCleaningService, CleaningService {
     let category: CleaningCategory = .homebrew
-    
+
     private let homebrewPaths = [
         "~/Library/Caches/Homebrew"
     ]
-    
+
     func scan(progress: ((String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
-        
+
         logger.log("Iniciando escaneamento de caches do Homebrew", level: .info)
         progress?("Scanning Homebrew caches...")
-        
+
         for path in homebrewPaths {
             let expandedPath = fileHelper.expandPath(path)
             if fileHelper.fileExists(atPath: expandedPath) {
@@ -25,9 +25,9 @@ class HomebrewCleaningService: BaseCleaningService, CleaningService {
                 }
             }
         }
-        
+
         logger.log("Escaneamento Homebrew concluído: \(fileHelper.formatBytes(totalSize))", level: .info)
-        
+
         return ScanResult(
             category: category,
             estimatedSize: totalSize,
@@ -35,15 +35,15 @@ class HomebrewCleaningService: BaseCleaningService, CleaningService {
             items: items
         )
     }
-    
+
     func clean() async -> CleaningResult {
         let startTime = Date()
         var bytesRemoved: Int64 = 0
         var filesRemoved = 0
         var errors: [String] = []
-        
+
         logger.log("Iniciando limpeza de caches do Homebrew", level: .info)
-        
+
         for path in homebrewPaths {
             let expandedPath = fileHelper.expandPath(path)
             if fileHelper.fileExists(atPath: expandedPath) {
@@ -59,10 +59,10 @@ class HomebrewCleaningService: BaseCleaningService, CleaningService {
                 }
             }
         }
-        
+
         let executionTime = Date().timeIntervalSince(startTime)
         logger.log("Limpeza Homebrew concluída: \(fileHelper.formatBytes(bytesRemoved)) liberados", level: .info)
-        
+
         return CleaningResult(
             category: category,
             bytesRemoved: bytesRemoved,

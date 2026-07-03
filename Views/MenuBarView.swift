@@ -10,17 +10,17 @@ class MenuBarViewModel: ObservableObject {
     @Published var showResults = false
     @Published var lastResult: CleaningResult?
     @Published var currentCleaningCategory: CleaningCategory?
-    
+
     @Published var totalDiskSpace: Int64 = 0
     @Published var usedDiskSpace: Int64 = 0
-    
+
     // TEMPORÁRIO: Apenas serviços originais até adicionar os novos arquivos ao Xcode
     // Para adicionar os novos serviços:
     // 1. No Xcode: Project Navigator > Botão direito > Add Files...
     // 2. Selecione os 11 arquivos *CleaningService.swift criados
     // 3. Marque "Copy items if needed" e "Add to targets"
     // 4. Descomente as linhas abaixo e compile novamente
-    
+
     let services: [CleaningCategory: CleaningService] = [
         .docker: DockerCleaningService(),
         .devPackages: DevPackagesCleaningService(),
@@ -63,42 +63,42 @@ class MenuBarViewModel: ObservableObject {
         .notionCache: NotionCleaningService(),
         .cypress: CypressCleaningService()
     ]
-    
+
     init() {
         refreshDiskStats()
         scanAllCategories()
     }
-    
+
     func refreshDiskStats() {
         let helper = FileSystemHelper.shared
         totalDiskSpace = helper.totalDiskSpace()
         usedDiskSpace = totalDiskSpace - helper.availableDiskSpace()
     }
-    
+
     func scanAllCategories() {
         // Escaneia apenas categorias que têm serviços implementados
         for category in services.keys {
             scanCategory(category)
         }
     }
-    
+
     @Published var scanningStatus: [CleaningCategory: String] = [:]
-    
+
     // ... existing properties ...
 
     func scanCategory(_ category: CleaningCategory) {
         guard let service = services[category] else { return }
-        
+
         isScanning[category] = true
         scanningStatus[category] = "Starting..."
-        
+
         Task {
             let result = await service.scan(progress: { [weak self] status in
                 Task { @MainActor in
                     self?.scanningStatus[category] = status
                 }
             })
-            
+
             await MainActor.run {
                 scanResults[category] = result
                 isScanning[category] = false
@@ -106,58 +106,58 @@ class MenuBarViewModel: ObservableObject {
             }
         }
     }
-    
+
     func cleanCategory(_ category: CleaningCategory) {
         // Se for System Data, verifica permissões primeiro
-        if category == .systemData && !PermissionsHelper.hasFullDiskAccess() {
+        if category == .systemData, !PermissionsHelper.hasFullDiskAccess() {
             PermissionsHelper.requestFullDiskAccess {
                 // Depois de pedir permissão (ou pular), continua limpeza
                 self.performCleanCategory(category)
             }
             return
         }
-        
+
         performCleanCategory(category)
     }
-    
+
     private func performCleanCategory(_ category: CleaningCategory) {
         guard let service = services[category] else { return }
-        
+
         currentCleaningCategory = category
         showProgress = true
         cleaningProgress = 0
         currentOperation = "Preparing to clean..."
-        
+
         Task {
             // Simula progresso
             await updateProgress(0.2, operation: "Scanning files...")
             try? await Task.sleep(nanoseconds: 500_000_000)
-            
+
             await updateProgress(0.5, operation: "Removing files...")
-            
+
             let result = await service.clean()
-            
+
             await updateProgress(1.0, operation: "Complete!")
             try? await Task.sleep(nanoseconds: 500_000_000)
-            
+
             await MainActor.run {
                 showProgress = false
                 lastResult = result
                 showResults = true
-                
+
                 // Atualiza estatísticas
                 refreshDiskStats()
                 scanCategory(category)
             }
         }
     }
-    
+
     func cleanAll() {
         Task {
             // Limpa apenas categorias que têm serviços implementados
             for category in services.keys.sorted(by: { $0.rawValue < $1.rawValue }) {
                 guard let service = services[category] else { continue }
-                
+
                 // Executa limpeza sequencialmente (não concorrente)
                 await MainActor.run {
                     currentCleaningCategory = category
@@ -165,30 +165,30 @@ class MenuBarViewModel: ObservableObject {
                     cleaningProgress = 0
                     currentOperation = "Preparing to clean \(category.rawValue)..."
                 }
-                
+
                 await updateProgress(0.3, operation: "Cleaning \(category.rawValue)...")
                 let result = await service.clean()
-                
+
                 await updateProgress(1.0, operation: "Complete!")
                 try? await Task.sleep(nanoseconds: 500_000_000)
-                
+
                 await MainActor.run {
                     lastResult = result
                     refreshDiskStats()
                     scanCategory(category)
                 }
-                
+
                 // Pequena pausa entre categorias
                 try? await Task.sleep(nanoseconds: 500_000_000)
             }
-            
+
             await MainActor.run {
                 showProgress = false
                 showResults = true
             }
         }
     }
-    
+
     private func updateProgress(_ progress: Double, operation: String) async {
         await MainActor.run {
             cleaningProgress = progress
@@ -201,11 +201,11 @@ struct MenuBarView: View {
     @StateObject private var viewModel = MenuBarViewModel()
     @StateObject private var launchAtLoginService = LaunchAtLoginService()
     let onOpenTreemap: () -> Void
-    
+
     init(onOpenTreemap: @escaping () -> Void = {}) {
         self.onOpenTreemap = onOpenTreemap
     }
-    
+
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
@@ -223,14 +223,14 @@ struct MenuBarView: View {
                                         endPoint: .trailing
                                     )
                                 )
-                            
+
                             Text("System Cleaner")
                                 .font(.system(size: 12))
                                 .foregroundColor(.secondary)
                         }
-                        
+
                         Spacer()
-                        
+
                         Button(action: {
                             onOpenTreemap()
                         }) {
@@ -239,7 +239,7 @@ struct MenuBarView: View {
                         }
                         .buttonStyle(.plain)
                         .help("Disk Map")
-                        
+
                         Button(action: {
                             viewModel.scanAllCategories()
                         }) {
@@ -251,7 +251,7 @@ struct MenuBarView: View {
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 20)
-                    
+
                     // Storage Stats
                     StorageStatsView(
                         usedSpace: viewModel.usedDiskSpace,
@@ -260,7 +260,7 @@ struct MenuBarView: View {
                     .padding(.horizontal, 20)
                 }
                 .padding(.bottom, 10)
-                
+
                 // SCROLLABLE LIST SECTION
                 ScrollView {
                     VStack(spacing: 20) {
@@ -271,7 +271,7 @@ struct MenuBarView: View {
                                 let categoriesInGroup = viewModel.services.keys
                                     .filter { $0.group == group }
                                     .sorted { $0.rawValue < $1.rawValue }
-                                
+
                                 if !categoriesInGroup.isEmpty {
                                     VStack(alignment: .leading, spacing: 12) {
                                         // Group Header
@@ -285,13 +285,14 @@ struct MenuBarView: View {
                                             Spacer()
                                         }
                                         .padding(.horizontal, 4)
-                                        
+
                                         // Categories Grid
                                         VStack(spacing: 12) {
                                             ForEach(categoriesInGroup) { category in
                                                 CleaningCategoryCard(
                                                     category: category,
-                                                    estimatedSize: viewModel.scanResults[category]?.formattedSize ?? "...",
+                                                    estimatedSize: viewModel.scanResults[category]?
+                                                        .formattedSize ?? "...",
                                                     isScanning: viewModel.isScanning[category] ?? false,
                                                     scanningStatus: viewModel.scanningStatus[category],
                                                     action: {
@@ -306,7 +307,7 @@ struct MenuBarView: View {
                         }
                         .padding(.horizontal, 20)
                         .padding(.top, 10)
-                        
+
                         // Clean All Button
                         Button(action: {
                             viewModel.cleanAll()
@@ -331,7 +332,7 @@ struct MenuBarView: View {
                         }
                         .buttonStyle(.plain)
                         .padding(.horizontal, 20)
-                        
+
                         // Settings
                         VStack(spacing: 12) {
                             Toggle(isOn: $launchAtLoginService.isEnabled) {
@@ -341,7 +342,7 @@ struct MenuBarView: View {
                             .toggleStyle(.switch)
                             .padding(.horizontal, 20)
                         }
-                        
+
                         // Quit Button
                         Button("Quit MAC-LIMPO") {
                             NSApplication.shared.terminate(nil)
@@ -353,7 +354,7 @@ struct MenuBarView: View {
                     }
                 }
             }
-            
+
             // Progress Overlay
             if viewModel.showProgress, let category = viewModel.currentCleaningCategory {
                 CleaningProgressView(
@@ -363,7 +364,7 @@ struct MenuBarView: View {
                     currentOperation: viewModel.currentOperation
                 )
             }
-            
+
             // Results Overlay
             if viewModel.showResults, let result = viewModel.lastResult {
                 ResultsView(

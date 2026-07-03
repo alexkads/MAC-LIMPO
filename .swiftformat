@@ -1,0 +1,18 @@
+# SwiftFormat config for MAC-LIMPO
+# Install: brew install swiftformat  •  Run: swiftformat .
+
+--swiftversion 5.9
+
+# Match the project's existing style
+--indent 4
+--maxwidth 120
+--self remove
+--importgrouping testable-bottom
+--commas inline
+--trimwhitespace always
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+
+# Exclude non-source dirs and generated/bundled artifacts
+--exclude .build,MAC-LIMPO.app,Design,docs,Assets.xcassets

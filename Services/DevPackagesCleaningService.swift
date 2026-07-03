@@ -2,7 +2,7 @@ import Foundation
 
 class DevPackagesCleaningService: BaseCleaningService, CleaningService {
     let category: CleaningCategory = .devPackages
-    
+
     private let cachePaths = [
         ("npm", "~/.npm"),
         ("pip", "~/Library/Caches/pip"),
@@ -15,11 +15,11 @@ class DevPackagesCleaningService: BaseCleaningService, CleaningService {
         ("TypeScript", "~/Library/Caches/typescript"),
         ("Postman Updates", "~/Library/Caches/com.postmanlabs.mac.ShipIt")
     ]
-    
-    func scan(progress: ((String) -> Void)?) async -> ScanResult {
+
+    func scan(progress _: ((String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
-        
+
         for (name, path) in cachePaths {
             let expandedPath = fileHelper.expandPath(path)
             if fileHelper.fileExists(atPath: expandedPath) {
@@ -30,7 +30,7 @@ class DevPackagesCleaningService: BaseCleaningService, CleaningService {
                 }
             }
         }
-        
+
         return ScanResult(
             category: category,
             estimatedSize: totalSize,
@@ -38,19 +38,19 @@ class DevPackagesCleaningService: BaseCleaningService, CleaningService {
             items: items
         )
     }
-    
+
     func clean() async -> CleaningResult {
         let startTime = Date()
         var bytesRemoved: Int64 = 0
         var filesRemoved = 0
         var errors: [String] = []
-        
+
         for (name, path) in cachePaths {
             let expandedPath = fileHelper.expandPath(path)
             if fileHelper.fileExists(atPath: expandedPath) {
                 let sizeBeforeRemoval = fileHelper.sizeOfDirectory(atPath: expandedPath)
                 let fileCount = fileHelper.countFiles(inDirectory: expandedPath)
-                
+
                 do {
                     try fileHelper.removeItem(atPath: expandedPath)
                     bytesRemoved += sizeBeforeRemoval
@@ -60,7 +60,7 @@ class DevPackagesCleaningService: BaseCleaningService, CleaningService {
                 }
             }
         }
-        
+
         // Limpa npm cache via comando
         if shell.checkCommandExists("npm") {
             let npmResult = shell.execute("npm cache clean --force")
@@ -84,7 +84,7 @@ class DevPackagesCleaningService: BaseCleaningService, CleaningService {
                 errors.append("go clean failed: \(goResult.error)")
             }
         }
-        
+
         // Limpa Homebrew
         if shell.checkCommandExists("brew") {
             let brewResult = shell.execute("brew cleanup -s")
@@ -99,9 +99,9 @@ class DevPackagesCleaningService: BaseCleaningService, CleaningService {
                 }
             }
         }
-        
+
         let executionTime = Date().timeIntervalSince(startTime)
-        
+
         return CleaningResult(
             category: category,
             bytesRemoved: bytesRemoved,

@@ -6,9 +6,9 @@ struct CleaningCategoryCard: View {
     let isScanning: Bool
     let scanningStatus: String?
     let action: () -> Void
-    
+
     @State private var isHovered = false
-    
+
     var body: some View {
         Button(action: action) {
             HStack(spacing: 16) {
@@ -18,26 +18,26 @@ struct CleaningCategoryCard: View {
                         .fill(category.gradient)
                         .frame(width: 50, height: 50)
                         .shadow(color: .black.opacity(0.2), radius: isHovered ? 8 : 4, y: isHovered ? 4 : 2)
-                    
+
                     Image(systemName: category.icon)
                         .font(.system(size: 24, weight: .semibold))
                         .foregroundColor(.white)
                 }
                 .scaleEffect(isHovered ? 1.05 : 1.0)
-                
+
                 VStack(alignment: .leading, spacing: 4) {
                     Text(category.rawValue)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.primary)
-                    
+
                     Text(category.description)
                         .font(.system(size: 12))
                         .foregroundColor(.secondary)
                         .lineLimit(1)
                 }
-                
+
                 Spacer()
-                
+
                 if isScanning {
                     HStack(spacing: 8) {
                         if let status = scanningStatus {
@@ -66,7 +66,11 @@ struct CleaningCategoryCard: View {
             .background(
                 RoundedRectangle(cornerRadius: 16)
                     .fill(Color(NSColor.controlBackgroundColor))
-                    .shadow(color: .black.opacity(isHovered ? 0.15 : 0.08), radius: isHovered ? 12 : 8, y: isHovered ? 6 : 4)
+                    .shadow(
+                        color: .black.opacity(isHovered ? 0.15 : 0.08),
+                        radius: isHovered ? 12 : 8,
+                        y: isHovered ? 6 : 4
+                    )
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16)

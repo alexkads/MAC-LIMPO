@@ -12,16 +12,16 @@ enum LogLevel {
 /// Helper para logging consistente em toda a aplicação
 class Logger {
     static let shared = Logger()
-    
+
     private let subsystem = Bundle.main.bundleIdentifier ?? "com.maclimpo.app"
     private let log: OSLog
-    
+
     private init() {
-        self.log = OSLog(subsystem: subsystem, category: "general")
+        log = OSLog(subsystem: subsystem, category: "general")
     }
-    
+
     // MARK: - Log genérico com level
-    
+
     func log(_ message: String, level: LogLevel) {
         switch level {
         case .debug:
@@ -34,40 +34,40 @@ class Logger {
             error(message)
         }
     }
-    
+
     // MARK: - Log Levels
-    
+
     func debug(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         let fileName = (file as NSString).lastPathComponent
         os_log(.debug, log: log, "%{public}@:%d %{public}@ - %{public}@", fileName, line, function, message)
     }
-    
+
     func info(_ message: String) {
         os_log(.info, log: log, "%{public}@", message)
     }
-    
+
     func warning(_ message: String) {
         os_log(.default, log: log, "⚠️ %{public}@", message)
     }
-    
+
     func error(_ message: String, error: Error? = nil) {
-        if let error = error {
+        if let error {
             os_log(.error, log: log, "❌ %{public}@: %{public}@", message, error.localizedDescription)
         } else {
             os_log(.error, log: log, "❌ %{public}@", message)
         }
     }
-    
+
     func success(_ message: String) {
         os_log(.info, log: log, "✅ %{public}@", message)
     }
-    
+
     // MARK: - Categoria específica
-    
+
     func scan(category: String, message: String) {
         os_log(.info, log: log, "🔍 [%{public}@] %{public}@", category, message)
     }
-    
+
     func clean(category: String, message: String) {
         os_log(.info, log: log, "🧹 [%{public}@] %{public}@", category, message)
     }

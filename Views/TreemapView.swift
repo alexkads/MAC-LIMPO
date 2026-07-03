@@ -3,12 +3,12 @@ import SwiftUI
 struct TreemapView: View {
     @StateObject private var viewModel: TreemapViewModel
     @Binding var isShowing: Bool
-    
+
     init(isShowing: Binding<Bool>, maxDepth: Int = 5) {
-        self._isShowing = isShowing
-        self._viewModel = StateObject(wrappedValue: TreemapViewModel(maxDepth: maxDepth))
+        _isShowing = isShowing
+        _viewModel = StateObject(wrappedValue: TreemapViewModel(maxDepth: maxDepth))
     }
-    
+
     var body: some View {
         ZStack {
             // Background overlay
@@ -17,12 +17,12 @@ struct TreemapView: View {
                 .onTapGesture {
                     isShowing = false
                 }
-            
+
             // Main content
             VStack(spacing: 0) {
                 // Header
                 headerView
-                
+
                 if viewModel.isScanning {
                     // Scanning progress
                     scanningView
@@ -31,10 +31,10 @@ struct TreemapView: View {
                     VStack(spacing: 0) {
                         // Breadcrumb navigation
                         breadcrumbView
-                        
+
                         // Treemap canvas
                         treemapCanvas(for: currentNode)
-                        
+
                         // Info panel
                         if let hovered = viewModel.hoveredNode {
                             infoPanel(for: hovered)
@@ -51,8 +51,9 @@ struct TreemapView: View {
             .shadow(radius: 20)
         }
     }
-    
+
     // MARK: - Header
+
     private var headerView: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
@@ -65,17 +66,17 @@ struct TreemapView: View {
                             endPoint: .trailing
                         )
                     )
-                
+
                 if let current = viewModel.currentNode {
                     Text(current.formattedSize)
                         .font(.system(size: 12))
                         .foregroundColor(.secondary)
                 }
             }
-            
+
             Spacer()
-            
-            if viewModel.rootNode != nil && !viewModel.isScanning {
+
+            if viewModel.rootNode != nil, !viewModel.isScanning {
                 Button(action: {
                     viewModel.reset()
                     viewModel.rootNode = nil
@@ -86,7 +87,7 @@ struct TreemapView: View {
                 .buttonStyle(.plain)
                 .help("New scan")
             }
-            
+
             Button(action: {
                 isShowing = false
             }) {
@@ -99,44 +100,46 @@ struct TreemapView: View {
         .padding(20)
         .background(Color(NSColor.controlBackgroundColor))
     }
-    
+
     // MARK: - Scanning View
+
     private var scanningView: some View {
         VStack(spacing: 20) {
             Spacer()
-            
+
             ProgressView(value: viewModel.scanProgress) {
                 Text("Scanning...")
                     .font(.system(size: 16, weight: .semibold))
             }
             .progressViewStyle(.linear)
             .frame(width: 400)
-            
+
             Text(viewModel.scanStatus)
                 .font(.system(size: 12))
                 .foregroundColor(.secondary)
                 .lineLimit(1)
                 .truncationMode(.middle)
-            
+
             Spacer()
         }
         .padding()
     }
-    
+
     // MARK: - Directory Selection
+
     private var directorySelectionView: some View {
         VStack(spacing: 30) {
             Spacer()
-            
+
             VStack(spacing: 8) {
                 Text("Select a directory to scan")
                     .font(.system(size: 24, weight: .bold))
-                
+
                 Text("Choose a location to analyze disk space usage")
                     .font(.system(size: 14))
                     .foregroundColor(.secondary)
             }
-            
+
             // Grid layout with 2 columns
             LazyVGrid(columns: [
                 GridItem(.flexible(), spacing: 16),
@@ -154,47 +157,47 @@ struct TreemapView: View {
                 }
             }
             .frame(width: 700)
-            
+
             Spacer()
         }
         .padding(40)
     }
-    
-    // Helper functions for directory icons and colors
+
+    /// Helper functions for directory icons and colors
     private func iconForDirectory(_ name: String) -> String {
         switch name {
-        case "Home": return "house.fill"
-        case "Desktop": return "desktopcomputer"
-        case "Documents": return "doc.text.fill"
-        case "Downloads": return "arrow.down.circle.fill"
-        case "Applications": return "app.fill"
-        case "Library": return "books.vertical.fill"
-        default: return "folder.fill"
+        case "Home": "house.fill"
+        case "Desktop": "desktopcomputer"
+        case "Documents": "doc.text.fill"
+        case "Downloads": "arrow.down.circle.fill"
+        case "Applications": "app.fill"
+        case "Library": "books.vertical.fill"
+        default: "folder.fill"
         }
     }
-    
+
     private func gradientForDirectory(_ name: String) -> LinearGradient {
-        let colors: [Color]
-        switch name {
+        let colors: [Color] = switch name {
         case "Home":
-            colors = [Color(hex: "667eea"), Color(hex: "764ba2")]
+            [Color(hex: "667eea"), Color(hex: "764ba2")]
         case "Desktop":
-            colors = [Color(hex: "f093fb"), Color(hex: "f5576c")]
+            [Color(hex: "f093fb"), Color(hex: "f5576c")]
         case "Documents":
-            colors = [Color(hex: "4facfe"), Color(hex: "00f2fe")]
+            [Color(hex: "4facfe"), Color(hex: "00f2fe")]
         case "Downloads":
-            colors = [Color(hex: "43e97b"), Color(hex: "38f9d7")]
+            [Color(hex: "43e97b"), Color(hex: "38f9d7")]
         case "Applications":
-            colors = [Color(hex: "fa709a"), Color(hex: "fee140")]
+            [Color(hex: "fa709a"), Color(hex: "fee140")]
         case "Library":
-            colors = [Color(hex: "30cfd0"), Color(hex: "330867")]
+            [Color(hex: "30cfd0"), Color(hex: "330867")]
         default:
-            colors = [.blue, .purple]
+            [.blue, .purple]
         }
         return LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing)
     }
-    
+
     // MARK: - Breadcrumb
+
     private var breadcrumbView: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
@@ -221,8 +224,9 @@ struct TreemapView: View {
         }
         .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
     }
-    
+
     // MARK: - Treemap Canvas
+
     private func treemapCanvas(for node: FileNode) -> some View {
         GeometryReader { geometry in
             let rects = TreemapLayout.layout(
@@ -230,12 +234,12 @@ struct TreemapView: View {
                 in: CGRect(origin: .zero, size: geometry.size),
                 depth: 0
             )
-            
+
             ZStack {
                 // Background to prevent black areas
                 Color(NSColor.windowBackgroundColor)
-                
-                Canvas { context, size in
+
+                Canvas { context, _ in
                     for rect in rects {
                         drawRect(rect, in: context)
                     }
@@ -250,7 +254,7 @@ struct TreemapView: View {
                     }
                     .onEnded { value in
                         if let rect = rects.first(where: { $0.frame.contains(value.location) }) {
-                            if rect.node.isDirectory && !rect.node.children.isEmpty {
+                            if rect.node.isDirectory, !rect.node.children.isEmpty {
                                 viewModel.navigateToNode(rect.node)
                             }
                         }
@@ -260,26 +264,26 @@ struct TreemapView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    
+
     private func drawRect(_ rect: TreemapRect, in context: GraphicsContext) {
         let path = Path(rect.frame)
-        
+
         // Fill
         context.fill(path, with: .color(rect.color))
-        
+
         // Border
         context.stroke(
             path,
             with: .color(.white.opacity(0.3)),
             lineWidth: 1
         )
-        
+
         // Label (se o retângulo for grande o suficiente)
-        if rect.frame.width > 60 && rect.frame.height > 30 {
+        if rect.frame.width > 60, rect.frame.height > 30 {
             let text = Text(rect.node.name)
                 .font(.system(size: 10))
                 .foregroundColor(.white)
-            
+
             context.draw(
                 text,
                 at: CGPoint(
@@ -290,32 +294,33 @@ struct TreemapView: View {
             )
         }
     }
-    
+
     // MARK: - Info Panel
+
     private func infoPanel(for node: FileNode) -> some View {
         HStack(spacing: 12) {
             Rectangle()
                 .fill(node.color)
                 .frame(width: 20, height: 20)
                 .cornerRadius(4)
-            
+
             VStack(alignment: .leading, spacing: 2) {
                 Text(node.name)
                     .font(.system(size: 12, weight: .semibold))
                     .lineLimit(1)
-                
+
                 Text(node.path)
                     .font(.system(size: 10))
                     .foregroundColor(.secondary)
                     .lineLimit(1)
             }
-            
+
             Spacer()
-            
+
             VStack(alignment: .trailing, spacing: 2) {
                 Text(node.formattedSize)
                     .font(.system(size: 12, weight: .semibold))
-                
+
                 if let parent = viewModel.currentNode {
                     Text(String(format: "%.1f%%", node.percentage(relativeTo: parent.totalSize)))
                         .font(.system(size: 10))

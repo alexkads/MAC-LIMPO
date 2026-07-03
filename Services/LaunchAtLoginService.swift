@@ -7,11 +7,11 @@ class LaunchAtLoginService: ObservableObject {
             updateState()
         }
     }
-    
+
     init() {
-        self.isEnabled = SMAppService.mainApp.status == .enabled
+        isEnabled = SMAppService.mainApp.status == .enabled
     }
-    
+
     private func updateState() {
         do {
             if isEnabled {

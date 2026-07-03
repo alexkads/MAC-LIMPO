@@ -2,20 +2,20 @@ import Foundation
 
 class CargoCleaningService: BaseCleaningService, CleaningService {
     let category: CleaningCategory = .cargo
-    
+
     private let cargoPaths = [
         "~/.cargo/registry/cache",
         "~/.cargo/registry/index",
         "~/.cargo/git"
     ]
-    
+
     func scan(progress: ((String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
-        
+
         logger.log("Iniciando escaneamento de caches do Cargo/Rust", level: .info)
         progress?("Scanning Cargo caches...")
-        
+
         for path in cargoPaths {
             let expandedPath = fileHelper.expandPath(path)
             if fileHelper.fileExists(atPath: expandedPath) {
@@ -28,9 +28,9 @@ class CargoCleaningService: BaseCleaningService, CleaningService {
                 }
             }
         }
-        
+
         logger.log("Escaneamento Cargo concluído: \(fileHelper.formatBytes(totalSize))", level: .info)
-        
+
         return ScanResult(
             category: category,
             estimatedSize: totalSize,
@@ -38,15 +38,15 @@ class CargoCleaningService: BaseCleaningService, CleaningService {
             items: items
         )
     }
-    
+
     func clean() async -> CleaningResult {
         let startTime = Date()
         var bytesRemoved: Int64 = 0
         var filesRemoved = 0
         var errors: [String] = []
-        
+
         logger.log("Iniciando limpeza de caches do Cargo/Rust", level: .info)
-        
+
         for path in cargoPaths {
             let expandedPath = fileHelper.expandPath(path)
             if fileHelper.fileExists(atPath: expandedPath) {
@@ -62,10 +62,10 @@ class CargoCleaningService: BaseCleaningService, CleaningService {
                 }
             }
         }
-        
+
         let executionTime = Date().timeIntervalSince(startTime)
         logger.log("Limpeza Cargo concluída: \(fileHelper.formatBytes(bytesRemoved)) liberados", level: .info)
-        
+
         return CleaningResult(
             category: category,
             bytesRemoved: bytesRemoved,

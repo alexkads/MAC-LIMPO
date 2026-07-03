@@ -2,7 +2,7 @@ import Foundation
 
 class LogsCleaningService: BaseCleaningService, CleaningService {
     let category: CleaningCategory = .logs
-    
+
     private let logPaths = [
         "~/Library/Logs",
         "~/Library/Application Support/CrashReporter",
@@ -13,15 +13,15 @@ class LogsCleaningService: BaseCleaningService, CleaningService {
         "/var/log/system.log",
         "/var/log/install.log"
     ]
-    
-    func scan(progress: ((String) -> Void)?) async -> ScanResult {
+
+    func scan(progress _: ((String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
-        
+
         for path in logPaths {
             // Resolve wildcards
             let paths = resolvePaths(path)
-            
+
             for expandedPath in paths {
                 if fileHelper.fileExists(atPath: expandedPath) {
                     let size = fileHelper.sizeOfDirectory(atPath: expandedPath)
@@ -33,7 +33,7 @@ class LogsCleaningService: BaseCleaningService, CleaningService {
                 }
             }
         }
-        
+
         return ScanResult(
             category: category,
             estimatedSize: totalSize,
@@ -41,19 +41,19 @@ class LogsCleaningService: BaseCleaningService, CleaningService {
             items: items
         )
     }
-    
+
     private func resolvePaths(_ path: String) -> [String] {
         let expanded = fileHelper.expandPath(path)
-        
+
         if path.contains("*") {
             let components = expanded.components(separatedBy: "/*")
             if components.count >= 2 {
                 let baseFolder = components[0]
                 let remainingPath = components.dropFirst().joined(separator: "/")
-                
+
                 let contents = fileHelper.contentsOfDirectory(atPath: baseFolder)
                 var results: [String] = []
-                
+
                 for item in contents {
                     let itemPath = (baseFolder as NSString).appendingPathComponent(item)
                     let finalPath = (itemPath as NSString).appendingPathComponent(remainingPath)
@@ -64,34 +64,34 @@ class LogsCleaningService: BaseCleaningService, CleaningService {
                 return results
             }
         }
-        
+
         return [expanded]
     }
-    
+
     func clean() async -> CleaningResult {
         let startTime = Date()
         var bytesRemoved: Int64 = 0
         var filesRemoved = 0
         var errors: [String] = []
-        
+
         // Limpa logs com mais de 30 dias
         let calendar = Calendar.current
         let cutoffDate = calendar.date(byAdding: .day, value: -30, to: Date()) ?? Date()
-        
+
         for path in logPaths {
             let paths = resolvePaths(path)
-            
+
             for expandedPath in paths {
                 // Pula caminhos do sistema que requerem sudo
                 if expandedPath.hasPrefix("/var/log") || expandedPath.hasPrefix("/Library/Logs") {
                     continue
                 }
-                
+
                 let contents = fileHelper.contentsOfDirectory(atPath: expandedPath)
-                
+
                 for item in contents {
                     let itemPath = (expandedPath as NSString).appendingPathComponent(item)
-                    
+
                     // Verifica data de modificação
                     do {
                         let attributes = try FileManager.default.attributesOfItem(atPath: itemPath)
@@ -109,18 +109,18 @@ class LogsCleaningService: BaseCleaningService, CleaningService {
                 }
             }
         }
-        
+
         // Nota: Limpeza de logs do sistema requer permissões especiais
         // e não pode ser feita sem intervenção do usuário via sudo
         // Por isso, essa funcionalidade foi desabilitada
-        
+
         // Se você quiser adicionar suporte, precisará:
         // 1. Criar um helper tool com privilégios elevados
         // 2. Usar SMJobBless para instalá-lo
         // 3. Comunicar via XPC com o helper
-        
+
         let executionTime = Date().timeIntervalSince(startTime)
-        
+
         return CleaningResult(
             category: category,
             bytesRemoved: bytesRemoved,

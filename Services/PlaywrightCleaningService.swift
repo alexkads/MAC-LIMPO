@@ -2,19 +2,19 @@ import Foundation
 
 class PlaywrightCleaningService: BaseCleaningService, CleaningService {
     let category: CleaningCategory = .playwright
-    
+
     private let playwrightPaths = [
         "~/Library/Caches/ms-playwright",
         "~/Library/Caches/ms-playwright-go"
     ]
-    
+
     func scan(progress: ((String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
-        
+
         logger.log("Iniciando escaneamento de caches do Playwright", level: .info)
         progress?("Scanning Playwright caches...")
-        
+
         for path in playwrightPaths {
             let expandedPath = fileHelper.expandPath(path)
             if fileHelper.fileExists(atPath: expandedPath) {
@@ -27,9 +27,9 @@ class PlaywrightCleaningService: BaseCleaningService, CleaningService {
                 }
             }
         }
-        
+
         logger.log("Escaneamento Playwright concluído: \(fileHelper.formatBytes(totalSize))", level: .info)
-        
+
         return ScanResult(
             category: category,
             estimatedSize: totalSize,
@@ -37,15 +37,15 @@ class PlaywrightCleaningService: BaseCleaningService, CleaningService {
             items: items
         )
     }
-    
+
     func clean() async -> CleaningResult {
         let startTime = Date()
         var bytesRemoved: Int64 = 0
         var filesRemoved = 0
         var errors: [String] = []
-        
+
         logger.log("Iniciando limpeza de caches do Playwright", level: .info)
-        
+
         for path in playwrightPaths {
             let expandedPath = fileHelper.expandPath(path)
             if fileHelper.fileExists(atPath: expandedPath) {
@@ -61,10 +61,10 @@ class PlaywrightCleaningService: BaseCleaningService, CleaningService {
                 }
             }
         }
-        
+
         let executionTime = Date().timeIntervalSince(startTime)
         logger.log("Limpeza Playwright concluída: \(fileHelper.formatBytes(bytesRemoved)) liberados", level: .info)
-        
+
         return CleaningResult(
             category: category,
             bytesRemoved: bytesRemoved,

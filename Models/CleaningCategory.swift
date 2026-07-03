@@ -12,25 +12,25 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
     case cargo = "Cargo/Rust"
     case homebrew = "Homebrew"
     case terminalLogs = "Terminal Logs"
-    
+
     // Sistema
     case tempFiles = "Temp Files"
     case logs = "Logs"
     case appCache = "App Cache"
     case downloads = "Old Downloads"
     case trash = "Trash Bin"
-    
+
     // Navegadores e Apps
     case browserCache = "Browser Cache"
     case spotifyCache = "Spotify Cache"
     case slackCache = "Slack Cache"
     case messagingApps = "Messaging Apps"
     case adobeCache = "Adobe Cache"
-    
+
     // Email e Mensagens
     case mailAttachments = "Mail Attachments"
     case messagesAttachments = "Messages Attachments"
-    
+
     // System Deep Clean
     case systemData = "System Data"
     case varFolders = "Var Folders"
@@ -39,111 +39,114 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
     case podcasts = "Podcasts"
     case appLeftovers = "App Leftovers"
     case development = "Project Builds"
-    
+
     // Novos serviços
     case pnpm = "pnpm Store"
     case goCache = "Go Cache"
     case devApiTools = "API Tools"
     case notionCache = "Notion Cache"
     case cypress = "Cypress"
-    
+
     var group: CleaningGroup {
         switch self {
-        case .docker, .xcodeCache, .devPackages, .ideCache, .androidSDK, .playwright, .cargo, .homebrew, .terminalLogs, .aiTools, .iosSimulators, .pnpm, .goCache, .devApiTools, .cypress:
-            return .development
+        case .docker, .xcodeCache, .devPackages, .ideCache, .androidSDK, .playwright, .cargo, .homebrew, .terminalLogs,
+             .aiTools, .iosSimulators, .pnpm, .goCache, .devApiTools, .cypress:
+            .development
         case .systemData, .tempFiles, .logs, .trash, .varFolders, .appLeftovers:
-            return .system
+            .system
         case .development:
-            return .development
+            .development
         case .appCache, .browserCache, .adobeCache, .downloads, .creativeApps, .notionCache:
-            return .apps
+            .apps
         case .slackCache, .messagingApps, .mailAttachments, .messagesAttachments:
-            return .communication
+            .communication
         case .spotifyCache, .podcasts:
-            return .media
+            .media
         }
     }
-    
-    var id: String { rawValue }
-    
+
+    var id: String {
+        rawValue
+    }
+
     var icon: String {
         switch self {
-        case .docker: return "shippingbox.fill"
-        case .devPackages: return "hammer.fill"
-        case .xcodeCache: return "chevron.left.forwardslash.chevron.right"
-        case .iosSimulators: return "iphone.gen3"
-        case .ideCache: return "laptopcomputer"
-        case .androidSDK: return "apps.iphone"
-        case .playwright: return "theatermasks.fill"
-        case .cargo: return "shippingbox"
-        case .homebrew: return "mug.fill"
-        case .terminalLogs: return "terminal.fill"
-        case .tempFiles: return "doc.fill"
-        case .logs: return "list.bullet.rectangle.fill"
-        case .appCache: return "tray.full.fill"
-        case .downloads: return "arrow.down.circle.fill"
-        case .trash: return "trash.fill"
-        case .browserCache: return "network"
-        case .spotifyCache: return "music.note"
-        case .slackCache: return "bubble.left.and.bubble.right.fill"
-        case .messagingApps: return "bubble.left.and.text.bubble.right.fill"
-        case .adobeCache: return "paintbrush.fill"
-        case .mailAttachments: return "envelope.fill"
-        case .messagesAttachments: return "message.fill"
-        case .systemData: return "internaldrive.fill"
-        case .varFolders: return "folder.fill"
-        case .aiTools: return "brain.head.profile"
-        case .creativeApps: return "paintpalette.fill"
-        case .podcasts: return "mic.fill"
-        case .appLeftovers: return "exclamationmark.triangle.fill"
-        case .development: return "hammer.fill"
-        case .pnpm: return "shippingbox.and.arrow.backward.fill"
-        case .goCache: return "hare.fill"
-        case .devApiTools: return "network.badge.shield.half.filled"
-        case .notionCache: return "doc.richtext.fill"
-        case .cypress: return "checkmark.shield.fill"
+        case .docker: "shippingbox.fill"
+        case .devPackages: "hammer.fill"
+        case .xcodeCache: "chevron.left.forwardslash.chevron.right"
+        case .iosSimulators: "iphone.gen3"
+        case .ideCache: "laptopcomputer"
+        case .androidSDK: "apps.iphone"
+        case .playwright: "theatermasks.fill"
+        case .cargo: "shippingbox"
+        case .homebrew: "mug.fill"
+        case .terminalLogs: "terminal.fill"
+        case .tempFiles: "doc.fill"
+        case .logs: "list.bullet.rectangle.fill"
+        case .appCache: "tray.full.fill"
+        case .downloads: "arrow.down.circle.fill"
+        case .trash: "trash.fill"
+        case .browserCache: "network"
+        case .spotifyCache: "music.note"
+        case .slackCache: "bubble.left.and.bubble.right.fill"
+        case .messagingApps: "bubble.left.and.text.bubble.right.fill"
+        case .adobeCache: "paintbrush.fill"
+        case .mailAttachments: "envelope.fill"
+        case .messagesAttachments: "message.fill"
+        case .systemData: "internaldrive.fill"
+        case .varFolders: "folder.fill"
+        case .aiTools: "brain.head.profile"
+        case .creativeApps: "paintpalette.fill"
+        case .podcasts: "mic.fill"
+        case .appLeftovers: "exclamationmark.triangle.fill"
+        case .development: "hammer.fill"
+        case .pnpm: "shippingbox.and.arrow.backward.fill"
+        case .goCache: "hare.fill"
+        case .devApiTools: "network.badge.shield.half.filled"
+        case .notionCache: "doc.richtext.fill"
+        case .cypress: "checkmark.shield.fill"
         }
     }
-    
+
     var color: Color {
         switch self {
-        case .docker: return Color(hex: "2196F3")
-        case .devPackages: return Color(hex: "FF6F00")
-        case .xcodeCache: return Color(hex: "147EFB")
-        case .iosSimulators: return Color(hex: "5AC8FA")
-        case .ideCache: return Color(hex: "007ACC")
-        case .androidSDK: return Color(hex: "3DDC84")
-        case .playwright: return Color(hex: "2EAD33")
-        case .cargo: return Color(hex: "FF6B35")
-        case .homebrew: return Color(hex: "FBB040")
-        case .terminalLogs: return Color(hex: "00C9A7")
-        case .tempFiles: return Color(hex: "9C27B0")
-        case .logs: return Color(hex: "00BCD4")
-        case .appCache: return Color(hex: "4CAF50")
-        case .downloads: return Color(hex: "FF9800")
-        case .trash: return Color(hex: "F44336")
-        case .browserCache: return Color(hex: "3F51B5")
-        case .spotifyCache: return Color(hex: "1DB954")
-        case .slackCache: return Color(hex: "4A154B")
-        case .messagingApps: return Color(hex: "25D366")
-        case .adobeCache: return Color(hex: "FF0000")
-        case .mailAttachments: return Color(hex: "2196F3")
-        case .messagesAttachments: return Color(hex: "34C759")
-        case .systemData: return Color(hex: "8E44AD")
-        case .varFolders: return Color(hex: "E67E22")
-        case .aiTools: return Color(hex: "9B59B6")
-        case .creativeApps: return Color(hex: "E91E63")
-        case .podcasts: return Color(hex: "673AB7")
-        case .appLeftovers: return Color(hex: "C0392B") // Red for leftovers
-        case .development: return Color(hex: "E67E22")
-        case .pnpm: return Color(hex: "F9A825") // pnpm orange/gold
-        case .goCache: return Color(hex: "00ACD7") // Go cyan
-        case .devApiTools: return Color(hex: "FF6C37") // Postman orange
-        case .notionCache: return Color(hex: "37352F") // Notion dark
-        case .cypress: return Color(hex: "04C38E") // Cypress teal
+        case .docker: Color(hex: "2196F3")
+        case .devPackages: Color(hex: "FF6F00")
+        case .xcodeCache: Color(hex: "147EFB")
+        case .iosSimulators: Color(hex: "5AC8FA")
+        case .ideCache: Color(hex: "007ACC")
+        case .androidSDK: Color(hex: "3DDC84")
+        case .playwright: Color(hex: "2EAD33")
+        case .cargo: Color(hex: "FF6B35")
+        case .homebrew: Color(hex: "FBB040")
+        case .terminalLogs: Color(hex: "00C9A7")
+        case .tempFiles: Color(hex: "9C27B0")
+        case .logs: Color(hex: "00BCD4")
+        case .appCache: Color(hex: "4CAF50")
+        case .downloads: Color(hex: "FF9800")
+        case .trash: Color(hex: "F44336")
+        case .browserCache: Color(hex: "3F51B5")
+        case .spotifyCache: Color(hex: "1DB954")
+        case .slackCache: Color(hex: "4A154B")
+        case .messagingApps: Color(hex: "25D366")
+        case .adobeCache: Color(hex: "FF0000")
+        case .mailAttachments: Color(hex: "2196F3")
+        case .messagesAttachments: Color(hex: "34C759")
+        case .systemData: Color(hex: "8E44AD")
+        case .varFolders: Color(hex: "E67E22")
+        case .aiTools: Color(hex: "9B59B6")
+        case .creativeApps: Color(hex: "E91E63")
+        case .podcasts: Color(hex: "673AB7")
+        case .appLeftovers: Color(hex: "C0392B") // Red for leftovers
+        case .development: Color(hex: "E67E22")
+        case .pnpm: Color(hex: "F9A825") // pnpm orange/gold
+        case .goCache: Color(hex: "00ACD7") // Go cyan
+        case .devApiTools: Color(hex: "FF6C37") // Postman orange
+        case .notionCache: Color(hex: "37352F") // Notion dark
+        case .cypress: Color(hex: "04C38E") // Cypress teal
         }
     }
-    
+
     var gradient: LinearGradient {
         LinearGradient(
             colors: [color, color.opacity(0.7)],
@@ -151,77 +154,77 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
             endPoint: .bottomTrailing
         )
     }
-    
+
     var description: String {
         switch self {
         case .docker:
-            return "Remove unused containers, images, and volumes"
+            "Remove unused containers, images, and volumes"
         case .devPackages:
-            return "Clear npm, pip, brew, and cargo caches"
+            "Clear npm, pip, brew, and cargo caches"
         case .xcodeCache:
-            return "Clean DerivedData, Archives, and build caches"
+            "Clean DerivedData, Archives, and build caches"
         case .iosSimulators:
-            return "Remove old iOS Simulator devices and data"
+            "Remove old iOS Simulator devices and data"
         case .ideCache:
-            return "Clean JetBrains, VS Code, Cursor caches"
+            "Clean JetBrains, VS Code, Cursor caches"
         case .androidSDK:
-            return "Clean Gradle cache and old Android SDK data"
+            "Clean Gradle cache and old Android SDK data"
         case .playwright:
-            return "Remove Playwright browser caches"
+            "Remove Playwright browser caches"
         case .cargo:
-            return "Clean Rust/Cargo build cache and registry"
+            "Clean Rust/Cargo build cache and registry"
         case .homebrew:
-            return "Clear Homebrew package download cache"
+            "Clear Homebrew package download cache"
         case .terminalLogs:
-            return "Remove old terminal log files"
+            "Remove old terminal log files"
         case .tempFiles:
-            return "Delete temporary files and caches"
+            "Delete temporary files and caches"
         case .logs:
-            return "Clean up old system and app logs (30+ days)"
+            "Clean up old system and app logs (30+ days)"
         case .appCache:
-            return "Clear application caches"
+            "Clear application caches"
         case .downloads:
-            return "Remove downloads older than 30 days"
+            "Remove downloads older than 30 days"
         case .trash:
-            return "Empty Trash and recover space"
+            "Empty Trash and recover space"
         case .browserCache:
-            return "Clear Safari, Chrome, Firefox cache"
+            "Clear Safari, Chrome, Firefox cache"
         case .spotifyCache:
-            return "Clean Spotify offline cache"
+            "Clean Spotify offline cache"
         case .slackCache:
-            return "Clear Slack cache and temp files"
+            "Clear Slack cache and temp files"
         case .messagingApps:
-            return "Clean WhatsApp, Teams, Discord caches"
+            "Clean WhatsApp, Teams, Discord caches"
         case .adobeCache:
-            return "Clear Adobe apps cache and media files"
+            "Clear Adobe apps cache and media files"
         case .mailAttachments:
-            return "Clean old Mail app attachments"
+            "Clean old Mail app attachments"
         case .messagesAttachments:
-            return "Remove old Messages attachments"
+            "Remove old Messages attachments"
         case .systemData:
-            return "Deep clean system caches and temporary data"
+            "Deep clean system caches and temporary data"
         case .varFolders:
-            return "Clean /var/folders temp caches (Chrome, Metal, clang)"
+            "Clean /var/folders temp caches (Chrome, Metal, clang)"
         case .aiTools:
-            return "Clear AI tools cache (Claude, Gemini, Cursor, Copilot)"
+            "Clear AI tools cache (Claude, Gemini, Cursor, Copilot)"
         case .creativeApps:
-            return "Clean Canva, Affinity, Figma caches"
+            "Clean Canva, Affinity, Figma caches"
         case .podcasts:
-            return "Remove downloaded episodes and caches"
+            "Remove downloaded episodes and caches"
         case .appLeftovers:
-            return "Remove data from uninstalled apps (JetBrains, Trae, etc)"
+            "Remove data from uninstalled apps (JetBrains, Trae, etc)"
         case .development:
-            return "Clean node_modules, Rust targets, and build artifacts"
+            "Clean node_modules, Rust targets, and build artifacts"
         case .pnpm:
-            return "Clean pnpm package store and dlx/metadata caches"
+            "Clean pnpm package store and dlx/metadata caches"
         case .goCache:
-            return "Clean Go module cache, build cache, and gopls"
+            "Clean Go module cache, build cache, and gopls"
         case .devApiTools:
-            return "Clean Postman, Insomnia, Bruno caches and logs"
+            "Clean Postman, Insomnia, Bruno caches and logs"
         case .notionCache:
-            return "Remove Notion asset cache and GPU caches"
+            "Remove Notion asset cache and GPU caches"
         case .cypress:
-            return "Clean Cypress test data and browser binary cache"
+            "Clean Cypress test data and browser binary cache"
         }
     }
 }
@@ -232,21 +235,23 @@ enum CleaningGroup: String, CaseIterable, Identifiable {
     case apps = "Apps & Browsers"
     case communication = "Communication"
     case media = "Media"
-    
-    var id: String { rawValue }
-    
+
+    var id: String {
+        rawValue
+    }
+
     var icon: String {
         switch self {
-        case .development: return "hammer.fill"
-        case .system: return "gear"
-        case .apps: return "app.badge.fill"
-        case .communication: return "bubble.left.and.bubble.right.fill"
-        case .media: return "play.circle.fill"
+        case .development: "hammer.fill"
+        case .system: "gear"
+        case .apps: "app.badge.fill"
+        case .communication: "bubble.left.and.bubble.right.fill"
+        case .media: "play.circle.fill"
         }
     }
 }
 
-// Extension para criar cores de hex
+/// Extension para criar cores de hex
 extension Color {
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
@@ -263,12 +268,12 @@ extension Color {
         default:
             (a, r, g, b) = (255, 0, 0, 0)
         }
-        
+
         self.init(
             .sRGB,
             red: Double(r) / 255,
             green: Double(g) / 255,
-            blue:  Double(b) / 255,
+            blue: Double(b) / 255,
             opacity: Double(a) / 255
         )
     }

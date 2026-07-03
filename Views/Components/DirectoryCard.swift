@@ -6,9 +6,9 @@ struct DirectoryCard: View {
     let icon: String
     let gradient: LinearGradient
     let action: () -> Void
-    
+
     @State private var isHovered = false
-    
+
     var body: some View {
         Button(action: action) {
             VStack(spacing: 16) {
@@ -18,20 +18,20 @@ struct DirectoryCard: View {
                         .fill(gradient)
                         .frame(width: 70, height: 70)
                         .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
-                    
+
                     Image(systemName: icon)
                         .font(.system(size: 32, weight: .semibold))
                         .foregroundColor(.white)
                 }
                 .scaleEffect(isHovered ? 1.05 : 1.0)
                 .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isHovered)
-                
+
                 // Text content
                 VStack(spacing: 4) {
                     Text(name)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.primary)
-                    
+
                     Text(path)
                         .font(.system(size: 11))
                         .foregroundColor(.secondary)

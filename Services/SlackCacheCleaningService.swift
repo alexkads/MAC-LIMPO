@@ -2,7 +2,7 @@ import Foundation
 
 class SlackCacheCleaningService: BaseCleaningService, CleaningService {
     let category: CleaningCategory = .slackCache
-    
+
     private let slackPaths = [
         "~/Library/Application Support/Slack/Cache",
         "~/Library/Application Support/Slack/Code Cache",
@@ -11,11 +11,11 @@ class SlackCacheCleaningService: BaseCleaningService, CleaningService {
         "~/Library/Caches/com.tinyspeck.slackmacgap",
         "~/Library/Caches/com.tinyspeck.slackmacgap.ShipIt"
     ]
-    
-    func scan(progress: ((String) -> Void)?) async -> ScanResult {
+
+    func scan(progress _: ((String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
-        
+
         for path in slackPaths {
             let expandedPath = fileHelper.expandPath(path)
             if fileHelper.fileExists(atPath: expandedPath) {
@@ -27,11 +27,11 @@ class SlackCacheCleaningService: BaseCleaningService, CleaningService {
                 }
             }
         }
-        
+
         if items.isEmpty {
             items.append("Slack not installed or no cache")
         }
-        
+
         return ScanResult(
             category: category,
             estimatedSize: totalSize,
@@ -39,19 +39,19 @@ class SlackCacheCleaningService: BaseCleaningService, CleaningService {
             items: items
         )
     }
-    
+
     func clean() async -> CleaningResult {
         let startTime = Date()
         var bytesRemoved: Int64 = 0
         var filesRemoved = 0
         var errors: [String] = []
-        
+
         for path in slackPaths {
             let expandedPath = fileHelper.expandPath(path)
             if fileHelper.fileExists(atPath: expandedPath) {
                 let size = fileHelper.sizeOfDirectory(atPath: expandedPath)
                 let contents = fileHelper.contentsOfDirectory(atPath: expandedPath)
-                
+
                 for item in contents {
                     let itemPath = (expandedPath as NSString).appendingPathComponent(item)
                     do {
@@ -61,13 +61,13 @@ class SlackCacheCleaningService: BaseCleaningService, CleaningService {
                         errors.append("Failed to remove \(item): \(error.localizedDescription)")
                     }
                 }
-                
+
                 bytesRemoved += size
             }
         }
-        
+
         let executionTime = Date().timeIntervalSince(startTime)
-        
+
         return CleaningResult(
             category: category,
             bytesRemoved: bytesRemoved,
