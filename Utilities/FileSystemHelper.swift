@@ -5,13 +5,19 @@ class FileSystemHelper {
     static let shared = FileSystemHelper()
     private let fileManager = FileManager.default
 
+    /// Timeout do `du` ao medir tamanho. Precisa ser generoso: pastas grandes
+    /// (ex.: imagens do Docker, com dezenas de GB) demoram bem mais que poucos
+    /// segundos, e um timeout curto fazia o `du` ser morto e o tamanho virar 0
+    /// (subcontagem silenciosa do espaço recuperável).
+    static let sizeMeasurementTimeout: TimeInterval = 120
+
     /// Calcula o tamanho de um diretório usando du (muito mais rápido)
     func sizeOfDirectory(atPath path: String) -> Int64 {
         guard fileManager.fileExists(atPath: path) else { return 0 }
 
         // Tenta usar du primeiro para performance
         let command = "du -sk '\(path)' | cut -f1"
-        let result = ShellExecutor.shared.execute(command, timeout: 5)
+        let result = ShellExecutor.shared.execute(command, timeout: Self.sizeMeasurementTimeout)
         if let bytes = Self.parseDuKilobytes(result.output) {
             return bytes
         }

@@ -36,31 +36,37 @@ class ShellExecutor {
         env["PATH"] = newPath
         task.environment = env
 
+        // Sinaliza quando o processo termina (sem busy-wait com Thread.sleep).
+        let exitSemaphore = DispatchSemaphore(value: 0)
+        task.terminationHandler = { _ in exitSemaphore.signal() }
+
+        // Drena os pipes em threads separadas. Ler só depois de o processo sair
+        // (código antigo) trava se a saída passar de ~64KB e encher o buffer do
+        // pipe enquanto o processo ainda escreve.
+        var outputData = Data()
+        var errorData = Data()
+        let ioGroup = DispatchGroup()
+        let ioQueue = DispatchQueue(label: "com.maclimpo.shell.io", attributes: .concurrent)
+        ioQueue.async(group: ioGroup) { outputData = outputPipe.fileHandleForReading.readDataToEndOfFile() }
+        ioQueue.async(group: ioGroup) { errorData = errorPipe.fileHandleForReading.readDataToEndOfFile() }
+
         do {
             try task.run()
-
-            // Implementa timeout
-            let deadline = Date().addingTimeInterval(timeout)
-            while task.isRunning, Date() < deadline {
-                Thread.sleep(forTimeInterval: 0.1)
-            }
-
-            // Se ainda estiver rodando após timeout, termina o processo
-            if task.isRunning {
-                task.terminate()
-                return ("", "Command timed out after \(timeout) seconds", -1)
-            }
-
-            let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
-            let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-
-            let output = String(data: outputData, encoding: .utf8) ?? ""
-            let error = String(data: errorData, encoding: .utf8) ?? ""
-
-            return (output, error, task.terminationStatus)
         } catch {
             return ("", error.localizedDescription, -1)
         }
+
+        // Espera o término respeitando o timeout.
+        if exitSemaphore.wait(timeout: .now() + timeout) == .timedOut {
+            task.terminate()
+            ioGroup.wait() // pipes fecham no terminate; deixa as leituras encerrarem
+            return ("", "Command timed out after \(timeout) seconds", -1)
+        }
+
+        ioGroup.wait() // garante leitura completa da saída antes de retornar
+        let output = String(data: outputData, encoding: .utf8) ?? ""
+        let error = String(data: errorData, encoding: .utf8) ?? ""
+        return (output, error, task.terminationStatus)
     }
 
     func checkCommandExists(_ command: String) -> Bool {

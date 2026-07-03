@@ -79,35 +79,55 @@ class MenuBarViewModel: ObservableObject {
         usedDiskSpace = totalDiskSpace - helper.availableDiskSpace()
     }
 
+    @Published var scanningStatus: [CleaningCategory: String] = [:]
+
+    /// Máximo de scans simultâneos. Cada scan dispara processos `du`; sem limite,
+    /// as ~35 categorias escaneavam todas de uma vez no launch, esgotando o thread
+    /// pool cooperativo. 4 mantém a UI responsiva sem serializar demais.
+    private let maxConcurrentScans = 4
+
     func scanAllCategories() {
-        // Escaneia apenas categorias que têm serviços implementados
-        for category in services.keys {
-            scanCategory(category)
+        let categories = Array(services.keys)
+        Task {
+            await withTaskGroup(of: Void.self) { group in
+                var next = 0
+                let seed = min(maxConcurrentScans, categories.count)
+                while next < seed {
+                    let category = categories[next]; next += 1
+                    group.addTask { await self.performScan(category) }
+                }
+                // À medida que cada scan termina, inicia o próximo (janela deslizante).
+                while await group.next() != nil {
+                    if next < categories.count {
+                        let category = categories[next]; next += 1
+                        group.addTask { await self.performScan(category) }
+                    }
+                }
+            }
         }
     }
 
-    @Published var scanningStatus: [CleaningCategory: String] = [:]
-
-    // ... existing properties ...
-
     func scanCategory(_ category: CleaningCategory) {
+        Task { await performScan(category) }
+    }
+
+    /// Núcleo awaitable do scan de uma categoria; atualiza o estado no MainActor.
+    private func performScan(_ category: CleaningCategory) async {
         guard let service = services[category] else { return }
 
-        isScanning[category] = true
-        scanningStatus[category] = "Starting..."
+        await MainActor.run {
+            isScanning[category] = true
+            scanningStatus[category] = "Starting..."
+        }
 
-        Task {
-            let result = await service.scan(progress: { [weak self] status in
-                Task { @MainActor in
-                    self?.scanningStatus[category] = status
-                }
-            })
+        let result = await service.scan(progress: { [weak self] status in
+            Task { @MainActor in self?.scanningStatus[category] = status }
+        })
 
-            await MainActor.run {
-                scanResults[category] = result
-                isScanning[category] = false
-                scanningStatus[category] = nil
-            }
+        await MainActor.run {
+            scanResults[category] = result
+            isScanning[category] = false
+            scanningStatus[category] = nil
         }
     }
 
