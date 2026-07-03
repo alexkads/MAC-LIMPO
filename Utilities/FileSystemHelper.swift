@@ -117,7 +117,7 @@ class FileSystemHelper {
                 return freeSize
             }
         } catch {
-            return 0
+            Logger.shared.log("Falha ao ler espaço livre do disco: \(error.localizedDescription)", level: .warning)
         }
         return 0
     }
@@ -130,7 +130,7 @@ class FileSystemHelper {
                 return totalSize
             }
         } catch {
-            return 0
+            Logger.shared.log("Falha ao ler tamanho total do disco: \(error.localizedDescription)", level: .warning)
         }
         return 0
     }

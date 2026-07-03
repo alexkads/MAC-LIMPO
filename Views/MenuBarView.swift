@@ -18,13 +18,9 @@ class MenuBarViewModel: ObservableObject {
     /// Quando o usuário marca "não perguntar de novo", pulamos a confirmação nesta sessão.
     private var skipCleaningConfirmation = false
 
-    // TEMPORÁRIO: Apenas serviços originais até adicionar os novos arquivos ao Xcode
-    // Para adicionar os novos serviços:
-    // 1. No Xcode: Project Navigator > Botão direito > Add Files...
-    // 2. Selecione os 11 arquivos *CleaningService.swift criados
-    // 3. Marque "Copy items if needed" e "Add to targets"
-    // 4. Descomente as linhas abaixo e compile novamente
-
+    /// Registry categoria → serviço. Ao adicionar um serviço, lembre de incluir o
+    /// fonte em `sources:` do Package.swift (SPM não faz glob). Ver a skill
+    /// `add-cleaning-service`.
     let services: [CleaningCategory: CleaningService] = [
         .docker: DockerCleaningService(),
         .devPackages: DevPackagesCleaningService(),
