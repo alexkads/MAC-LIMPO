@@ -174,11 +174,16 @@ tamanhos corretos.
 
 ## Fora de escopo (backlog separado — ligado à análise "liberar mais espaço")
 
-Estes são **features**, não qualidade; ficam para depois do refactor:
-- Chrome multi-profile + `Service Worker` no `BrowserCacheCleaningService`.
-- Docker: `volume prune`, modo agressivo `image prune -a`, aviso sobre `Docker.raw`.
-- Services novos: TikTok LIVE Studio, Antigravity, Wondershare (leftovers).
-- Modo "limpeza agressiva" opt-in (modelos IA regeneráveis do Chrome).
+Estes são **features**, não qualidade. Implementados na branch `feature/reclaim-more-space`:
+- [x] Chrome/Chromium multi-profile + `Service Worker` no `BrowserCacheCleaningService`.
+- [x] Docker: `builder prune -a` (build cache completo) + aviso sobre `Docker.raw`.
+      (volume prune deliberadamente NÃO feito — pode apagar dados do usuário.)
+- [x] Services novos: TikTok LIVE Studio (categoria nova), `antigravity-updater`
+      (AITools), Wondershare Dr.Fone (AppLeftovers).
+
+Ainda em aberto:
+- Modo "limpeza agressiva" opt-in (ex.: `OptGuideOnDeviceModel` do Chrome, ~4GB regenerável).
+- `docker image prune -a` opcional (mais agressivo, atrás de um toggle).
 
 ## Sequência de execução
 
