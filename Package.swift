@@ -48,6 +48,7 @@ let package = Package(
                 "Models/CleaningCategory.swift",
                 "Models/CleaningResult.swift",
                 "Models/CleaningOptions.swift",
+                "Models/Theme.swift",
                 "Models/FileNode.swift",
                 "Services/CleaningService.swift",
                 "Services/PathBasedCleaningService.swift",
@@ -104,6 +105,7 @@ let package = Package(
                 "Views/Components/CleaningProgressView.swift",
                 "Views/Components/ResultsView.swift",
                 "Views/Components/DirectoryCard.swift",
+                "Views/Components/ThemePickerView.swift",
                 // Utilities
                 "Utilities/FileSystemHelper.swift",
                 "Utilities/ShellExecutor.swift",

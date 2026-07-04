@@ -6,6 +6,8 @@ struct CleaningProgressView: View {
     let progress: Double
     let currentOperation: String
 
+    @ObservedObject private var themeManager = ThemeManager.shared
+
     var body: some View {
         ZStack {
             // Backdrop
@@ -33,11 +35,12 @@ struct CleaningProgressView: View {
                 // Título
                 Text("Cleaning \(category.rawValue)")
                     .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(themeManager.palette.primaryText)
 
                 // Operação atual
                 Text(currentOperation)
                     .font(.system(size: 14))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(themeManager.palette.secondaryText)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
                     .frame(height: 40)
@@ -60,7 +63,7 @@ struct CleaningProgressView: View {
 
                     Text("\(Int(progress * 100))%")
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(themeManager.palette.secondaryText)
                 }
 
                 // Botão cancelar
@@ -75,8 +78,18 @@ struct CleaningProgressView: View {
             .frame(width: 320)
             .background(
                 RoundedRectangle(cornerRadius: 20)
-                    .fill(Color(NSColor.windowBackgroundColor))
-                    .shadow(color: .black.opacity(0.3), radius: 30)
+                    .fill(themeManager.palette.glow
+                        ? themeManager.palette.surface
+                        : Color(NSColor.windowBackgroundColor))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(themeManager.palette.surfaceStroke, lineWidth: themeManager.palette.glow ? 1.5 : 0)
+                    )
+                    .shadow(
+                        color: themeManager.palette.glow
+                            ? themeManager.palette.glowColor.opacity(0.5) : .black.opacity(0.3),
+                        radius: 30
+                    )
             )
         }
     }

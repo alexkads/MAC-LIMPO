@@ -4,6 +4,7 @@ struct ResultsView: View {
     let result: CleaningResult
     @Binding var isShowing: Bool
 
+    @ObservedObject private var themeManager = ThemeManager.shared
     @State private var animateSuccess = false
 
     var body: some View {
@@ -89,8 +90,18 @@ struct ResultsView: View {
             .frame(width: 360)
             .background(
                 RoundedRectangle(cornerRadius: 20)
-                    .fill(Color(NSColor.windowBackgroundColor))
-                    .shadow(color: .black.opacity(0.3), radius: 30)
+                    .fill(themeManager.palette.glow
+                        ? themeManager.palette.surface
+                        : Color(NSColor.windowBackgroundColor))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(themeManager.palette.surfaceStroke, lineWidth: themeManager.palette.glow ? 1.5 : 0)
+                    )
+                    .shadow(
+                        color: themeManager.palette.glow
+                            ? themeManager.palette.glowColor.opacity(0.5) : .black.opacity(0.3),
+                        radius: 30
+                    )
             )
         }
         .onAppear {
@@ -107,7 +118,10 @@ struct StatisticRow: View {
     let value: String
     let color: Color
 
+    @ObservedObject private var themeManager = ThemeManager.shared
+
     var body: some View {
+        let palette = themeManager.palette
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 20))
@@ -116,18 +130,22 @@ struct StatisticRow: View {
 
             Text(label)
                 .font(.system(size: 14))
-                .foregroundColor(.secondary)
+                .foregroundColor(palette.secondaryText)
 
             Spacer()
 
             Text(value)
                 .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.primary)
+                .foregroundColor(palette.primaryText)
         }
         .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color(NSColor.controlBackgroundColor))
+                .fill(palette.glow ? palette.glowColor.opacity(0.08) : Color(NSColor.controlBackgroundColor))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(palette.glow ? palette.surfaceStroke.opacity(0.4) : .clear, lineWidth: 1)
+                )
         )
     }
 }

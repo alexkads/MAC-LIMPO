@@ -7,17 +7,31 @@ struct CleaningCategoryCard: View {
     let scanningStatus: String?
     let action: () -> Void
 
+    @ObservedObject private var themeManager = ThemeManager.shared
     @State private var isHovered = false
 
+    /// Cor/gradiente do ícone: por categoria, ou o accent do tema (ex.: Matrix).
+    private var iconGradient: LinearGradient {
+        themeManager.palette.usesCategoryColors ? category.gradient : themeManager.palette.accentGradient
+    }
+
+    private var iconGlowColor: Color {
+        themeManager.palette.usesCategoryColors ? category.color : themeManager.palette.glowColor
+    }
+
     var body: some View {
+        let palette = themeManager.palette
         Button(action: action) {
             HStack(spacing: 16) {
-                // ... (existing icon code) ...
                 ZStack {
                     Circle()
-                        .fill(category.gradient)
+                        .fill(iconGradient)
                         .frame(width: 50, height: 50)
-                        .shadow(color: .black.opacity(0.2), radius: isHovered ? 8 : 4, y: isHovered ? 4 : 2)
+                        .shadow(
+                            color: palette.glow ? iconGlowColor.opacity(0.8) : .black.opacity(0.2),
+                            radius: palette.glow ? (isHovered ? 14 : 9) : (isHovered ? 8 : 4),
+                            y: palette.glow ? 0 : (isHovered ? 4 : 2)
+                        )
 
                     Image(systemName: category.icon)
                         .font(.system(size: 24, weight: .semibold))
@@ -28,11 +42,11 @@ struct CleaningCategoryCard: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(category.rawValue)
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.primary)
+                        .foregroundColor(palette.primaryText)
 
                     Text(category.description)
                         .font(.system(size: 12))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(palette.secondaryText)
                         .lineLimit(1)
                 }
 
@@ -43,7 +57,7 @@ struct CleaningCategoryCard: View {
                         if let status = scanningStatus {
                             Text(status)
                                 .font(.system(size: 11))
-                                .foregroundColor(.secondary)
+                                .foregroundColor(palette.secondaryText)
                                 .lineLimit(1)
                         }
                         ProgressView()
@@ -56,26 +70,16 @@ struct CleaningCategoryCard: View {
                         .foregroundColor(.white)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .background(
-                            Capsule()
-                                .fill(category.gradient)
-                        )
+                        .background(Capsule().fill(iconGradient))
                 }
             }
             .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(NSColor.controlBackgroundColor))
-                    .shadow(
-                        color: .black.opacity(isHovered ? 0.15 : 0.08),
-                        radius: isHovered ? 12 : 8,
-                        y: isHovered ? 6 : 4
-                    )
-            )
+            .themedSurface(palette, hovered: isHovered)
             .overlay(
+                // Realce de borda no hover (accent/categoria).
                 RoundedRectangle(cornerRadius: 16)
                     .stroke(
-                        category.gradient.opacity(isHovered ? 0.5 : 0),
+                        iconGradient.opacity(isHovered ? (palette.glow ? 0.9 : 0.5) : 0),
                         lineWidth: 2
                     )
             )

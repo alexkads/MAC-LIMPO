@@ -4,6 +4,8 @@ struct StorageStatsView: View {
     let usedSpace: Int64
     let totalSpace: Int64
 
+    @ObservedObject private var themeManager = ThemeManager.shared
+
     private var usedPercentage: Double {
         guard totalSpace > 0 else { return 0 }
         return Double(usedSpace) / Double(totalSpace)
@@ -14,15 +16,17 @@ struct StorageStatsView: View {
     }
 
     var body: some View {
+        let palette = themeManager.palette
         VStack(spacing: 16) {
             // Título
             HStack {
                 Image(systemName: "internaldrive")
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.blue)
+                    .foregroundStyle(palette.accentGradient)
 
                 Text("Storage")
                     .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(palette.primaryText)
 
                 Spacer()
             }
@@ -31,14 +35,14 @@ struct StorageStatsView: View {
                 // Gráfico circular
                 ZStack {
                     Circle()
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 12)
+                        .stroke(palette.secondaryText.opacity(0.2), lineWidth: 12)
                         .frame(width: 80, height: 80)
 
                     Circle()
                         .trim(from: 0, to: usedPercentage)
                         .stroke(
                             LinearGradient(
-                                colors: [Color.blue, Color.purple],
+                                colors: palette.accent,
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ),
@@ -46,13 +50,18 @@ struct StorageStatsView: View {
                         )
                         .frame(width: 80, height: 80)
                         .rotationEffect(.degrees(-90))
+                        .shadow(
+                            color: palette.glow ? palette.glowColor.opacity(0.7) : .clear,
+                            radius: palette.glow ? 8 : 0
+                        )
 
                     VStack(spacing: 2) {
                         Text("\(Int(usedPercentage * 100))%")
                             .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(palette.primaryText)
                         Text("used")
                             .font(.system(size: 10))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(palette.secondaryText)
                     }
                 }
 
@@ -79,20 +88,7 @@ struct StorageStatsView: View {
             }
         }
         .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color(NSColor.controlBackgroundColor),
-                            Color(NSColor.controlBackgroundColor).opacity(0.8)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
-        )
+        .themedSurface(palette)
     }
 }
 
@@ -100,6 +96,8 @@ struct StatRow: View {
     let label: String
     let value: String
     let color: Color
+
+    @ObservedObject private var themeManager = ThemeManager.shared
 
     var body: some View {
         HStack {
@@ -109,13 +107,13 @@ struct StatRow: View {
 
             Text(label)
                 .font(.system(size: 12))
-                .foregroundColor(.secondary)
+                .foregroundColor(themeManager.palette.secondaryText)
 
             Spacer()
 
             Text(value)
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(.primary)
+                .foregroundColor(themeManager.palette.primaryText)
         }
     }
 }

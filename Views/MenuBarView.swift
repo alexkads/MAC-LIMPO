@@ -286,6 +286,7 @@ struct MenuBarView: View {
     @StateObject private var viewModel = MenuBarViewModel()
     @StateObject private var launchAtLoginService = LaunchAtLoginService()
     @ObservedObject private var cleaningOptions = CleaningOptions.shared
+    @ObservedObject private var themeManager = ThemeManager.shared
     let onOpenTreemap: () -> Void
 
     init(onOpenTreemap: @escaping () -> Void = {}) {
@@ -294,6 +295,9 @@ struct MenuBarView: View {
 
     var body: some View {
         ZStack {
+            // Fundo temático (Classic = transparente; neon = gradiente escuro)
+            themeManager.palette.backgroundView
+
             VStack(spacing: 0) {
                 // FIXED HEADER SECTION
                 VStack(spacing: 20) {
@@ -302,17 +306,16 @@ struct MenuBarView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("MAC-LIMPO")
                                 .font(.system(size: 24, weight: .bold))
-                                .foregroundStyle(
-                                    LinearGradient(
-                                        colors: [.blue, .purple],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
+                                .foregroundStyle(themeManager.palette.accentGradient)
+                                .shadow(
+                                    color: themeManager.palette.glow
+                                        ? themeManager.palette.glowColor.opacity(0.7) : .clear,
+                                    radius: themeManager.palette.glow ? 8 : 0
                                 )
 
                             Text("System Cleaner")
                                 .font(.system(size: 12))
-                                .foregroundColor(.secondary)
+                                .foregroundColor(themeManager.palette.secondaryText)
                         }
 
                         Spacer()
@@ -322,6 +325,7 @@ struct MenuBarView: View {
                         }) {
                             Image(systemName: "square.grid.3x3.fill")
                                 .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(themeManager.palette.accentGradient)
                         }
                         .buttonStyle(.plain)
                         .help("Disk Map")
@@ -331,6 +335,7 @@ struct MenuBarView: View {
                         }) {
                             Image(systemName: "arrow.clockwise")
                                 .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(themeManager.palette.accentGradient)
                         }
                         .buttonStyle(.plain)
                         .help("Refresh scan")
@@ -364,10 +369,10 @@ struct MenuBarView: View {
                                         HStack {
                                             Image(systemName: group.icon)
                                                 .font(.system(size: 14))
-                                                .foregroundColor(.secondary)
+                                                .foregroundColor(themeManager.palette.secondaryText)
                                             Text(group.rawValue)
                                                 .font(.system(size: 13, weight: .semibold))
-                                                .foregroundColor(.secondary)
+                                                .foregroundColor(themeManager.palette.secondaryText)
                                             Spacer()
                                         }
                                         .padding(.horizontal, 4)
@@ -406,24 +411,27 @@ struct MenuBarView: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(
-                                LinearGradient(
-                                    colors: [.blue, .purple],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
+                            .background(themeManager.palette.accentGradient)
                             .foregroundColor(.white)
                             .cornerRadius(12)
+                            .shadow(
+                                color: themeManager.palette.glow
+                                    ? themeManager.palette.glowColor.opacity(0.6) : .clear,
+                                radius: themeManager.palette.glow ? 14 : 0
+                            )
                         }
                         .buttonStyle(.plain)
                         .padding(.horizontal, 20)
 
                         // Settings
                         VStack(spacing: 12) {
+                            // Theme picker
+                            ThemePickerView(themeManager: themeManager)
+
                             Toggle(isOn: $launchAtLoginService.isEnabled) {
                                 Text("Launch at Login")
                                     .font(.system(size: 14))
+                                    .foregroundColor(themeManager.palette.primaryText)
                             }
                             .toggleStyle(.switch)
                             .padding(.horizontal, 20)
@@ -432,11 +440,12 @@ struct MenuBarView: View {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Aggressive cleaning")
                                         .font(.system(size: 14))
+                                        .foregroundColor(themeManager.palette.primaryText)
                                     Text(
                                         "Also clears large regenerable caches (Chrome AI models, all unused Docker images)"
                                     )
                                     .font(.system(size: 11))
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(themeManager.palette.secondaryText)
                                     .fixedSize(horizontal: false, vertical: true)
                                 }
                             }
@@ -449,7 +458,7 @@ struct MenuBarView: View {
                             NSApplication.shared.terminate(nil)
                         }
                         .buttonStyle(.plain)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(themeManager.palette.secondaryText)
                         .font(.system(size: 12))
                         .padding(.bottom, 20)
                     }
@@ -475,6 +484,8 @@ struct MenuBarView: View {
             }
         }
         .frame(width: 420, height: 600)
+        .fontDesign(themeManager.palette.fontDesign)
+        .animation(.easeInOut(duration: 0.35), value: themeManager.theme)
         .onChange(of: cleaningOptions.aggressiveMode) { _ in
             // As estimativas mudam com o modo agressivo; re-escaneia para refletir.
             viewModel.scanAllCategories()
