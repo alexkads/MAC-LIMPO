@@ -181,9 +181,14 @@ Estes são **features**, não qualidade. Implementados na branch `feature/reclai
 - [x] Services novos: TikTok LIVE Studio (categoria nova), `antigravity-updater`
       (AITools), Wondershare Dr.Fone (AppLeftovers).
 
-Ainda em aberto:
-- Modo "limpeza agressiva" opt-in (ex.: `OptGuideOnDeviceModel` do Chrome, ~4GB regenerável).
-- `docker image prune -a` opcional (mais agressivo, atrás de um toggle).
+- [x] Modo "limpeza agressiva" opt-in (`CleaningOptions.aggressiveMode` + toggle no
+      popover): inclui `OptGuideOnDeviceModel` do Chrome (~4GB) e `docker image prune -a`,
+      com aviso no diálogo e re-scan ao alternar. `CleanTarget.aggressive` gate testado.
+
+Backlog aberto (novo):
+- Cobrir mais apps sob demanda via a skill `add-cleaning-service`.
+- Migrar Downloads/Logs para `CleanTarget.olderThanDays` (já suportado pela base).
+- Trocar deleção permanente por Lixeira nos services ainda não migrados (AppLeftovers etc.).
 
 ## Sequência de execução
 
