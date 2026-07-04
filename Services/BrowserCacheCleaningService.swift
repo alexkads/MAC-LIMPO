@@ -1,86 +1,121 @@
 import Foundation
 
-class BrowserCacheCleaningService: BaseCleaningService, CleaningService {
+/// Limpa caches de navegadores. Para browsers Chromium (Chrome, Edge, Brave, Arc)
+/// os caches ficam **por profile** (`Default`, `Profile 1`, ...); antes só o
+/// `Default` do Chrome era coberto e o `Service Worker` (frequentemente o maior)
+/// era ignorado. Aqui enumeramos todos os profiles dinamicamente.
+///
+/// Só mexe em caches. NÃO apaga histórico/LocalStorage (dados do usuário).
+final class BrowserCacheCleaningService: BaseCleaningService, CleaningService {
     let category: CleaningCategory = .browserCache
 
-    private let browserCaches = [
-        // Safari
-        ("Safari Cache", "~/Library/Caches/com.apple.Safari"),
-        ("Safari WebKit", "~/Library/Caches/com.apple.WebKit.WebContent"),
-        ("Safari History", "~/Library/Safari/History.db"),
-        ("Safari LocalStorage", "~/Library/Safari/LocalStorage"),
+    /// Se `true` (produção), envia à Lixeira; testes usam `false`.
+    private let useTrash: Bool
 
-        // Chrome
-        ("Chrome Cache", "~/Library/Caches/Google/Chrome"),
-        ("Chrome Default Cache", "~/Library/Application Support/Google/Chrome/Default/Cache"),
-        ("Chrome GPUCache", "~/Library/Application Support/Google/Chrome/Default/GPUCache"),
-        ("Chrome Code Cache", "~/Library/Application Support/Google/Chrome/Default/Code Cache"),
+    init(useTrash: Bool = true) {
+        self.useTrash = useTrash
+    }
 
-        // Firefox
-        ("Firefox Cache", "~/Library/Caches/Firefox"),
-        ("Firefox Profiles Cache", "~/Library/Application Support/Firefox/Profiles/*/cache2"),
-
-        // Edge
-        ("Edge Cache", "~/Library/Caches/Microsoft Edge"),
-        ("Edge Default Cache", "~/Library/Application Support/Microsoft Edge/Default/Cache"),
-
-        // Brave
-        ("Brave Cache", "~/Library/Caches/BraveSoftware/Brave-Browser"),
-        ("Brave Default Cache", "~/Library/Application Support/BraveSoftware/Brave-Browser/Default/Cache"),
-
-        // Arc
-        ("Arc Cache", "~/Library/Caches/company.thebrowser.Browser")
+    /// Navegadores Chromium: (nome, user-data dir, cache de topo em ~/Library/Caches).
+    private let chromiumBrowsers: [(name: String, userData: String, topCache: String)] = [
+        ("Chrome", "~/Library/Application Support/Google/Chrome", "~/Library/Caches/Google/Chrome"),
+        ("Edge", "~/Library/Application Support/Microsoft Edge", "~/Library/Caches/Microsoft Edge"),
+        (
+            "Brave",
+            "~/Library/Application Support/BraveSoftware/Brave-Browser",
+            "~/Library/Caches/BraveSoftware/Brave-Browser"
+        ),
+        (
+            "Arc",
+            "~/Library/Application Support/company.thebrowser.Browser",
+            "~/Library/Caches/company.thebrowser.Browser"
+        )
     ]
 
-    private func resolvePaths(_ path: String) -> [String] {
-        let expanded = fileHelper.expandPath(path)
+    /// Subpastas de cache (relativas ao profile) seguras para limpar.
+    private let chromiumProfileCacheSubdirs = [
+        "Cache",
+        "Code Cache",
+        "GPUCache",
+        "DawnCache",
+        "GrShaderCache",
+        "Service Worker/CacheStorage",
+        "Service Worker/ScriptCache"
+    ]
 
-        if path.contains("*") {
-            let folder = (expanded as NSString).deletingLastPathComponent
-            let pattern = (expanded as NSString).lastPathComponent
-            let prefix = pattern.replacingOccurrences(of: "/*", with: "")
+    private let otherCaches: [(name: String, path: String)] = [
+        ("Safari Cache", "~/Library/Caches/com.apple.Safari"),
+        ("Safari WebKit", "~/Library/Caches/com.apple.WebKit.WebContent"),
+        ("Firefox Cache", "~/Library/Caches/Firefox")
+    ]
 
-            let contents = fileHelper.contentsOfDirectory(atPath: folder)
-            var results: [String] = []
+    private let firefoxProfilesRoot = "~/Library/Application Support/Firefox/Profiles"
 
-            for item in contents {
-                if item.hasPrefix(prefix) || prefix.isEmpty {
-                    let itemPath = (folder as NSString).appendingPathComponent(item)
-                    let subPath = pattern.replacingOccurrences(of: "*/", with: "")
-                    let finalPath = (itemPath as NSString).appendingPathComponent(subPath)
-                    if fileHelper.fileExists(atPath: finalPath) {
-                        results.append(finalPath)
+    /// Dado o conteúdo de um user-data dir Chromium, devolve os nomes de profile
+    /// (`Default` e `Profile N`). Função pura (testável).
+    static func chromiumProfileNames(from contents: [String]) -> [String] {
+        contents.filter { $0 == "Default" || $0.hasPrefix("Profile ") }.sorted()
+    }
+
+    /// Coleta todos os diretórios de cache de navegador existentes (rótulo, path).
+    private func collectCachePaths() -> [(name: String, path: String)] {
+        var result: [(name: String, path: String)] = []
+
+        for browser in chromiumBrowsers {
+            let topCache = fileHelper.expandPath(browser.topCache)
+            if fileHelper.fileExists(atPath: topCache) {
+                result.append(("\(browser.name) cache", topCache))
+            }
+
+            let userData = fileHelper.expandPath(browser.userData)
+            guard fileHelper.fileExists(atPath: userData) else { continue }
+
+            let profiles = Self.chromiumProfileNames(from: fileHelper.contentsOfDirectory(atPath: userData))
+            for profile in profiles {
+                let profilePath = (userData as NSString).appendingPathComponent(profile)
+                for sub in chromiumProfileCacheSubdirs {
+                    let cachePath = (profilePath as NSString).appendingPathComponent(sub)
+                    if fileHelper.fileExists(atPath: cachePath) {
+                        result.append(("\(browser.name) \(profile)/\(sub)", cachePath))
                     }
                 }
             }
-            return results
-        } else {
-            return [expanded]
         }
+
+        for cache in otherCaches {
+            let path = fileHelper.expandPath(cache.path)
+            if fileHelper.fileExists(atPath: path) {
+                result.append((cache.name, path))
+            }
+        }
+
+        // Firefox: cache2 por profile.
+        let ffRoot = fileHelper.expandPath(firefoxProfilesRoot)
+        for profile in fileHelper.contentsOfDirectory(atPath: ffRoot) {
+            let cache2 = (ffRoot as NSString).appendingPathComponent(profile) + "/cache2"
+            if fileHelper.fileExists(atPath: cache2) {
+                result.append(("Firefox \(profile)/cache2", cache2))
+            }
+        }
+
+        return result
     }
 
-    func scan(progress _: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress: ((String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
 
-        for (name, path) in browserCaches {
-            for resolvedPath in resolvePaths(path) {
-                if fileHelper.fileExists(atPath: resolvedPath) {
-                    let size = fileHelper.sizeOfDirectory(atPath: resolvedPath)
-                    if size > 0 {
-                        totalSize += size
-                        items.append("\(name): \(fileHelper.formatBytes(size))")
-                    }
-                }
+        progress?("Scanning browser caches...")
+        for entry in collectCachePaths() {
+            let size = fileHelper.sizeOfDirectory(atPath: entry.path)
+            if size > 0 {
+                totalSize += size
+                items.append("\(entry.name): \(fileHelper.formatBytes(size))")
             }
         }
 
-        return ScanResult(
-            category: category,
-            estimatedSize: totalSize,
-            itemCount: items.count,
-            items: items
-        )
+        logger.log("Scan Browser Cache concluído: \(fileHelper.formatBytes(totalSize))", level: .info)
+        return ScanResult(category: category, estimatedSize: totalSize, itemCount: items.count, items: items)
     }
 
     func clean() async -> CleaningResult {
@@ -89,47 +124,37 @@ class BrowserCacheCleaningService: BaseCleaningService, CleaningService {
         var filesRemoved = 0
         var errors: [String] = []
 
-        for (name, path) in browserCaches {
-            for resolvedPath in resolvePaths(path) {
-                if fileHelper.fileExists(atPath: resolvedPath) {
-                    let size = fileHelper.sizeOfDirectory(atPath: resolvedPath)
+        // Remove o conteúdo de cada diretório de cache (preserva a pasta que o
+        // navegador espera existir), preferindo a Lixeira.
+        for entry in collectCachePaths() {
+            for child in fileHelper.contentsOfDirectory(atPath: entry.path) {
+                let itemPath = (entry.path as NSString).appendingPathComponent(child)
+                let size = fileHelper.sizeOfDirectory(atPath: itemPath)
 
-                    do {
-                        // Para arquivos únicos (como History.db)
-                        var isDirectory: ObjCBool = false
-                        FileManager.default.fileExists(atPath: resolvedPath, isDirectory: &isDirectory)
+                if useTrash, fileHelper.trashItem(atPath: itemPath) {
+                    bytesRemoved += size
+                    filesRemoved += 1
+                    continue
+                }
 
-                        if isDirectory.boolValue {
-                            // Para diretórios, limpa conteúdo
-                            let contents = fileHelper.contentsOfDirectory(atPath: resolvedPath)
-                            for item in contents {
-                                let itemPath = (resolvedPath as NSString).appendingPathComponent(item)
-                                try fileHelper.removeItem(atPath: itemPath)
-                                filesRemoved += 1
-                            }
-                        } else {
-                            // Para arquivos, remove o arquivo
-                            try fileHelper.removeItem(atPath: resolvedPath)
-                            filesRemoved += 1
-                        }
-
-                        bytesRemoved += size
-                    } catch {
-                        errors.append("Failed to clean \(name): \(error.localizedDescription)")
-                    }
+                do {
+                    try fileHelper.removeItem(atPath: itemPath)
+                    bytesRemoved += size
+                    filesRemoved += 1
+                } catch {
+                    errors.append("Failed to clean \(entry.name): \(error.localizedDescription)")
                 }
             }
         }
 
-        let executionTime = Date().timeIntervalSince(startTime)
-
+        logger.log("Limpeza Browser Cache: \(fileHelper.formatBytes(bytesRemoved)) liberados", level: .info)
         return CleaningResult(
             category: category,
             bytesRemoved: bytesRemoved,
             filesRemoved: filesRemoved,
             errors: errors,
-            executionTime: executionTime,
-            success: errors.count < filesRemoved / 2
+            executionTime: Date().timeIntervalSince(startTime),
+            success: errors.isEmpty
         )
     }
 }
