@@ -47,6 +47,7 @@ let package = Package(
                 "MACLIMPOApp.swift",
                 "Models/CleaningCategory.swift",
                 "Models/CleaningResult.swift",
+                "Models/CleaningOptions.swift",
                 "Models/FileNode.swift",
                 "Services/CleaningService.swift",
                 "Services/PathBasedCleaningService.swift",

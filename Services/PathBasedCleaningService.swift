@@ -16,12 +16,22 @@ struct CleanTarget {
     let strategy: Strategy
     /// Se definido, só considera itens modificados há mais de N dias.
     let olderThanDays: Int?
+    /// Se `true`, só é considerado quando o modo agressivo está ligado
+    /// (cache grande mas regenerável, custoso de reconstruir).
+    let aggressive: Bool
 
-    init(_ path: String, label: String? = nil, strategy: Strategy = .removeItem, olderThanDays: Int? = nil) {
+    init(
+        _ path: String,
+        label: String? = nil,
+        strategy: Strategy = .removeItem,
+        olderThanDays: Int? = nil,
+        aggressive: Bool = false
+    ) {
         self.path = path
         self.label = label
         self.strategy = strategy
         self.olderThanDays = olderThanDays
+        self.aggressive = aggressive
     }
 }
 
@@ -46,6 +56,12 @@ class PathBasedCleaningService: BaseCleaningService, CleaningService {
         self.useTrash = useTrash
     }
 
+    /// Alvos considerados agora: exclui os agressivos quando o modo está desligado.
+    private var activeTargets: [CleanTarget] {
+        let aggressiveOn = CleaningOptions.shared.aggressiveMode
+        return targets.filter { !$0.aggressive || aggressiveOn }
+    }
+
     // MARK: - Scan
 
     func scan(progress: ((String) -> Void)?) async -> ScanResult {
@@ -54,7 +70,7 @@ class PathBasedCleaningService: BaseCleaningService, CleaningService {
 
         progress?("Scanning \(category.rawValue)...")
 
-        for target in targets {
+        for target in activeTargets {
             let size = measuredSize(of: target)
             if size > 0 {
                 totalSize += size
@@ -76,7 +92,7 @@ class PathBasedCleaningService: BaseCleaningService, CleaningService {
 
         logger.log("Iniciando limpeza de \(category.rawValue)", level: .info)
 
-        for target in targets {
+        for target in activeTargets {
             let expanded = fileHelper.expandPath(target.path)
             guard fileHelper.fileExists(atPath: expanded) else { continue }
 

@@ -81,8 +81,12 @@ class DockerCleaningService: BaseCleaningService, CleaningService {
             filesRemoved += lines.filter { $0.contains("deleted") }.count
         }
 
-        // 2. Remove apenas imagens dangling (não utilizadas e sem tag)
-        let imagesResult = shell.execute("docker image prune -f", timeout: 60)
+        // 2. Remove imagens. No modo agressivo, TODAS as não usadas (-a); senão,
+        //    só as dangling (sem tag). `-a` recupera muito mais, mas exige repull/rebuild.
+        let imagePruneCmd = CleaningOptions.shared.aggressiveMode
+            ? "docker image prune -a -f"
+            : "docker image prune -f"
+        let imagesResult = shell.execute(imagePruneCmd, timeout: 120)
         if imagesResult.exitCode != 0 {
             errors.append("Failed to clean images: \(imagesResult.error)")
         } else {

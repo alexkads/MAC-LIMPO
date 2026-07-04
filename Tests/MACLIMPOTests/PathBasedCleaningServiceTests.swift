@@ -77,6 +77,40 @@ final class PathBasedCleaningServiceTests: XCTestCase {
         XCTAssertEqual(try fm.contentsOfDirectory(atPath: dir), ["new.log"])
     }
 
+    // MARK: - aggressive mode
+
+    func testAggressiveTargetSkippedWhenModeOff() async throws {
+        CleaningOptions.shared.aggressiveMode = false
+        defer { CleaningOptions.shared.aggressiveMode = false }
+
+        try makeFile("big/model.bin", bytes: 80000)
+        let dir = root.appendingPathComponent("big").path
+        let svc = service([CleanTarget(dir, aggressive: true)])
+
+        let scan = await svc.scan(progress: nil)
+        let result = await svc.clean()
+
+        XCTAssertEqual(scan.estimatedSize, 0, "alvo agressivo não deve contar com modo desligado")
+        XCTAssertEqual(result.bytesRemoved, 0)
+        XCTAssertTrue(fm.fileExists(atPath: dir), "não deve remover alvo agressivo com modo desligado")
+    }
+
+    func testAggressiveTargetCleanedWhenModeOn() async throws {
+        CleaningOptions.shared.aggressiveMode = true
+        defer { CleaningOptions.shared.aggressiveMode = false }
+
+        try makeFile("big/model.bin", bytes: 80000)
+        let dir = root.appendingPathComponent("big").path
+        let svc = service([CleanTarget(dir, aggressive: true)])
+
+        let scan = await svc.scan(progress: nil)
+        let result = await svc.clean()
+
+        XCTAssertGreaterThan(scan.estimatedSize, 0, "alvo agressivo deve contar com modo ligado")
+        XCTAssertGreaterThan(result.bytesRemoved, 0)
+        XCTAssertFalse(fm.fileExists(atPath: dir))
+    }
+
     // MARK: - missing paths
 
     func testMissingTargetsAreSkippedCleanly() async {

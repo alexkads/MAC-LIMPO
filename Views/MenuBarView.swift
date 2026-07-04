@@ -144,10 +144,15 @@ class MenuBarViewModel: ObservableObject {
         } else {
             alert.messageText = "Limpar \(categories.count) categorias?"
         }
-        alert.informativeText = """
+        var body = """
         Cerca de \(sizeText) serão liberados. Sempre que possível, os itens vão para a \
         Lixeira e podem ser restaurados de lá.
         """
+        if CleaningOptions.shared.aggressiveMode {
+            body += "\n\n⚡️ Modo agressivo ligado: também remove caches grandes regeneráveis " +
+                "(modelos de IA do Chrome, imagens Docker não usadas)."
+        }
+        alert.informativeText = body
         alert.addButton(withTitle: "Limpar")
         alert.addButton(withTitle: "Cancelar")
         alert.showsSuppressionButton = true
@@ -256,6 +261,7 @@ class MenuBarViewModel: ObservableObject {
 struct MenuBarView: View {
     @StateObject private var viewModel = MenuBarViewModel()
     @StateObject private var launchAtLoginService = LaunchAtLoginService()
+    @ObservedObject private var cleaningOptions = CleaningOptions.shared
     let onOpenTreemap: () -> Void
 
     init(onOpenTreemap: @escaping () -> Void = {}) {
@@ -397,6 +403,21 @@ struct MenuBarView: View {
                             }
                             .toggleStyle(.switch)
                             .padding(.horizontal, 20)
+
+                            Toggle(isOn: $cleaningOptions.aggressiveMode) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Aggressive cleaning")
+                                        .font(.system(size: 14))
+                                    Text(
+                                        "Also clears large regenerable caches (Chrome AI models, all unused Docker images)"
+                                    )
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                }
+                            }
+                            .toggleStyle(.switch)
+                            .padding(.horizontal, 20)
                         }
 
                         // Quit Button
@@ -430,5 +451,9 @@ struct MenuBarView: View {
             }
         }
         .frame(width: 420, height: 600)
+        .onChange(of: cleaningOptions.aggressiveMode) { _ in
+            // As estimativas mudam com o modo agressivo; re-escaneia para refletir.
+            viewModel.scanAllCategories()
+        }
     }
 }

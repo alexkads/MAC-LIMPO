@@ -43,6 +43,17 @@ final class BrowserCacheCleaningService: BaseCleaningService, CleaningService {
         "Service Worker/ScriptCache"
     ]
 
+    /// Diretórios (na raiz do user-data) de modelos de IA on-device e caches de
+    /// componentes do Chrome. Grandes (o `OptGuideOnDeviceModel` chega a ~4GB) e
+    /// regeneráveis, mas custosos de rebaixar — só no modo agressivo.
+    private let chromiumAggressiveModelDirs = [
+        "OptGuideOnDeviceModel",
+        "OptGuideOnDeviceClassifierModel",
+        "optimization_guide_model_store",
+        "screen_ai",
+        "component_crx_cache"
+    ]
+
     private let otherCaches: [(name: String, path: String)] = [
         ("Safari Cache", "~/Library/Caches/com.apple.Safari"),
         ("Safari WebKit", "~/Library/Caches/com.apple.WebKit.WebContent"),
@@ -77,6 +88,16 @@ final class BrowserCacheCleaningService: BaseCleaningService, CleaningService {
                     let cachePath = (profilePath as NSString).appendingPathComponent(sub)
                     if fileHelper.fileExists(atPath: cachePath) {
                         result.append(("\(browser.name) \(profile)/\(sub)", cachePath))
+                    }
+                }
+            }
+
+            // Modelos de IA on-device / caches de componentes (só no modo agressivo).
+            if CleaningOptions.shared.aggressiveMode {
+                for modelDir in chromiumAggressiveModelDirs {
+                    let modelPath = (userData as NSString).appendingPathComponent(modelDir)
+                    if fileHelper.fileExists(atPath: modelPath) {
+                        result.append(("\(browser.name) \(modelDir) (aggressive)", modelPath))
                     }
                 }
             }
