@@ -91,6 +91,7 @@ let package = Package(
                 "Services/DevApiToolsCleaningService.swift",
                 "Services/NotionCleaningService.swift",
                 "Services/CypressCleaningService.swift",
+                "Services/TikTokLiveStudioCleaningService.swift",
                 // ViewModels
                 "ViewModels/TreemapViewModel.swift",
                 // Views

@@ -46,6 +46,7 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
     case devApiTools = "API Tools"
     case notionCache = "Notion Cache"
     case cypress = "Cypress"
+    case tiktokLiveStudio = "TikTok LIVE Studio"
 
     var group: CleaningGroup {
         switch self {
@@ -60,7 +61,7 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
             .apps
         case .slackCache, .messagingApps, .mailAttachments, .messagesAttachments:
             .communication
-        case .spotifyCache, .podcasts:
+        case .spotifyCache, .podcasts, .tiktokLiveStudio:
             .media
         }
     }
@@ -105,6 +106,7 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .devApiTools: "network.badge.shield.half.filled"
         case .notionCache: "doc.richtext.fill"
         case .cypress: "checkmark.shield.fill"
+        case .tiktokLiveStudio: "dot.radiowaves.left.and.right"
         }
     }
 
@@ -144,6 +146,7 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .devApiTools: Color(hex: "FF6C37") // Postman orange
         case .notionCache: Color(hex: "37352F") // Notion dark
         case .cypress: Color(hex: "04C38E") // Cypress teal
+        case .tiktokLiveStudio: Color(hex: "FE2C55") // TikTok red/pink
         }
     }
 
@@ -225,6 +228,8 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
             "Remove Notion asset cache and GPU caches"
         case .cypress:
             "Clean Cypress test data and browser binary cache"
+        case .tiktokLiveStudio:
+            "Clean TikTok LIVE Studio browser cache and logs (keeps your effects/assets)"
         }
     }
 }

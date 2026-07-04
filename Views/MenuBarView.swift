@@ -61,7 +61,8 @@ class MenuBarViewModel: ObservableObject {
         .goCache: GoCleaningService(),
         .devApiTools: DevApiToolsCleaningService(),
         .notionCache: NotionCleaningService(),
-        .cypress: CypressCleaningService()
+        .cypress: CypressCleaningService(),
+        .tiktokLiveStudio: TikTokLiveStudioCleaningService()
     ]
 
     init() {

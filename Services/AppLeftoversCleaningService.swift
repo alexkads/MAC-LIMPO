@@ -21,7 +21,13 @@ class AppLeftoversCleaningService: BaseCleaningService, CleaningService {
         ("Android SDK", "~/Library/Android", "/Applications/Android Studio.app"),
         // Additional Leftovers found
         ("Visual Studio", "~/Library/Application Support/VisualStudio", "/Applications/Visual Studio.app"),
-        ("Zed", "~/Library/Application Support/Zed", "/Applications/Zed.app")
+        ("Zed", "~/Library/Application Support/Zed", "/Applications/Zed.app"),
+        // Installer framework leftover from Wondershare Dr.Fone (only if app is gone)
+        (
+            "Wondershare Dr.Fone",
+            "~/Library/Application Support/com.wondershare.Installer",
+            "/Applications/Wondershare Dr.Fone.app"
+        )
     ]
 
     /// Map of JetBrains folder prefixes to their Application names

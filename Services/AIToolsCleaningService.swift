@@ -48,6 +48,11 @@ final class AIToolsCleaningService: PathBasedCleaningService {
                 label: "Antigravity cache",
                 strategy: .removeContents
             ),
+            CleanTarget(
+                "~/Library/Caches/antigravity-updater",
+                label: "Antigravity updater",
+                strategy: .removeContents
+            ),
             // Trae
             CleanTarget("~/Library/Application Support/Trae/Cache", label: "Trae Cache", strategy: .removeContents),
             CleanTarget(
