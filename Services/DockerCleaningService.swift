@@ -90,8 +90,9 @@ class DockerCleaningService: BaseCleaningService, CleaningService {
             filesRemoved += lines.filter { $0.contains("deleted") }.count
         }
 
-        // 3. Remove apenas build cache (não toca em volumes ou redes)
-        let cacheResult = shell.execute("docker builder prune -f", timeout: 60)
+        // 3. Remove TODO o build cache (regenerável). `-a` recupera bem mais que
+        //    só o dangling, sem risco de perda de dados (volumes/redes intactos).
+        let cacheResult = shell.execute("docker builder prune -a -f", timeout: 120)
         if cacheResult.exitCode != 0 {
             errors.append("Failed to clean build cache: \(cacheResult.error)")
         }
@@ -101,6 +102,17 @@ class DockerCleaningService: BaseCleaningService, CleaningService {
         let afterSize = parseDiskSize(afterResult.output)
 
         bytesRemoved = max(0, beforeSize - afterSize)
+
+        // Nota importante: o prune libera espaço DENTRO da VM do Docker, mas o
+        // arquivo de disco (Docker.raw, em ~/Library/Containers/com.docker.docker)
+        // não encolhe sozinho. Para devolver o espaço ao macOS é preciso usar o
+        // "reclaim" do Docker Desktop (Settings > Resources) ou recriar o disco.
+        // Volumes NÃO são removidos de propósito (podem conter dados do usuário).
+        logger.log(
+            "Docker: espaço liberado dentro da VM. O Docker.raw não encolhe automaticamente — " +
+                "use o reclaim do Docker Desktop se precisar devolver o espaço ao sistema.",
+            level: .info
+        )
 
         let executionTime = Date().timeIntervalSince(startTime)
 
