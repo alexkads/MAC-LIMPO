@@ -211,41 +211,65 @@ class MenuBarViewModel: ObservableObject {
         }
     }
 
+    /// Máximo de limpezas simultâneas. Menor que o de scan: deletar é mais pesado
+    /// de I/O e alguns services rodam comandos de sistema (Docker, purge).
+    private let maxConcurrentCleans = min(4, max(2, ProcessInfo.processInfo.activeProcessorCount))
+
     func cleanAll() {
         guard confirmClean(Array(services.keys)) else { return }
 
+        let categories = services.keys.sorted { $0.rawValue < $1.rawValue }
+        let total = categories.count
+
         Task {
-            // Limpa apenas categorias que têm serviços implementados
-            for category in services.keys.sorted(by: { $0.rawValue < $1.rawValue }) {
-                guard let service = services[category] else { continue }
-
-                // Executa limpeza sequencialmente (não concorrente)
-                await MainActor.run {
-                    currentCleaningCategory = category
-                    showProgress = true
-                    cleaningProgress = 0
-                    currentOperation = "Preparing to clean \(category.rawValue)..."
-                }
-
-                await updateProgress(0.3, operation: "Cleaning \(category.rawValue)...")
-                let result = await service.clean()
-
-                await updateProgress(1.0, operation: "Complete!")
-                try? await Task.sleep(nanoseconds: 500_000_000)
-
-                await MainActor.run {
-                    lastResult = result
-                    refreshDiskStats()
-                    scanCategory(category)
-                }
-
-                // Pequena pausa entre categorias
-                try? await Task.sleep(nanoseconds: 500_000_000)
+            let startTime = Date()
+            await MainActor.run {
+                currentCleaningCategory = categories.first
+                showProgress = true
+                cleaningProgress = 0
+                currentOperation = "Cleaning \(total) categories..."
             }
+
+            // Limpa em paralelo com janela deslizante (respeita o teto de concorrência).
+            var results: [CleaningResult] = []
+            await withTaskGroup(of: CleaningResult?.self) { group in
+                var next = 0
+                let seed = min(maxConcurrentCleans, total)
+                while next < seed {
+                    let category = categories[next]; next += 1
+                    group.addTask { await self.services[category]?.clean() }
+                }
+                while let finished = await group.next() {
+                    if let finished { results.append(finished) }
+                    let done = results.count
+                    await MainActor.run {
+                        cleaningProgress = Double(done) / Double(total)
+                        currentOperation = "Cleaning… \(done)/\(total) categorias"
+                        if let finished { currentCleaningCategory = finished.category }
+                    }
+                    if next < categories.count {
+                        let category = categories[next]; next += 1
+                        group.addTask { await self.services[category]?.clean() }
+                    }
+                }
+            }
+
+            // Resultado combinado (ResultsView mostra total liberado/arquivos/tempo).
+            let combined = CleaningResult(
+                category: categories.first ?? .trash,
+                bytesRemoved: results.reduce(0) { $0 + $1.bytesRemoved },
+                filesRemoved: results.reduce(0) { $0 + $1.filesRemoved },
+                errors: results.flatMap(\.errors),
+                executionTime: Date().timeIntervalSince(startTime),
+                success: results.allSatisfy(\.success)
+            )
 
             await MainActor.run {
                 showProgress = false
+                lastResult = combined
                 showResults = true
+                refreshDiskStats()
+                scanAllCategories()
             }
         }
     }
