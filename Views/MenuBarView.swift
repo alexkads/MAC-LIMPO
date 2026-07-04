@@ -78,10 +78,10 @@ class MenuBarViewModel: ObservableObject {
 
     @Published var scanningStatus: [CleaningCategory: String] = [:]
 
-    /// Máximo de scans simultâneos. Cada scan dispara processos `du`; sem limite,
-    /// as ~35 categorias escaneavam todas de uma vez no launch, esgotando o thread
-    /// pool cooperativo. 4 mantém a UI responsiva sem serializar demais.
-    private let maxConcurrentScans = 4
+    /// Máximo de scans simultâneos, dimensionado pelos núcleos do Mac. Cada scan
+    /// mede tamanhos via `du` no pool do GCD (não trava o pool cooperativo), então
+    /// podemos usar todos os cores. Limitado a 8 para não saturar o I/O do disco.
+    private let maxConcurrentScans = min(8, max(2, ProcessInfo.processInfo.activeProcessorCount))
 
     func scanAllCategories() {
         let categories = Array(services.keys)

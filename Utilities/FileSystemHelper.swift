@@ -38,6 +38,18 @@ class FileSystemHelper {
         return kb * 1024 // KB -> bytes
     }
 
+    /// Versão assíncrona de `sizeOfDirectory`. Roda o `du` (bloqueante) no pool
+    /// concorrente do GCD, que escala com os núcleos do Mac, em vez de bloquear
+    /// uma thread do pool cooperativo do Swift. Assim várias medições podem
+    /// acontecer em paralelo de verdade.
+    func sizeOfDirectoryAsync(atPath path: String) async -> Int64 {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .utility).async {
+                continuation.resume(returning: self.sizeOfDirectory(atPath: path))
+            }
+        }
+    }
+
     // Fallback: Calcula o tamanho recursivamente (lento)
     private func sizeOfDirectoryFallback(atPath path: String) -> Int64 {
         var totalSize: Int64 = 0

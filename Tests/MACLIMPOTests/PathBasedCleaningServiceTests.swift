@@ -111,6 +111,39 @@ final class PathBasedCleaningServiceTests: XCTestCase {
         XCTAssertFalse(fm.fileExists(atPath: dir))
     }
 
+    // MARK: - parallel measurement
+
+    func testAsyncMeasurementMatchesSyncForMultiPathTarget() async throws {
+        for i in 0 ..< 6 {
+            try makeFile("multi/f\(i).bin", bytes: 40000)
+        }
+        let dir = root.appendingPathComponent("multi").path
+        let svc = service([CleanTarget(dir, strategy: .removeContents)])
+        let target = svc.targets[0]
+
+        let sync = svc.measuredSize(of: target)
+        let async = await svc.measuredSizeAsync(of: target)
+        XCTAssertEqual(sync, async, "medição paralela deve bater com a sequencial")
+        XCTAssertGreaterThan(async, 0)
+    }
+
+    func testParallelScanTotalAndStableOrder() async throws {
+        try makeFile("a/x.bin", bytes: 30000)
+        try makeFile("b/x.bin", bytes: 60000)
+        try makeFile("c/x.bin", bytes: 90000)
+        let svc = service([
+            CleanTarget(root.appendingPathComponent("a").path, label: "A"),
+            CleanTarget(root.appendingPathComponent("b").path, label: "B"),
+            CleanTarget(root.appendingPathComponent("c").path, label: "C")
+        ])
+
+        let scan = await svc.scan(progress: nil)
+        XCTAssertGreaterThan(scan.estimatedSize, 0)
+        XCTAssertEqual(scan.itemCount, 3)
+        // Ordem estável = ordem dos alvos (A, B, C), apesar da medição concorrente.
+        XCTAssertEqual(scan.items.map { String($0.prefix(1)) }, ["A", "B", "C"])
+    }
+
     // MARK: - missing paths
 
     func testMissingTargetsAreSkippedCleanly() async {

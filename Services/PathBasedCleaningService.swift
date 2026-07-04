@@ -65,17 +65,31 @@ class PathBasedCleaningService: BaseCleaningService, CleaningService {
     // MARK: - Scan
 
     func scan(progress: ((String) -> Void)?) async -> ScanResult {
-        var totalSize: Int64 = 0
-        var items: [String] = []
-
         progress?("Scanning \(category.rawValue)...")
 
-        for target in activeTargets {
-            let size = measuredSize(of: target)
-            if size > 0 {
-                totalSize += size
-                items.append("\(displayName(for: target)): \(fileHelper.formatBytes(size))")
+        // Mede todos os alvos em paralelo (um por core disponível). Preserva a
+        // ordem original via índice para um relatório estável.
+        let targets = activeTargets
+        let measured: [(index: Int, name: String, size: Int64)] = await withTaskGroup(
+            of: (Int, String, Int64).self
+        ) { group in
+            for (index, target) in targets.enumerated() {
+                group.addTask {
+                    await (index, self.displayName(for: target), self.measuredSizeAsync(of: target))
+                }
             }
+            var results: [(Int, String, Int64)] = []
+            for await result in group {
+                results.append(result)
+            }
+            return results.sorted { $0.0 < $1.0 }
+        }
+
+        var totalSize: Int64 = 0
+        var items: [String] = []
+        for entry in measured where entry.size > 0 {
+            totalSize += entry.size
+            items.append("\(entry.name): \(fileHelper.formatBytes(entry.size))")
         }
 
         logger.log("Scan \(category.rawValue) concluído: \(fileHelper.formatBytes(totalSize))", level: .info)
@@ -156,6 +170,24 @@ class PathBasedCleaningService: BaseCleaningService, CleaningService {
         guard fileHelper.fileExists(atPath: expanded) else { return 0 }
         return removablePaths(for: target, expanded: expanded)
             .reduce(0) { $0 + fileHelper.sizeOfDirectory(atPath: $1) }
+    }
+
+    /// Igual a `measuredSize`, mas mede os paths em paralelo (fora do pool
+    /// cooperativo). Usado pelo `scan` para aproveitar os núcleos do Mac.
+    func measuredSizeAsync(of target: CleanTarget) async -> Int64 {
+        let expanded = fileHelper.expandPath(target.path)
+        guard fileHelper.fileExists(atPath: expanded) else { return 0 }
+        let paths = removablePaths(for: target, expanded: expanded)
+        return await withTaskGroup(of: Int64.self) { group in
+            for path in paths {
+                group.addTask { await self.fileHelper.sizeOfDirectoryAsync(atPath: path) }
+            }
+            var total: Int64 = 0
+            for await size in group {
+                total += size
+            }
+            return total
+        }
     }
 
     func isOlderThan(_ days: Int, path: String) -> Bool {
