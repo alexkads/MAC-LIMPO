@@ -18,10 +18,13 @@ let package = Package(
             path: ".",
             exclude: [
                 "README.md",
+                "CLAUDE.md",
                 "XCODE_SETUP.md",
                 "CHANGELOG.md",
                 "CONTRIBUTING.md",
+                "VERSION",
                 "docs",
+                "Tests",
                 "Info.plist",
                 "create_xcode_project.sh",
                 "create_installer.sh",
@@ -39,8 +42,6 @@ let package = Package(
                 "Services/capture_errors.sh",
                 "Services/check_files.sh",
                 "Services/Logger 2.swift",
-                "analyze_system_data.sh",
-                "deep_analysis.sh",
                 "deep_clean.sh"
             ],
             sources: [

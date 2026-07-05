@@ -76,21 +76,7 @@ class CreativeAppsCleaningService: BaseCleaningService, CleaningService {
 
                     // Specific handling for complex directories
                     if expandedPath.contains("Group Containers") {
-                        // Clean only cache/temp folders inside Group Containers
-                        let targets = ["Cache", "Caches", "temp", "Logs", "com.adobe.GrowthSDK"]
-                        if let enumerator = FileManager.default.enumerator(atPath: expandedPath) {
-                            while let file = enumerator.nextObject() as? String {
-                                let shouldClean = targets.contains(where: { file.contains($0) })
-                                if shouldClean {
-                                    let fullPath = (expandedPath as NSString).appendingPathComponent(file)
-                                    // Should check if it's a directory or file and clean accordingly
-                                    // Simplified for safety: skipping manual deep traversal for now,
-                                    // only cleaning known safe subdirs if they match exact targets
-                                }
-                            }
-                        }
-
-                        // Safer approach for known paths:
+                        // Só limpamos pastas conhecidas e seguras dentro de Group Containers.
                         if path.contains("com.adobe.GrowthSDK") {
                             // This folder seems to be purely analytics/growth data
                             do {

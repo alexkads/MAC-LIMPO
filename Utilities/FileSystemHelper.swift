@@ -1,7 +1,8 @@
 import Foundation
 import os.log
 
-class FileSystemHelper {
+// Singleton imutável (só mantém um FileManager) — seguro para usar entre threads.
+final class FileSystemHelper: @unchecked Sendable {
     static let shared = FileSystemHelper()
     private let fileManager = FileManager.default
 
