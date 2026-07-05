@@ -3,6 +3,13 @@ import Foundation
 class DockerCleaningService: BaseCleaningService, CleaningService {
     let category: CleaningCategory = .docker
 
+    /// O CLI do `docker` pode estar instalado mas o daemon desligado (Docker Desktop
+    /// fechado). Nesse caso os comandos de prune falham com "Cannot connect to the
+    /// Docker daemon" — checamos a conectividade antes para tratar como no-op.
+    private func isDaemonRunning() -> Bool {
+        shell.execute("docker info", timeout: 15).exitCode == 0
+    }
+
     func scan(progress _: ((String) -> Void)?) async -> ScanResult {
         var estimatedSize: Int64 = 0
         var items: [String] = []
@@ -10,6 +17,11 @@ class DockerCleaningService: BaseCleaningService, CleaningService {
         // Verifica se Docker está instalado
         guard shell.checkCommandExists("docker") else {
             return ScanResult(category: category, estimatedSize: 0, itemCount: 0, items: ["Docker not installed"])
+        }
+
+        // Verifica se o daemon está acessível (Docker Desktop aberto)
+        guard isDaemonRunning() else {
+            return ScanResult(category: category, estimatedSize: 0, itemCount: 0, items: ["Docker not running"])
         }
 
         // Conta containers parados
@@ -59,11 +71,22 @@ class DockerCleaningService: BaseCleaningService, CleaningService {
         var filesRemoved = 0
         var errors: [String] = []
 
+        // Docker ausente ou daemon desligado = nada a limpar (não é uma falha).
         guard shell.checkCommandExists("docker") else {
+            logger.log("Docker não instalado; pulando limpeza.", level: .info)
             return CleaningResult(
                 category: category,
-                errors: ["Docker not installed"],
-                success: false
+                executionTime: Date().timeIntervalSince(startTime),
+                success: true
+            )
+        }
+
+        guard isDaemonRunning() else {
+            logger.log("Docker daemon não está rodando; nada a limpar.", level: .info)
+            return CleaningResult(
+                category: category,
+                executionTime: Date().timeIntervalSince(startTime),
+                success: true
             )
         }
 

@@ -255,13 +255,18 @@ class MenuBarViewModel: ObservableObject {
             }
 
             // Resultado combinado (ResultsView mostra total liberado/arquivos/tempo).
+            let totalBytes = results.reduce(0) { $0 + $1.bytesRemoved }
+            let allErrors = results.flatMap(\.errors)
+            // Sucesso se nada falhou OU se, apesar de algum erro pontual, houve espaço
+            // liberado — assim 18 GB limpos não viram "Failed" por um erro isolado.
+            // Os erros continuam listados abaixo para transparência.
             let combined = CleaningResult(
                 category: categories.first ?? .trash,
-                bytesRemoved: results.reduce(0) { $0 + $1.bytesRemoved },
+                bytesRemoved: totalBytes,
                 filesRemoved: results.reduce(0) { $0 + $1.filesRemoved },
-                errors: results.flatMap(\.errors),
+                errors: allErrors,
                 executionTime: Date().timeIntervalSince(startTime),
-                success: results.allSatisfy(\.success)
+                success: allErrors.isEmpty || totalBytes > 0
             )
 
             await MainActor.run {
