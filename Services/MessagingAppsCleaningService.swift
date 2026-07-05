@@ -9,7 +9,17 @@ class MessagingAppsCleaningService: BaseCleaningService, CleaningService {
             "~/Library/Containers/com.whatsapp.WhatsApp/Data/Library/Caches",
             "~/Library/Containers/desktop.WhatsApp/Data/Library/Caches",
             "~/Library/Group Containers/group.net.whatsapp.WhatsApp.shared/Library/Caches",
-            "~/Library/Group Containers/group.com.whatsapp.family/Library/Caches"
+            "~/Library/Group Containers/group.com.whatsapp.family/Library/Caches",
+            // WhatsApp Desktop é Electron/Chromium: o cache real (grande) fica em
+            // Application Support, não em Library/Caches. Service Worker costuma ser
+            // o maior. Só caches regeneráveis — NÃO tocamos em IndexedDB, Local
+            // Storage, databases, ChatStorage nem na mídia (dados do usuário).
+            "~/Library/Containers/desktop.WhatsApp/Data/Library/Application Support/WhatsApp/Service Worker",
+            "~/Library/Containers/desktop.WhatsApp/Data/Library/Application Support/WhatsApp/Cache",
+            "~/Library/Containers/desktop.WhatsApp/Data/Library/Application Support/WhatsApp/Code Cache",
+            "~/Library/Containers/desktop.WhatsApp/Data/Library/Application Support/WhatsApp/GPUCache",
+            "~/Library/Containers/desktop.WhatsApp/Data/Library/Application Support/WhatsApp/DawnCache",
+            "~/Library/Containers/desktop.WhatsApp/Data/Library/Application Support/WhatsApp/DawnGraphiteCache"
         ]),
         ("Microsoft Teams", [
             "~/Library/Containers/com.microsoft.teams2/Data/Library/Caches",
