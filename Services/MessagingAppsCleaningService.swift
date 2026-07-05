@@ -17,7 +17,18 @@ class MessagingAppsCleaningService: BaseCleaningService, CleaningService {
             "~/Library/Application Support/Microsoft/Teams/GPUCache",
             "~/Library/Application Support/Microsoft/Teams/Code Cache",
             "~/Library/Application Support/Microsoft/Teams/Service Worker/CacheStorage",
-            "~/Library/Group Containers/UBF8T346G9.com.microsoft.teams/Library/Caches"
+            "~/Library/Group Containers/UBF8T346G9.com.microsoft.teams/Library/Caches",
+            // Teams 2.x usa WebView2 (Chromium) — o cache real fica aqui (Service
+            // Worker costuma ser o maior). São todos caches regeneráveis.
+            "~/Library/Containers/com.microsoft.teams2/Data/Library/Application Support/Microsoft/MSTeams/EBWebView/component_crx_cache",
+            "~/Library/Containers/com.microsoft.teams2/Data/Library/Application Support/Microsoft/MSTeams/EBWebView/GraphiteDawnCache",
+            "~/Library/Containers/com.microsoft.teams2/Data/Library/Application Support/Microsoft/MSTeams/EBWebView/ShaderCache",
+            "~/Library/Containers/com.microsoft.teams2/Data/Library/Application Support/Microsoft/MSTeams/EBWebView/GrShaderCache",
+            "~/Library/Containers/com.microsoft.teams2/Data/Library/Application Support/Microsoft/MSTeams/EBWebView/WV2Profile_tfw/Service Worker",
+            "~/Library/Containers/com.microsoft.teams2/Data/Library/Application Support/Microsoft/MSTeams/EBWebView/WV2Profile_tfw/GPUCache",
+            "~/Library/Containers/com.microsoft.teams2/Data/Library/Application Support/Microsoft/MSTeams/EBWebView/WV2Profile_tfw/Code Cache",
+            "~/Library/Containers/com.microsoft.teams2/Data/Library/Application Support/Microsoft/MSTeams/EBWebView/WV2Profile_tfw/DawnWebGPUCache",
+            "~/Library/Containers/com.microsoft.teams2/Data/Library/Application Support/Microsoft/MSTeams/EBWebView/WV2Profile_tfw/DawnGraphiteCache"
         ]),
         ("Slack", [
             "~/Library/Application Support/Slack/Cache",
