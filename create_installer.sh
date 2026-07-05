@@ -8,9 +8,11 @@ APP_BUNDLE="$APP_NAME.app"
 DMG_NAME="$APP_NAME.dmg"
 BUNDLE_ID="com.alexkads.$APP_NAME"
 
-# Version — bump these on each release (SemVer for the short string).
-VERSION="1.1.0"
-BUILD_NUMBER="2"
+# Version — single source of truth is the VERSION file (SemVer). BUILD_NUMBER is
+# the monotonic CFBundleVersion; override via env when cutting a build, e.g.
+# BUILD_NUMBER=3 ./create_installer.sh
+VERSION="$(tr -d ' \n' < VERSION 2>/dev/null || echo '1.1.0')"
+BUILD_NUMBER="${BUILD_NUMBER:-2}"
 
 echo "🚀 Starting installer creation for $APP_NAME v$VERSION ($BUILD_NUMBER)..."
 

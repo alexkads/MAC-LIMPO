@@ -14,6 +14,31 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - Atalhos de teclado
 - Preferências avançadas
 
+## [1.1.0] - 2026-07-04
+
+### ✨ Adicionado
+- **Temas**: seletor com **Classic** (visual original), **Cyberpunk** (neon ciano/magenta) e **Matrix** (verde), com glow, tipografia monoespaçada e persistência da escolha.
+- **Modo de limpeza agressiva** (opt-in): remove caches grandes porém regeneráveis — modelos de IA on-device do Chrome (~4 GB) e `docker image prune -a`.
+- **Diálogo de confirmação** antes de qualquer limpeza, mostrando o espaço estimado.
+- Novas coberturas: **Chrome/Chromium multi-profile** (Chrome, Edge, Brave, Arc) incluindo `Service Worker`; categoria **TikTok LIVE Studio**; cache do **antigravity-updater**; leftover do **Wondershare Dr.Fone**.
+- Rede de testes unitários (target `MACLIMPOTests`).
+
+### 🔒 Segurança
+- Deleções vão para a **Lixeira** (reversível), com fallback para remoção definitiva só quando a Lixeira recusa o caminho.
+- `du`/`rm` passam o caminho por **argumento** (sem interpolação em shell): paths com aspas/espaços deixam de quebrar.
+
+### ⚡ Performance
+- **Scan paralelo** das categorias usando os núcleos do Mac (medição de tamanho no pool do GCD, sem travar o pool cooperativo).
+- **Clean All paralelo** (concorrência limitada), com progresso agregado e resultado somado.
+- Correção da medição via `du` que zerava pastas grandes (subcontagem silenciosa).
+
+### 🧹 Refatoração
+- `PathBasedCleaningService`: base testada que unificou ~12 serviços baseados em path, com estratégias (item/conteúdo), filtro de idade e alvos "agressivos".
+- Remoção de código morto; falhas antes silenciosas passam a registrar log.
+
+### 📦 Build
+- `create_installer.sh` mais robusto (`set -euo pipefail`, verificação de codesign/DMG) e versionado a partir do arquivo `VERSION`.
+
 ## [1.0.0] - 2025-12-17
 
 ### ✨ Adicionado
