@@ -1,0 +1,62 @@
+#!/bin/bash
+#
+# Remove tudo que o instalador do MAC-LIMPO colocou neste Mac.
+# Instalado em /usr/local/bin/mac-limpo-uninstall
+#
+#     sudo mac-limpo-uninstall
+#
+# Só mexe no que o instalador criou: o app, o desinstalador e os caches/prefs
+# por usuário. Nada que o app tenha limpado é tocado — aquilo já foi para a
+# Lixeira no momento da limpeza e continua lá.
+
+set -uo pipefail
+
+APP="/Applications/MAC-LIMPO.app"
+SELF="/usr/local/bin/mac-limpo-uninstall"
+BUNDLE_ID="com.alexkads.MAC-LIMPO"
+
+if [ "$(id -u)" -ne 0 ]; then
+    echo "error: precisa rodar como root — tente: sudo mac-limpo-uninstall" >&2
+    exit 1
+fi
+
+echo "Encerrando o app..."
+pkill -f "MAC-LIMPO.app/Contents/MacOS/MAC-LIMPO" 2>/dev/null
+sleep 1
+
+if [ -d "$APP" ]; then
+    rm -rf "$APP" && echo "Removido $APP"
+fi
+
+# Dados por usuário. O app não guarda documentos — só preferências, o estado de
+# janela salvo pelo próprio macOS e o cache do bundle.
+for home in /Users/*; do
+    [ -d "$home" ] || continue
+    for path in \
+        "$home/Library/Preferences/${BUNDLE_ID}.plist" \
+        "$home/Library/Caches/${BUNDLE_ID}" \
+        "$home/Library/HTTPStorages/${BUNDLE_ID}" \
+        "$home/Library/Saved Application State/${BUNDLE_ID}.savedState" \
+        "$home/Library/Application Support/MAC-LIMPO" \
+        "$home/Library/Logs/MAC-LIMPO"
+    do
+        [ -e "$path" ] && rm -rf "$path" && echo "Removido $path"
+    done
+done
+
+# Esquece o recibo do pacote, para que uma reinstalação seja tratada como nova.
+pkgutil --forget com.alexkads.MAC-LIMPO.pkg >/dev/null 2>&1
+
+echo
+echo "MAC-LIMPO removido."
+echo
+echo "Duas coisas ficam registradas pelo próprio macOS e não podem ser apagadas"
+echo "por um script:"
+echo "  • Acesso Total ao Disco — Ajustes › Privacidade e Segurança › Acesso Total"
+echo "    ao Disco, remova MAC-LIMPO da lista."
+echo "  • Abrir ao iniciar — Ajustes › Geral › Itens de Início, se ainda aparecer."
+
+# Este script é removido por último: ele está rodando a partir do arquivo que
+# está sendo apagado, o que funciona no macOS porque o inode continua vivo até
+# o processo terminar.
+rm -f "$SELF"

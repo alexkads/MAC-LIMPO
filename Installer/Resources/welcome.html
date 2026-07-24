@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: -apple-system, sans-serif; font-size: 13px; line-height: 1.5;">
+
+<p>Isto instala o <b>MAC-LIMPO</b>, um utilitário de menu bar para liberar
+espaço em disco no Mac.</p>
+
+<p>Duas coisas serão colocadas neste Mac:</p>
+
+<ul>
+  <li><b>MAC-LIMPO.app</b> em Aplicativos — um app de menu bar com as categorias
+      de limpeza e o mapa de disco. Não tem ícone no Dock nem janela principal.</li>
+  <li><b>mac-limpo-uninstall</b> em <code>/usr/local/bin</code> — remove tudo
+      depois, se você quiser.</li>
+</ul>
+
+<p><b>O que ele apaga.</b> Apenas caches, builds intermediários, logs e arquivos
+temporários — nunca seus documentos. Cada categoria é escaneada antes, mostra
+quanto ocuparia liberar, e você escolhe o que limpar.</p>
+
+<p><b>Onde os arquivos vão.</b> Sempre que possível, as remoções vão para a
+<b>Lixeira</b> — reversíveis enquanto você não a esvaziar. Algumas categorias
+não têm esse caminho: limpezas feitas por ferramentas externas (Docker,
+Homebrew) e áreas de sistema são apagadas de vez.</p>
+
+<p>Depois de instalar, o app pedirá <b>Acesso Total ao Disco</b> nos Ajustes do
+Sistema. Sem isso ele funciona, mas não enxerga várias das pastas de cache que
+mais ocupam espaço.</p>
+
+</body>
+</html>

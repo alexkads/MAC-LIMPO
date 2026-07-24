@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: -apple-system, sans-serif; font-size: 13px; line-height: 1.5;">
+
+<h3>O que este app apaga</h3>
+
+<p>O MAC-LIMPO remove <b>caches, builds intermediários, logs e arquivos
+temporários</b> de ferramentas de desenvolvimento, navegadores e aplicativos.
+Ele não toca em documentos, fotos, nem em nada dentro das suas pastas de
+trabalho fora dos diretórios de cache dessas ferramentas.</p>
+
+<p>Sempre que possível a remoção vai para a <b>Lixeira</b>, e não é apagada na
+hora — uma limpeza indesejada continua reversível enquanto a Lixeira não for
+esvaziada. Mas isso não vale para todas as categorias: as que delegam a
+ferramentas externas (<code>docker prune</code>, <code>brew cleanup</code>) e as
+que varrem áreas de sistema apagam definitivamente, porque não existe Lixeira
+nesse caminho.</p>
+
+<h3>O que você deve saber antes</h3>
+
+<ul>
+  <li><b>Escaneie antes de limpar.</b> Cada categoria mostra o que encontrou e
+      quanto espaço ocupa. Nada é removido sem você mandar.</li>
+  <li><b>Caches se reconstroem — leva tempo.</b> Apagar o DerivedData do Xcode
+      ou o cache do Docker é seguro, mas o próximo build vai do zero.</li>
+  <li><b>Feche o que for limpar.</b> Limpar o cache de um app aberto pode fazer
+      ele se comportar de forma estranha até ser reiniciado.</li>
+  <li><b>Acesso Total ao Disco.</b> Algumas categorias só conseguem medir e
+      limpar com essa permissão concedida nos Ajustes do Sistema.</li>
+</ul>
+
+<h3>Sem garantia</h3>
+
+<p>Este software é fornecido no estado em que se encontra, sem garantia de
+qualquer natureza. Ele apaga arquivos do seu disco a seu pedido, e a
+responsabilidade por revisar o que foi encontrado antes de confirmar uma
+limpeza é sua.</p>
+
+<h3>Como remover</h3>
+
+<p>Rode <code>sudo mac-limpo-uninstall</code> no Terminal. Isso remove o app, o
+desinstalador e as preferências. Arquivos que você já limpou não voltam — eles
+estão na Lixeira.</p>
+
+</body>
+</html>

@@ -1,0 +1,50 @@
+#!/bin/bash
+#
+# Roda como root depois dos arquivos estarem no lugar.
+#
+# Este é o passo que faz o .pkg valer mais que um .dmg com arrastar-e-soltar: o
+# instalador já tem root, então a quarentena sai e o app sobe sem o usuário
+# precisar do Terminal nem do menu de contexto "Abrir mesmo assim".
+
+set -u
+
+VOLUME="${3:-/}"
+APP="${VOLUME%/}/Applications/MAC-LIMPO.app"
+UNINSTALL="${VOLUME%/}/usr/local/bin/mac-limpo-uninstall"
+
+if [ ! -d "$APP" ]; then
+    echo "error: $APP não existe após a instalação" >&2
+    exit 1
+fi
+
+# O --ownership recommended do pkgbuild já deveria ter feito isto, mas um app em
+# /Applications gravável por qualquer usuário é um caminho para substituir o
+# binário por outro — vale ser explícito em vez de confiar nas flags.
+/usr/sbin/chown -R root:wheel "$APP"
+/bin/chmod -R go-w "$APP"
+
+if [ -e "$UNINSTALL" ]; then
+    /usr/sbin/chown root:wheel "$UNINSTALL"
+    /bin/chmod 755 "$UNINSTALL"
+fi
+
+# O app é assinado ad-hoc quando não há um certificado Developer ID no keychain.
+# Se o .pkg chegou nesta máquina pela internet, o atributo de quarentena é
+# herdado pelo payload e o Gatekeeper recusa uma assinatura ad-hoc em quarentena.
+/usr/bin/xattr -dr com.apple.quarantine "$APP" 2>/dev/null
+
+# Sobe o app já para o usuário que está na frente da máquina. É um app de menu
+# bar sem janela nem ícone no Dock: sem isto, uma instalação bem-sucedida não
+# mostra nada na tela e parece que não aconteceu.
+CONSOLE_USER=$(/usr/bin/stat -f "%Su" /dev/console 2>/dev/null)
+if [ -n "$CONSOLE_USER" ] && [ "$CONSOLE_USER" != "root" ]; then
+    CONSOLE_UID=$(/usr/bin/id -u "$CONSOLE_USER" 2>/dev/null)
+    if [ -n "$CONSOLE_UID" ]; then
+        /bin/launchctl asuser "$CONSOLE_UID" \
+            /usr/bin/sudo -u "$CONSOLE_USER" \
+            /usr/bin/open -a "$APP" 2>/dev/null
+    fi
+fi
+
+echo "MAC-LIMPO instalado."
+exit 0

@@ -102,11 +102,30 @@ _Cards bonitos com gradientes para seleção de diretórios_
 - macOS 13.0 (Ventura) ou superior
 - Swift 5.9 ou superior
 
+### Instalação via .pkg (recomendado)
+
+1. Baixe o arquivo `MAC-LIMPO-<versão>.pkg`
+2. Abra e siga o instalador
+3. O app é aberto automaticamente ao final — procure o ícone de lixeira no menu bar
+
+O instalador coloca duas coisas no Mac:
+
+| Caminho | O que é |
+|---|---|
+| `/Applications/MAC-LIMPO.app` | o app de menu bar |
+| `/usr/local/bin/mac-limpo-uninstall` | o desinstalador |
+
+**Para remover tudo:** `sudo mac-limpo-uninstall`
+
+> O `.pkg` também tira a quarentena do app durante a instalação, o que evita o
+> aviso de "desenvolvedor não identificado" que o `.dmg` produz enquanto o
+> projeto não tiver um certificado Developer ID.
+
 ### Instalação via DMG
 
 1. Baixe o arquivo `MAC-LIMPO.dmg`
 2. Abra o DMG e arraste o app para Applications
-3. Execute o MAC-LIMPO
+3. Na primeira vez, clique com o botão direito no app › **Abrir** (assinatura ad-hoc)
 4. Procure o ícone de lixeira no menu bar
 
 ### Compilação Manual
@@ -118,17 +137,32 @@ git clone <repository_url>
 cd MAC-LIMPO
 ```
 
-2. Compile e gere o instalador:
+2. Gere o instalador:
 
 ```bash
-./create_installer.sh
+make installer     # → build/MAC-LIMPO-<versão>.pkg
+make dmg           # → MAC-LIMPO.dmg
+make install       # gera o .pkg e o abre
 ```
 
-3. Ou compile diretamente:
+3. Ou compile e rode direto:
 
 ```bash
-swift build -c release
-swift run
+make run           # equivale a: swift run
+make app           # só monta e assina build/app/MAC-LIMPO.app
+make help          # lista todos os alvos
+```
+
+#### Assinatura
+
+`Scripts/bundle-app.sh` procura uma identidade no keychain nesta ordem:
+*Developer ID Application* → *Apple Development* → ad-hoc. Sem nenhum
+certificado, o build funciona e o app roda localmente, mas não pode ser
+notarizado. Para forçar uma identidade:
+
+```bash
+IDENTITY="Developer ID Application: ..." make app
+INSTALLER_IDENTITY="Developer ID Installer: ..." make installer
 ```
 
 ### Uso

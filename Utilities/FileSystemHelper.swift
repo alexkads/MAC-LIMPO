@@ -39,12 +39,22 @@ final class FileSystemHelper: @unchecked Sendable {
         return kb * 1024 // KB -> bytes
     }
 
+    /// Teto de `du` simultâneos. Medir tamanho é limitado por I/O num único
+    /// disco: acima de um punhado em paralelo o disco satura e nada acelera. Sem
+    /// esse teto o problema é pior que lentidão — cada `du` fica bloqueado numa
+    /// thread do pool global, o GCD responde criando *mais* threads, e o
+    /// fan-out aninhado do scan (várias categorias × dezenas de paths cada)
+    /// chegava a 64 `du` de uma vez, travando a varredura inteira.
+    private static let duGate = AsyncSemaphore(value: 4)
+
     /// Versão assíncrona de `sizeOfDirectory`. Roda o `du` (bloqueante) no pool
-    /// concorrente do GCD, que escala com os núcleos do Mac, em vez de bloquear
-    /// uma thread do pool cooperativo do Swift. Assim várias medições podem
-    /// acontecer em paralelo de verdade.
+    /// concorrente do GCD, mas passa por `duGate` primeiro, de modo que no
+    /// máximo `duGate` medições rodam ao mesmo tempo por todo o app — não importa
+    /// quantas tarefas de scan chamem isto em paralelo.
     func sizeOfDirectoryAsync(atPath path: String) async -> Int64 {
-        await withCheckedContinuation { continuation in
+        await Self.duGate.acquire()
+        defer { Self.duGate.release() }
+        return await withCheckedContinuation { continuation in
             DispatchQueue.global(qos: .utility).async {
                 continuation.resume(returning: self.sizeOfDirectory(atPath: path))
             }

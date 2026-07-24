@@ -28,6 +28,13 @@ let package = Package(
                 "Info.plist",
                 "create_xcode_project.sh",
                 "create_installer.sh",
+                "Makefile",
+                "Installer",
+                "Scripts",
+                // Saída de Scripts/bundle-app.sh e Installer/build-installer.sh:
+                // o .app montado e o .pkg. Sem isto o SPM avisa de arquivos
+                // "unhandled" a cada build depois de gerar um instalador.
+                "build",
                 "Assets.xcassets",
                 "Design",
                 "MAC-LIMPO.app",
@@ -111,7 +118,9 @@ let package = Package(
                 "Utilities/FileSystemHelper.swift",
                 "Utilities/ShellExecutor.swift",
                 "Utilities/TreemapLayout.swift",
-                "Utilities/PermissionsHelper.swift"
+                "Utilities/PermissionsHelper.swift",
+                "Utilities/NSAlert+MenuBar.swift",
+                "Utilities/AsyncSemaphore.swift"
             ]
         ),
         .testTarget(

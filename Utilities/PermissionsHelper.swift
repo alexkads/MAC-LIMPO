@@ -37,7 +37,7 @@ class PermissionsHelper {
 
         alert.icon = NSImage(systemSymbolName: "lock.shield", accessibilityDescription: "Security")
 
-        let response = alert.runModal()
+        let response = alert.runModalAboveMenuBarPopover()
 
         switch response {
         case .alertFirstButtonReturn:
@@ -78,7 +78,7 @@ class PermissionsHelper {
         alert.addButton(withTitle: "Done - Já Habilitei")
         alert.addButton(withTitle: "Pular Por Agora")
 
-        let response = alert.runModal()
+        let response = alert.runModalAboveMenuBarPopover()
 
         if response == .alertFirstButtonReturn {
             // Verifica se realmente tem acesso agora
@@ -88,7 +88,7 @@ class PermissionsHelper {
                 successAlert.informativeText = "Agora você pode limpar muito mais espaço. Execute a limpeza novamente para melhores resultados."
                 successAlert.alertStyle = .informational
                 successAlert.addButton(withTitle: "OK")
-                successAlert.runModal()
+                successAlert.runModalAboveMenuBarPopover()
             } else {
                 let warningAlert = NSAlert()
                 warningAlert.messageText = "⚠️ Permissão Não Detectada"
@@ -100,7 +100,7 @@ class PermissionsHelper {
                 """
                 warningAlert.alertStyle = .warning
                 warningAlert.addButton(withTitle: "OK")
-                warningAlert.runModal()
+                warningAlert.runModalAboveMenuBarPopover()
             }
         }
 

@@ -1,0 +1,33 @@
+#!/bin/bash
+#
+# Roda como root antes dos arquivos serem gravados.
+#
+# A ordem importa: o app precisa ser encerrado *antes* do seu binário ser
+# trocado por baixo dele. Substituir o bundle de um app rodando deixa um
+# processo vivo executando um binário apagado, e o menu bar item continua na
+# tela apontando para código que não existe mais.
+
+APP="/Applications/MAC-LIMPO.app"
+
+if /usr/bin/pgrep -f "MAC-LIMPO.app/Contents/MacOS/MAC-LIMPO" >/dev/null 2>&1; then
+    echo "Encerrando a instância em execução..."
+    /usr/bin/pkill -f "MAC-LIMPO.app/Contents/MacOS/MAC-LIMPO" 2>/dev/null
+
+    # Dá tempo para o app sair sozinho antes de continuar. Não insiste com
+    # SIGKILL: o app não mantém estado que precise ser gravado na saída, e um
+    # kill forçado aqui não melhoraria nada.
+    for _ in 1 2 3 4 5; do
+        /usr/bin/pgrep -f "MAC-LIMPO.app/Contents/MacOS/MAC-LIMPO" >/dev/null 2>&1 || break
+        sleep 1
+    done
+fi
+
+# Uma instalação por cima sem remover o bundle antigo deixa arquivos órfãos de
+# versões anteriores dentro do .app — o instalador mescla diretórios, não os
+# substitui.
+if [ -d "$APP" ]; then
+    echo "Removendo a versão anterior..."
+    /bin/rm -rf "$APP"
+fi
+
+exit 0

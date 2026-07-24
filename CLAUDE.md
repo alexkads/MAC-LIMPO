@@ -9,14 +9,38 @@ MAC-LIMPO is a native macOS menu-bar app (SwiftUI + AppKit) for freeing disk spa
 ## Commands
 
 ```bash
+make help                   # list every target
 swift build                 # debug build
 swift build -c release      # release build
 swift run                   # build and launch the app (look for the trash icon in the menu bar)
 swift test                  # run unit tests (Tests/MACLIMPOTests)
-./create_installer.sh       # release build → .app bundle (ad-hoc codesigned) → MAC-LIMPO.dmg
+make app                    # assemble + sign build/app/MAC-LIMPO.app  (Scripts/bundle-app.sh)
+make installer              # → build/MAC-LIMPO-<version>.pkg          (Installer/build-installer.sh)
+make dmg                    # → MAC-LIMPO.dmg                          (./create_installer.sh)
 ./create_xcode_project.sh   # generate an Xcode project if you need the IDE
 swiftformat . && swiftlint  # format + lint (configs: .swiftformat, .swiftlint.yml)
 ```
+
+### Packaging
+
+`Scripts/bundle-app.sh` is the **single** place the `.app` is assembled — Info.plist
+generation, icon compilation and codesigning all live there, and both the `.pkg` and
+the `.dmg` consume its output at `build/app/MAC-LIMPO.app`. Never re-implement bundling
+in a distribution script; the two used to diverge in plist and signature silently.
+It picks a signing identity from the keychain (Developer ID → Apple Development →
+ad-hoc), overridable with `IDENTITY=`.
+
+`Installer/` holds the native `.pkg`: `Distribution.xml` (welcome/license/conclusion
+pages in `Installer/Resources/*.html`), `Installer/Scripts/{preinstall,postinstall}`
+which run as root, and `uninstall-mac-limpo`, which ships to
+`/usr/local/bin/mac-limpo-uninstall`. `build-installer.sh` **disables bundle
+relocation** and then re-expands the built package to assert no `<relocate>` block
+came back — with relocation on, the installer follows Spotlight to any existing copy
+of the bundle id and overwrites the dev build as root instead of installing to
+`/Applications`.
+
+Anything added under `Installer/` or `Scripts/` must stay in the `exclude:` list in
+`Package.swift`, or SPM warns about unhandled files on every build.
 
 The `MACLIMPOTests` target `@testable import MAC_LIMPO`s the executable (note the underscore — hyphens in the target name become underscores in the module name). VS Code launch configs live in `.vscode/launch.json` (Swift extension).
 

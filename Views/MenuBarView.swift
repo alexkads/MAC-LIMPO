@@ -158,8 +158,7 @@ class MenuBarViewModel: ObservableObject {
         alert.showsSuppressionButton = true
         alert.suppressionButton?.title = "Não perguntar de novo nesta sessão"
 
-        NSApp.activate(ignoringOtherApps: true)
-        let response = alert.runModal()
+        let response = alert.runModalAboveMenuBarPopover()
         if alert.suppressionButton?.state == .on { skipCleaningConfirmation = true }
         return response == .alertFirstButtonReturn
     }
