@@ -54,6 +54,7 @@ struct StorageStatsView: View {
                             color: palette.glow ? palette.glowColor.opacity(0.7) : .clear,
                             radius: palette.glow ? 8 : 0
                         )
+                        .animation(.easeInOut(duration: 0.6), value: usedPercentage)
 
                     VStack(spacing: 2) {
                         Text("\(Int(usedPercentage * 100))%")

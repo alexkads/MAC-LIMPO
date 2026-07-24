@@ -133,8 +133,17 @@ final class FileSystemHelper: @unchecked Sendable {
         (path as NSString).expandingTildeInPath
     }
 
-    /// Obtém espaço disponível em disco
+    /// Obtém espaço disponível em disco.
+    ///
+    /// Usa `volumeAvailableCapacityForImportantUsage`, que no APFS reflete o espaço
+    /// realmente disponível (incluindo o purgeable que o macOS libera sob demanda) —
+    /// o mesmo número que o Finder mostra. Faz fallback para `.systemFreeSize`.
     func availableDiskSpace() -> Int64 {
+        let homeURL = URL(fileURLWithPath: NSHomeDirectory())
+        if let values = try? homeURL.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]),
+           let importantAvailable = values.volumeAvailableCapacityForImportantUsage {
+            return importantAvailable
+        }
         do {
             let systemAttributes = try fileManager.attributesOfFileSystem(forPath: NSHomeDirectory())
             if let freeSize = systemAttributes[.systemFreeSize] as? Int64 {

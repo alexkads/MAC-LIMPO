@@ -18,6 +18,9 @@ class MenuBarViewModel: ObservableObject {
     /// Quando o usuário marca "não perguntar de novo", pulamos a confirmação nesta sessão.
     private var skipCleaningConfirmation = false
 
+    /// Atualiza automaticamente apenas o card de Storage de hora em hora.
+    private var diskStatsTimer: Timer?
+
     /// Registry categoria → serviço. Ao adicionar um serviço, lembre de incluir o
     /// fonte em `sources:` do Package.swift (SPM não faz glob). Ver a skill
     /// `add-cleaning-service`.
@@ -68,12 +71,29 @@ class MenuBarViewModel: ObservableObject {
     init() {
         refreshDiskStats()
         scanAllCategories()
+        startDiskStatsTimer()
+    }
+
+    deinit {
+        diskStatsTimer?.invalidate()
     }
 
     func refreshDiskStats() {
         let helper = FileSystemHelper.shared
         totalDiskSpace = helper.totalDiskSpace()
         usedDiskSpace = totalDiskSpace - helper.availableDiskSpace()
+    }
+
+    /// Agenda a atualização automática do card de Storage de hora em hora.
+    /// Só recalcula o espaço em disco — não dispara os scans das categorias.
+    private func startDiskStatsTimer() {
+        diskStatsTimer?.invalidate()
+        let timer = Timer(timeInterval: 3600, repeats: true) { [weak self] _ in
+            self?.refreshDiskStats()
+        }
+        timer.tolerance = 300
+        RunLoop.main.add(timer, forMode: .common)
+        diskStatsTimer = timer
     }
 
     @Published var scanningStatus: [CleaningCategory: String] = [:]
@@ -335,6 +355,7 @@ struct MenuBarView: View {
                         .help("Disk Map")
 
                         Button(action: {
+                            viewModel.refreshDiskStats()
                             viewModel.scanAllCategories()
                         }) {
                             Image(systemName: "arrow.clockwise")
