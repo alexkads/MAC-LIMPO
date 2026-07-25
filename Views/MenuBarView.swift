@@ -1,6 +1,14 @@
 import AppKit
 import SwiftUI
 
+/// Pedido de confirmação de limpeza mostrado inline no popover.
+struct ConfirmationRequest: Identifiable {
+    let id = UUID()
+    let title: String
+    let message: String
+    let onConfirm: () -> Void
+}
+
 class MenuBarViewModel: ObservableObject {
     @Published var scanResults: [CleaningCategory: ScanResult] = [:]
     @Published var isScanning: [CleaningCategory: Bool] = [:]
@@ -9,6 +17,10 @@ class MenuBarViewModel: ObservableObject {
     @Published var currentOperation = ""
     @Published var showProgress = false
     @Published var showResults = false
+
+    /// Pedido de confirmação exibido inline (dentro do popover), no lugar do antigo
+    /// `NSAlert` — que roubava o foco e fechava o popover. `nil` = nada pendente.
+    @Published var confirmationRequest: ConfirmationRequest?
     @Published var lastResult: CleaningResult?
     @Published var currentCleaningCategory: CleaningCategory?
 
@@ -65,7 +77,11 @@ class MenuBarViewModel: ObservableObject {
         .devApiTools: DevApiToolsCleaningService(),
         .notionCache: NotionCleaningService(),
         .cypress: CypressCleaningService(),
-        .tiktokLiveStudio: TikTokLiveStudioCleaningService()
+        .tiktokLiveStudio: TikTokLiveStudioCleaningService(),
+        .nugetCache: NuGetCleaningService(),
+        .bunCache: BunCleaningService(),
+        .pubCache: PubCacheCleaningService(),
+        .googleCache: GoogleCacheCleaningService()
     ]
 
     init() {
@@ -148,22 +164,21 @@ class MenuBarViewModel: ObservableObject {
         }
     }
 
-    /// Diálogo de confirmação antes de qualquer limpeza. Retorna `true` se pode prosseguir.
-    /// A maioria das categorias envia os itens para a Lixeira (restaurável).
-    private func confirmClean(_ categories: [CleaningCategory]) -> Bool {
-        if skipCleaningConfirmation { return true }
+    /// Prepara uma confirmação inline antes de limpar. Se o usuário já pediu para não
+    /// perguntar de novo nesta sessão, executa `onConfirm` direto. Caso contrário,
+    /// publica um `ConfirmationRequest` que a UI mostra dentro do próprio popover —
+    /// assim ele não fecha e o progresso segue visível ali mesmo.
+    private func requestConfirmation(_ categories: [CleaningCategory], onConfirm: @escaping () -> Void) {
+        if skipCleaningConfirmation {
+            onConfirm()
+            return
+        }
 
         let totalSize = categories.reduce(Int64(0)) { $0 + (scanResults[$1]?.estimatedSize ?? 0) }
         let sizeText = FileSystemHelper.shared.formatBytes(totalSize)
-
-        let alert = NSAlert()
-        alert.alertStyle = .warning
-        alert.icon = NSImage(systemSymbolName: "trash", accessibilityDescription: "Limpar")
-        if categories.count == 1 {
-            alert.messageText = "Limpar \(categories[0].rawValue)?"
-        } else {
-            alert.messageText = "Limpar \(categories.count) categorias?"
-        }
+        let title = categories.count == 1
+            ? "Limpar \(categories[0].rawValue)?"
+            : "Limpar \(categories.count) categorias?"
         var body = """
         Cerca de \(sizeText) serão liberados. Sempre que possível, os itens vão para a \
         Lixeira e podem ser restaurados de lá.
@@ -172,30 +187,34 @@ class MenuBarViewModel: ObservableObject {
             body += "\n\n⚡️ Modo agressivo ligado: também remove caches grandes regeneráveis " +
                 "(modelos de IA do Chrome, imagens Docker não usadas)."
         }
-        alert.informativeText = body
-        alert.addButton(withTitle: "Limpar")
-        alert.addButton(withTitle: "Cancelar")
-        alert.showsSuppressionButton = true
-        alert.suppressionButton?.title = "Não perguntar de novo nesta sessão"
+        confirmationRequest = ConfirmationRequest(title: title, message: body, onConfirm: onConfirm)
+    }
 
-        let response = alert.runModalAboveMenuBarPopover()
-        if alert.suppressionButton?.state == .on { skipCleaningConfirmation = true }
-        return response == .alertFirstButtonReturn
+    /// Confirma a limpeza pendente. `dontAskAgain` equivale ao antigo botão de supressão.
+    func confirmPendingClean(dontAskAgain: Bool) {
+        if dontAskAgain { skipCleaningConfirmation = true }
+        let request = confirmationRequest
+        confirmationRequest = nil
+        request?.onConfirm()
+    }
+
+    func cancelPendingClean() {
+        confirmationRequest = nil
     }
 
     func cleanCategory(_ category: CleaningCategory) {
-        guard confirmClean([category]) else { return }
-
-        // Se for System Data, verifica permissões primeiro
-        if category == .systemData, !PermissionsHelper.hasFullDiskAccess() {
-            PermissionsHelper.requestFullDiskAccess {
-                // Depois de pedir permissão (ou pular), continua limpeza
-                self.performCleanCategory(category)
+        requestConfirmation([category]) { [weak self] in
+            guard let self else { return }
+            // Se for System Data, verifica permissões primeiro
+            if category == .systemData, !PermissionsHelper.hasFullDiskAccess() {
+                PermissionsHelper.requestFullDiskAccess {
+                    // Depois de pedir permissão (ou pular), continua limpeza
+                    self.performCleanCategory(category)
+                }
+                return
             }
-            return
+            self.performCleanCategory(category)
         }
-
-        performCleanCategory(category)
     }
 
     private func performCleanCategory(_ category: CleaningCategory) {
@@ -235,8 +254,12 @@ class MenuBarViewModel: ObservableObject {
     private let maxConcurrentCleans = min(4, max(2, ProcessInfo.processInfo.activeProcessorCount))
 
     func cleanAll() {
-        guard confirmClean(Array(services.keys)) else { return }
+        requestConfirmation(Array(services.keys)) { [weak self] in
+            self?.startCleanAll()
+        }
+    }
 
+    private func startCleanAll() {
         let categories = services.keys.sorted { $0.rawValue < $1.rawValue }
         let total = categories.count
 
@@ -507,10 +530,25 @@ struct MenuBarView: View {
                     isShowing: $viewModel.showResults
                 )
             }
+
+            // Confirmation Overlay (inline — não fecha o popover)
+            if let request = viewModel.confirmationRequest {
+                CleaningConfirmationView(
+                    request: request,
+                    onConfirm: { dontAskAgain in
+                        viewModel.confirmPendingClean(dontAskAgain: dontAskAgain)
+                    },
+                    onCancel: {
+                        viewModel.cancelPendingClean()
+                    }
+                )
+            }
         }
         .frame(width: 420, height: 600)
         .fontDesign(themeManager.palette.fontDesign)
         .animation(.easeInOut(duration: 0.35), value: themeManager.theme)
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewModel.showProgress)
+        .animation(.easeInOut(duration: 0.2), value: viewModel.confirmationRequest?.id)
         .onChange(of: cleaningOptions.aggressiveMode) { _ in
             // As estimativas mudam com o modo agressivo; re-escaneia para refletir.
             viewModel.scanAllCategories()

@@ -1,5 +1,8 @@
 import SwiftUI
 
+/// Barra de progresso inline, ancorada na base do popover. Diferente de uma modal,
+/// **não** cobre a UI com backdrop nem captura cliques fora da própria barra —
+/// o usuário continua navegando/rolando enquanto a limpeza roda.
 struct CleaningProgressView: View {
     let category: CleaningCategory
     @Binding var isShowing: Bool
@@ -9,88 +12,85 @@ struct CleaningProgressView: View {
     @ObservedObject private var themeManager = ThemeManager.shared
 
     var body: some View {
-        ZStack {
-            // Backdrop
-            Color.black.opacity(0.4)
-                .ignoresSafeArea()
+        let palette = themeManager.palette
+        VStack {
+            Spacer()
 
-            VStack(spacing: 24) {
-                // Ícone animado
-                ZStack {
-                    Circle()
-                        .fill(category.gradient)
-                        .frame(width: 80, height: 80)
-                        .shadow(color: category.color.opacity(0.5), radius: 20)
+            VStack(spacing: 10) {
+                HStack(spacing: 12) {
+                    // Ícone da categoria
+                    ZStack {
+                        Circle()
+                            .fill(category.gradient)
+                            .frame(width: 32, height: 32)
 
-                    Image(systemName: category.icon)
-                        .font(.system(size: 36, weight: .semibold))
-                        .foregroundColor(.white)
-                }
-                .scaleEffect(progress > 0 ? 1.0 : 0.8)
-                .animation(
-                    .spring(response: 0.5, dampingFraction: 0.6).repeatForever(autoreverses: true),
-                    value: progress
-                )
-
-                // Título
-                Text("Cleaning \(category.rawValue)")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(themeManager.palette.primaryText)
-
-                // Operação atual
-                Text(currentOperation)
-                    .font(.system(size: 14))
-                    .foregroundColor(themeManager.palette.secondaryText)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.center)
-                    .frame(height: 40)
-
-                // Barra de progresso
-                VStack(spacing: 8) {
-                    GeometryReader { geometry in
-                        ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Color.gray.opacity(0.2))
-                                .frame(height: 8)
-
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(category.gradient)
-                                .frame(width: geometry.size.width * progress, height: 8)
-                                .animation(.linear(duration: 0.3), value: progress)
-                        }
+                        Image(systemName: category.icon)
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(.white)
                     }
-                    .frame(height: 8)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Cleaning \(category.rawValue)")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(palette.primaryText)
+                            .lineLimit(1)
+
+                        Text(currentOperation)
+                            .font(.system(size: 11))
+                            .foregroundColor(palette.secondaryText)
+                            .lineLimit(1)
+                    }
+
+                    Spacer()
 
                     Text("\(Int(progress * 100))%")
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(themeManager.palette.secondaryText)
+                        .foregroundColor(palette.secondaryText)
+
+                    // Cancelar
+                    Button(action: { isShowing = false }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 16))
+                            .foregroundColor(palette.secondaryText.opacity(0.7))
+                    }
+                    .buttonStyle(.plain)
+                    .help("Cancel")
                 }
 
-                // Botão cancelar
-                Button("Cancel") {
-                    isShowing = false
+                // Barra de progresso
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(height: 6)
+
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(category.gradient)
+                            .frame(width: max(0, geometry.size.width * progress), height: 6)
+                            .animation(.linear(duration: 0.3), value: progress)
+                    }
                 }
-                .buttonStyle(.plain)
-                .foregroundColor(.red)
-                .padding(.top, 8)
+                .frame(height: 6)
             }
-            .padding(32)
-            .frame(width: 320)
+            .padding(14)
             .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(themeManager.palette.glow
-                        ? themeManager.palette.surface
-                        : Color(NSColor.windowBackgroundColor))
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(palette.glow ? palette.surface : Color(NSColor.windowBackgroundColor))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .stroke(themeManager.palette.surfaceStroke, lineWidth: themeManager.palette.glow ? 1.5 : 0)
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(palette.surfaceStroke, lineWidth: palette.glow ? 1.5 : 0)
                     )
                     .shadow(
-                        color: themeManager.palette.glow
-                            ? themeManager.palette.glowColor.opacity(0.5) : .black.opacity(0.3),
-                        radius: 30
+                        color: palette.glow ? palette.glowColor.opacity(0.4) : .black.opacity(0.25),
+                        radius: 16, y: 4
                     )
             )
+            .padding(.horizontal, 16)
+            .padding(.bottom, 14)
+            .transition(.move(edge: .bottom).combined(with: .opacity))
         }
+        // Só a barra na base recebe toques; o resto do popover segue interativo.
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        .allowsHitTesting(true)
     }
 }

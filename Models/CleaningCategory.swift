@@ -47,17 +47,22 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
     case notionCache = "Notion Cache"
     case cypress = "Cypress"
     case tiktokLiveStudio = "TikTok LIVE Studio"
+    case nugetCache = "NuGet Cache"
+    case bunCache = "Bun Cache"
+    case pubCache = "pub Cache"
+    case googleCache = "Google Cache"
 
     var group: CleaningGroup {
         switch self {
         case .docker, .xcodeCache, .devPackages, .ideCache, .androidSDK, .playwright, .cargo, .homebrew, .terminalLogs,
-             .aiTools, .iosSimulators, .pnpm, .goCache, .devApiTools, .cypress:
+             .aiTools, .iosSimulators, .pnpm, .goCache, .devApiTools, .cypress,
+             .nugetCache, .bunCache, .pubCache:
             .development
         case .systemData, .tempFiles, .logs, .trash, .varFolders, .appLeftovers:
             .system
         case .development:
             .development
-        case .appCache, .browserCache, .adobeCache, .downloads, .creativeApps, .notionCache:
+        case .appCache, .browserCache, .adobeCache, .downloads, .creativeApps, .notionCache, .googleCache:
             .apps
         case .slackCache, .messagingApps, .mailAttachments, .messagesAttachments:
             .communication
@@ -107,6 +112,10 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .notionCache: "doc.richtext.fill"
         case .cypress: "checkmark.shield.fill"
         case .tiktokLiveStudio: "dot.radiowaves.left.and.right"
+        case .nugetCache: "cube.box.fill"
+        case .bunCache: "takeoutbag.and.cup.and.straw.fill"
+        case .pubCache: "bird.fill"
+        case .googleCache: "globe"
         }
     }
 
@@ -147,6 +156,10 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .notionCache: Color(hex: "37352F") // Notion dark
         case .cypress: Color(hex: "04C38E") // Cypress teal
         case .tiktokLiveStudio: Color(hex: "FE2C55") // TikTok red/pink
+        case .nugetCache: Color(hex: "004880") // NuGet blue
+        case .bunCache: Color(hex: "F472B6") // Bun pink
+        case .pubCache: Color(hex: "0175C2") // Dart blue
+        case .googleCache: Color(hex: "4285F4") // Google blue
         }
     }
 
@@ -230,6 +243,14 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
             "Clean Cypress test data and browser binary cache"
         case .tiktokLiveStudio:
             "Clean TikTok LIVE Studio browser cache and logs (keeps your effects/assets)"
+        case .nugetCache:
+            "Clear the global NuGet package cache (restored on dotnet build)"
+        case .bunCache:
+            "Clear Bun's global install cache"
+        case .pubCache:
+            "Clear downloaded Dart/Flutter pub packages (re-fetched on pub get)"
+        case .googleCache:
+            "Clear Chrome regenerable profile caches and old Google Updater versions"
         }
     }
 }

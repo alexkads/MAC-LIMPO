@@ -102,6 +102,10 @@ let package = Package(
                 "Services/NotionCleaningService.swift",
                 "Services/CypressCleaningService.swift",
                 "Services/TikTokLiveStudioCleaningService.swift",
+                "Services/NuGetCleaningService.swift",
+                "Services/BunCleaningService.swift",
+                "Services/PubCacheCleaningService.swift",
+                "Services/GoogleCacheCleaningService.swift",
                 // ViewModels
                 "ViewModels/TreemapViewModel.swift",
                 // Views
@@ -111,6 +115,7 @@ let package = Package(
                 "Views/Components/CleaningCategoryCard.swift",
                 "Views/Components/StorageStatsView.swift",
                 "Views/Components/CleaningProgressView.swift",
+                "Views/Components/CleaningConfirmationView.swift",
                 "Views/Components/ResultsView.swift",
                 "Views/Components/DirectoryCard.swift",
                 "Views/Components/ThemePickerView.swift",
