@@ -116,6 +116,13 @@ Temporary Items
 MAC-LIMPO.app/
 MAC-LIMPO.dmg
 
+# Área de montagem transitória do create_installer.sh. Ele a cria e a apaga na
+# mesma execução, mas se ficar para trás contém o symlink Applications ->
+# /Applications: o llbuild varre a árvore inteira do pacote, segue o link e
+# indexa /Applications (Xcode.app junto), inflando .build/build.db para GBs
+# enquanto o build nunca sai de buildPackageStructure. Nunca comite.
+dmg_staging/
+
 # Logs
 *.log
 

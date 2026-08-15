@@ -5,7 +5,18 @@
       "Bash(sysctl -n hw.activecpu)",
       "Bash(awk '{print $2, $3\"%cpu\", $11, $12, $13}')",
       "Bash(awk '{print $2, $3, $11}')",
-      "Bash(awk '{print $1, $2, $NF}')"
+      "Bash(awk '{print $1, $2, $NF}')",
+      "Bash(pkill -9 -f swift-build)",
+      "Bash(pkill -9 -f swift-frontend)",
+      "Bash(kill -9 54961)",
+      "Bash(ps -axo pid,pcpu,stat,comm)",
+      "Bash(sort -k2 -rn)",
+      "Bash(kill -9 18304 27165)",
+      "Bash(awk '{print $6,$7,$8,$9}')",
+      "Bash(watchman shutdown-server *)",
+      "Bash(launchctl list *)",
+      "Bash(awk '{print $6,$7,$8}')",
+      "Bash(awk '{print $5,$9}')"
     ]
   }
 }

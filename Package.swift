@@ -39,6 +39,11 @@ let package = Package(
                 "Design",
                 "MAC-LIMPO.app",
                 "MAC-LIMPO.dmg",
+                // Área de montagem do create_installer.sh. Contém o symlink
+                // Applications -> /Applications; sem este exclude o SwiftPM
+                // segue o link e varre /Applications inteiro (Xcode.app junto),
+                // e o build gira em getattrlist sem nunca compilar nada.
+                "dmg_staging",
                 "Services/COMO_VER_LOGS.md",
                 "Services/CORRECAO_APLICADA.md",
                 "Services/CORRECAO_TEMPFILES.md",
