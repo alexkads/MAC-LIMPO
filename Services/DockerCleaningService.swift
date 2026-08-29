@@ -42,6 +42,25 @@ class DockerCleaningService: BaseCleaningService, CleaningService {
             items.append("Build cache")
         }
 
+        // Volumes não usados (removidos só no modo agressivo)
+        let volumesResult = shell.execute("docker volume ls -q -f dangling=true | wc -l")
+        if let count = Int(volumesResult.output.trimmingCharacters(in: .whitespacesAndNewlines)), count > 0 {
+            items
+                .append(
+                    "\(count) unused volumes\(CleaningOptions.shared.aggressiveMode ? "" : " (aggressive mode only)")"
+                )
+        }
+
+        // Cache do Docker Scout (análise de vulnerabilidades, regenerável)
+        let scoutPath = fileHelper.expandPath("~/.docker/scout")
+        if fileHelper.fileExists(atPath: scoutPath) {
+            let scoutSize = fileHelper.sizeOfDirectory(atPath: scoutPath)
+            if scoutSize > 0 {
+                estimatedSize += scoutSize
+                items.append("Docker Scout cache: \(fileHelper.formatBytes(scoutSize))")
+            }
+        }
+
         // Estima tamanho do build cache
         let sizeResult = shell.execute("docker system df --format '{{.Reclaimable}}' | head -1")
         let sizeStr = sizeResult.output.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -124,17 +143,41 @@ class DockerCleaningService: BaseCleaningService, CleaningService {
             errors.append("Failed to clean build cache: \(cacheResult.error)")
         }
 
+        // 4. Volumes: SÓ no modo agressivo — volumes podem conter dados do usuário
+        //    (bancos de dados, etc.). `-a` remove também volumes nomeados não usados
+        //    (Docker 23+); se a flag não existir, cai para o prune de anônimos.
+        if CleaningOptions.shared.aggressiveMode {
+            var volumesResult = shell.execute("docker volume prune -a -f", timeout: 120)
+            if volumesResult.exitCode != 0 {
+                volumesResult = shell.execute("docker volume prune -f", timeout: 120)
+            }
+            if volumesResult.exitCode != 0 {
+                errors.append("Failed to clean volumes: \(volumesResult.error)")
+            } else {
+                filesRemoved += volumesResult.output
+                    .components(separatedBy: "\n")
+                    .filter { !$0.isEmpty && !$0.contains(":") }
+                    .count
+            }
+        }
+
         // Obtém tamanho depois da limpeza
         let afterResult = shell.execute("docker system df --format '{{.Size}}' | head -1")
         let afterSize = parseDiskSize(afterResult.output)
 
         bytesRemoved = max(0, beforeSize - afterSize)
 
+        // 5. Cache do Docker Scout (fora da VM; regenerado na próxima análise).
+        //    Somado DEPOIS do delta da VM para não ser sobrescrito.
+        let scout = cleanScoutCache(errors: &errors)
+        bytesRemoved += scout.bytes
+        filesRemoved += scout.removed
+
         // Nota importante: o prune libera espaço DENTRO da VM do Docker, mas o
         // arquivo de disco (Docker.raw, em ~/Library/Containers/com.docker.docker)
         // não encolhe sozinho. Para devolver o espaço ao macOS é preciso usar o
         // "reclaim" do Docker Desktop (Settings > Resources) ou recriar o disco.
-        // Volumes NÃO são removidos de propósito (podem conter dados do usuário).
+        // Volumes só são removidos no modo agressivo (podem conter dados do usuário).
         logger.log(
             "Docker: espaço liberado dentro da VM. O Docker.raw não encolhe automaticamente — " +
                 "use o reclaim do Docker Desktop se precisar devolver o espaço ao sistema.",
@@ -151,6 +194,24 @@ class DockerCleaningService: BaseCleaningService, CleaningService {
             executionTime: executionTime,
             success: errors.isEmpty
         )
+    }
+
+    /// Remove ~/.docker/scout (Lixeira primeiro; remoção direta como fallback).
+    private func cleanScoutCache(errors: inout [String]) -> (bytes: Int64, removed: Int) {
+        let scoutPath = fileHelper.expandPath("~/.docker/scout")
+        guard fileHelper.fileExists(atPath: scoutPath) else { return (0, 0) }
+
+        let scoutSize = fileHelper.sizeOfDirectory(atPath: scoutPath)
+        if fileHelper.trashItem(atPath: scoutPath) {
+            return (scoutSize, 1)
+        }
+        do {
+            try fileHelper.removeItem(atPath: scoutPath)
+            return (scoutSize, 1)
+        } catch {
+            errors.append("Failed to clean Docker Scout cache")
+            return (0, 0)
+        }
     }
 
     private func parseDiskSize(_ sizeString: String) -> Int64 {

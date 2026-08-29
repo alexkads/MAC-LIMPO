@@ -81,7 +81,12 @@ class MenuBarViewModel: ObservableObject {
         .nugetCache: NuGetCleaningService(),
         .bunCache: BunCleaningService(),
         .pubCache: PubCacheCleaningService(),
-        .googleCache: GoogleCacheCleaningService()
+        .googleCache: GoogleCacheCleaningService(),
+        .nvmVersions: NvmCleaningService(),
+        .azureTools: AzureToolsCleaningService(),
+        .expoCache: ExpoCleaningService(),
+        .zedCache: ZedCleaningService(),
+        .aiModels: AIModelsCleaningService()
     ]
 
     init() {
@@ -213,7 +218,7 @@ class MenuBarViewModel: ObservableObject {
                 }
                 return
             }
-            self.performCleanCategory(category)
+            performCleanCategory(category)
         }
     }
 

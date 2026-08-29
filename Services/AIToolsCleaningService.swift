@@ -22,6 +22,14 @@ final class AIToolsCleaningService: PathBasedCleaningService {
                 label: "Claude cache",
                 strategy: .removeContents
             ),
+            // Bundles de VM do Claude Desktop (Cowork): ~10 GB re-baixáveis,
+            // mas custosos de re-baixar — só no modo agressivo.
+            CleanTarget(
+                "~/Library/Application Support/Claude/vm_bundles",
+                label: "Claude VM bundles",
+                strategy: .removeContents,
+                aggressive: true
+            ),
             // Antigravity (Gemini)
             CleanTarget(
                 "~/Library/Application Support/Antigravity/Cache",
@@ -53,6 +61,7 @@ final class AIToolsCleaningService: PathBasedCleaningService {
                 label: "Antigravity updater",
                 strategy: .removeContents
             ),
+            CleanTarget("~/.gemini/antigravity-backup", label: "Antigravity backup"),
             // Trae
             CleanTarget("~/Library/Application Support/Trae/Cache", label: "Trae Cache", strategy: .removeContents),
             CleanTarget(

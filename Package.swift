@@ -111,6 +111,11 @@ let package = Package(
                 "Services/BunCleaningService.swift",
                 "Services/PubCacheCleaningService.swift",
                 "Services/GoogleCacheCleaningService.swift",
+                "Services/NvmCleaningService.swift",
+                "Services/AzureToolsCleaningService.swift",
+                "Services/ExpoCleaningService.swift",
+                "Services/ZedCleaningService.swift",
+                "Services/AIModelsCleaningService.swift",
                 // ViewModels
                 "ViewModels/TreemapViewModel.swift",
                 // Views

@@ -52,11 +52,19 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
     case pubCache = "pub Cache"
     case googleCache = "Google Cache"
 
+    // Dev tooling e IA
+    case nvmVersions = "Node Versions"
+    case azureTools = "Azure Tools"
+    case expoCache = "Expo Cache"
+    case zedCache = "Zed Cache"
+    case aiModels = "AI Models"
+
     var group: CleaningGroup {
         switch self {
         case .docker, .xcodeCache, .devPackages, .ideCache, .androidSDK, .playwright, .cargo, .homebrew, .terminalLogs,
              .aiTools, .iosSimulators, .pnpm, .goCache, .devApiTools, .cypress,
-             .nugetCache, .bunCache, .pubCache:
+             .nugetCache, .bunCache, .pubCache,
+             .nvmVersions, .azureTools, .expoCache, .zedCache, .aiModels:
             .development
         case .systemData, .tempFiles, .logs, .trash, .varFolders, .appLeftovers:
             .system
@@ -116,6 +124,11 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .bunCache: "takeoutbag.and.cup.and.straw.fill"
         case .pubCache: "bird.fill"
         case .googleCache: "globe"
+        case .nvmVersions: "hexagon.fill"
+        case .azureTools: "cloud.fill"
+        case .expoCache: "atom"
+        case .zedCache: "bolt.fill"
+        case .aiModels: "cpu.fill"
         }
     }
 
@@ -160,6 +173,11 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .bunCache: Color(hex: "F472B6") // Bun pink
         case .pubCache: Color(hex: "0175C2") // Dart blue
         case .googleCache: Color(hex: "4285F4") // Google blue
+        case .nvmVersions: Color(hex: "339933") // Node green
+        case .azureTools: Color(hex: "0078D4") // Azure blue
+        case .expoCache: Color(hex: "4630EB") // Expo indigo
+        case .zedCache: Color(hex: "084CCF") // Zed blue
+        case .aiModels: Color(hex: "5856D6") // System indigo
         }
     }
 
@@ -251,6 +269,16 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
             "Clear downloaded Dart/Flutter pub packages (re-fetched on pub get)"
         case .googleCache:
             "Clear Chrome regenerable profile caches and old Google Updater versions"
+        case .nvmVersions:
+            "Remove old nvm Node versions (keeps default and newest per major)"
+        case .azureTools:
+            "Remove downloaded Azure Functions Core Tools versions"
+        case .expoCache:
+            "Clear Expo Go, APK, and simulator app caches"
+        case .zedCache:
+            "Remove Zed's downloaded runtimes, language servers, and logs"
+        case .aiModels:
+            "Remove local AI model caches (Ollama/LM Studio models need aggressive mode)"
         }
     }
 }
