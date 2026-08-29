@@ -110,42 +110,46 @@ class SystemDataCleaningService: BaseCleaningService, CleaningService {
         var totalSize: Int64 = 0
         var items: [String] = []
 
-        for (name, path, _) in systemPaths {
-            let expandedPath = fileHelper.expandPath(path)
+        progress?("Scanning \(systemPaths.count) system locations...")
 
-            // Se o path tem wildcard, precisa fazer glob matching
-            if path.contains("*") {
-                let parentPath = expandedPath.components(separatedBy: "*").first ?? expandedPath
-                if fileHelper.fileExists(atPath: parentPath) {
-                    let foundPaths = findMatchingPaths(pattern: expandedPath)
-                    var categorySize: Int64 = 0
+        // Expande wildcards antes (expansão rasa, barata) e achata em unidades
+        // (índice da entrada, path concreto) para medir TUDO em paralelo — em
+        // série eram ~50 `du` um após o outro e este era o scan mais lento do
+        // app. O paralelismo real é limitado pelo duGate global do helper.
+        var flat: [(index: Int, path: String)] = []
+        for (index, entry) in systemPaths.enumerated() {
+            let expanded = fileHelper.expandPath(entry.1)
+            let paths = entry.1.contains("*") ? Self.expandGlob(expanded) : [expanded]
+            for path in paths {
+                flat.append((index, path))
+            }
+        }
 
-                    for foundPath in foundPaths {
-                        let size = fileHelper.sizeOfDirectory(atPath: foundPath)
-                        categorySize += size
-                    }
-
-                    if categorySize > 0 {
-                        totalSize += categorySize
-                        items.append("\(name): \(fileHelper.formatBytes(categorySize))")
-                    }
-                }
-            } else {
-                if fileHelper.fileExists(atPath: expandedPath) {
-                    let size = fileHelper.sizeOfDirectory(atPath: expandedPath)
-                    if size > 0 {
-                        totalSize += size
-                        items.append("\(name): \(fileHelper.formatBytes(size))")
-                    }
+        let sizesByEntry: [Int: Int64] = await withTaskGroup(of: (Int, Int64).self) { group in
+            for unit in flat {
+                group.addTask {
+                    guard self.fileHelper.fileExists(atPath: unit.path) else { return (unit.index, 0) }
+                    return await (unit.index, self.fileHelper.sizeOfDirectoryAsync(atPath: unit.path))
                 }
             }
+            var accumulated: [Int: Int64] = [:]
+            for await (index, size) in group {
+                accumulated[index, default: 0] += size
+            }
+            return accumulated
+        }
 
-            progress?("Scanning \(name)...")
+        for (index, entry) in systemPaths.enumerated() {
+            let size = sizesByEntry[index] ?? 0
+            if size > 0 {
+                totalSize += size
+                items.append("\(entry.0): \(fileHelper.formatBytes(size))")
+            }
         }
 
         // Caches root-owned (limpos só no modo agressivo, com senha de admin)
         for (name, path) in rootOwnedCachePaths where fileHelper.fileExists(atPath: path) {
-            let size = fileHelper.sizeOfDirectory(atPath: path)
+            let size = await fileHelper.sizeOfDirectoryAsync(atPath: path)
             guard size > 0 else { continue }
             if CleaningOptions.shared.aggressiveMode {
                 totalSize += size
@@ -185,7 +189,7 @@ class SystemDataCleaningService: BaseCleaningService, CleaningService {
             // ESTRATÉGIA NOVA: Sempre limpa CONTEÚDO, nunca remove o diretório pai
             if path.contains("*") {
                 // Paths com wildcard - procura e limpa cada um
-                let foundPaths = findMatchingPaths(pattern: expandedPath)
+                let foundPaths = Self.expandGlob(expandedPath)
 
                 for foundPath in foundPaths {
                     let (size, count) = cleanDirectorySafely(atPath: foundPath)
@@ -264,28 +268,38 @@ class SystemDataCleaningService: BaseCleaningService, CleaningService {
         return (totalBytes, totalFiles)
     }
 
-    private func findMatchingPaths(pattern: String) -> [String] {
-        var results: [String] = []
+    /// Expande um padrão com "*" listando apenas o nível de cada curinga —
+    /// nunca enumera a árvore inteira. A versão antiga enumerava recursivamente
+    /// a base (ex.: ~/Library/Containers, que tem milhões de nós por causa de
+    /// Docker/WhatsApp) e levava MINUTOS por padrão; a expansão rasa custa
+    /// alguns readdir. Componentes parciais ("V*") casam via fnmatch.
+    static func expandGlob(_ pattern: String) -> [String] {
+        guard pattern.contains("*") else { return [pattern] }
 
-        // Simplificação: procura em diretórios conhecidos
-        let parts = pattern.split(separator: "*")
-        if parts.count >= 2 {
-            let basePath = String(parts[0])
-            let suffix = parts.count > 1 ? String(parts[1]) : ""
-
-            if let baseURL = URL(string: "file://\(basePath)"),
-               let enumerator = FileManager.default.enumerator(at: baseURL, includingPropertiesForKeys: nil)
-            {
-                for case let fileURL as URL in enumerator {
-                    let path = fileURL.path
-                    if path.hasSuffix(suffix) || suffix.isEmpty {
-                        results.append(path)
+        let helper = FileSystemHelper.shared
+        var paths = ["/"]
+        for component in pattern.split(separator: "/").map(String.init) {
+            var next: [String] = []
+            if component.contains("*") {
+                for base in paths {
+                    for child in helper.contentsOfDirectory(atPath: base)
+                        where fnmatch(component, child, 0) == 0
+                    {
+                        next.append((base as NSString).appendingPathComponent(child))
+                    }
+                }
+            } else {
+                for base in paths {
+                    let candidate = (base as NSString).appendingPathComponent(component)
+                    if helper.fileExists(atPath: candidate) {
+                        next.append(candidate)
                     }
                 }
             }
+            paths = next
+            if paths.isEmpty { break }
         }
-
-        return results
+        return paths
     }
 
     private func cleanDirectoryContents(atPath path: String) throws {

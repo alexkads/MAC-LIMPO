@@ -18,18 +18,30 @@ class DevPackagesCleaningService: BaseCleaningService, CleaningService {
     ]
 
     func scan(progress _: ((String) -> Void)?) async -> ScanResult {
-        var totalSize: Int64 = 0
-        var items: [String] = []
-
-        for (name, path) in cachePaths {
-            let expandedPath = fileHelper.expandPath(path)
-            if fileHelper.fileExists(atPath: expandedPath) {
-                let size = fileHelper.sizeOfDirectory(atPath: expandedPath)
-                if size > 0 {
-                    totalSize += size
-                    items.append("\(name): \(fileHelper.formatBytes(size))")
+        // Mede todos os caches em paralelo (o duGate global limita os `du`
+        // simultâneos); preserva a ordem original via índice.
+        let measured: [(index: Int, name: String, size: Int64)] = await withTaskGroup(
+            of: (Int, String, Int64).self
+        ) { group in
+            for (index, entry) in cachePaths.enumerated() {
+                let expandedPath = fileHelper.expandPath(entry.1)
+                guard fileHelper.fileExists(atPath: expandedPath) else { continue }
+                group.addTask {
+                    await (index, entry.0, self.fileHelper.sizeOfDirectoryAsync(atPath: expandedPath))
                 }
             }
+            var results: [(Int, String, Int64)] = []
+            for await result in group {
+                results.append(result)
+            }
+            return results.sorted { $0.0 < $1.0 }
+        }
+
+        var totalSize: Int64 = 0
+        var items: [String] = []
+        for entry in measured where entry.size > 0 {
+            totalSize += entry.size
+            items.append("\(entry.name): \(fileHelper.formatBytes(entry.size))")
         }
 
         return ScanResult(

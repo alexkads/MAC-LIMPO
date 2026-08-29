@@ -168,22 +168,25 @@ class MessagingAppsCleaningService: BaseCleaningService, CleaningService {
         var oldMediaSize: Int64 = 0
         let cutoffDate = Calendar.current.date(byAdding: .day, value: -90, to: Date())!
 
+        // Enumerador baseado em URL com atributos pré-buscados: evita um stat
+        // extra por arquivo (a versão antiga chamava attributesOfItem para cada
+        // um dos milhares de arquivos de mídia).
+        let keys: Set<URLResourceKey> = [.contentModificationDateKey, .fileSizeKey, .isRegularFileKey]
         for mediaPath in mediaPaths {
             let expandedPath = fileHelper.expandPath(mediaPath)
             guard fileHelper.fileExists(atPath: expandedPath) else { continue }
 
-            if let enumerator = FileManager.default.enumerator(atPath: expandedPath) {
-                while let file = enumerator.nextObject() as? String {
-                    let filePath = (expandedPath as NSString).appendingPathComponent(file)
-
-                    if let attrs = try? FileManager.default.attributesOfItem(atPath: filePath),
-                       let modDate = attrs[.modificationDate] as? Date,
-                       modDate < cutoffDate,
-                       let size = attrs[.size] as? Int64
-                    {
-                        oldMediaSize += size
-                    }
-                }
+            let enumerator = FileManager.default.enumerator(
+                at: URL(fileURLWithPath: expandedPath),
+                includingPropertiesForKeys: Array(keys)
+            )
+            while let fileURL = enumerator?.nextObject() as? URL {
+                guard let values = try? fileURL.resourceValues(forKeys: keys),
+                      values.isRegularFile == true,
+                      let modDate = values.contentModificationDate,
+                      modDate < cutoffDate
+                else { continue }
+                oldMediaSize += Int64(values.fileSize ?? 0)
             }
         }
 

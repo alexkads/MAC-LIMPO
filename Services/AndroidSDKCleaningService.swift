@@ -32,40 +32,45 @@ class AndroidSDKCleaningService: BaseCleaningService, CleaningService {
 
         logger.log("Iniciando escaneamento do Android SDK", level: .info)
 
-        // System Images (emuladores)
+        // Mede os cinco grupos em paralelo (`async let`); dentro de cada grupo
+        // os paths também são medidos em paralelo, limitados pelo duGate global.
         let systemImagesPath = fileHelper.expandPath("~/Library/Android/sdk/system-images")
-        if fileHelper.fileExists(atPath: systemImagesPath) {
-            let size = fileHelper.sizeOfDirectory(atPath: systemImagesPath)
-            if size > 0 {
-                totalSize += size
-                // Contar imagens disponíveis
-                let images = countSystemImages(at: systemImagesPath)
-                items.append("System Images (\(images) imagens): \(fileHelper.formatBytes(size))")
-                logger.log("System Images: \(fileHelper.formatBytes(size)) - \(images) imagens", level: .debug)
-            }
+        let avdPath = fileHelper.expandPath("~/.android/avd")
+        let ndkPath = fileHelper.expandPath("~/Library/Android/sdk/ndk")
+        let oldNdks = Self.oldNdkVersions(atPath: ndkPath)
+
+        async let systemImagesSizeAsync = sumSizesInParallel([systemImagesPath])
+        async let avdSizeAsync = sumSizesInParallel([avdPath])
+        async let gradleSizeAsync = sumSizesInParallel(
+            ["~/.gradle/caches", "~/.gradle/daemon", "~/.gradle/wrapper/dists"].map(fileHelper.expandPath)
+        )
+        async let androidCacheSizeAsync = sumSizesInParallel(
+            ["~/.android/build-cache", "~/.android/cache"].map(fileHelper.expandPath)
+        )
+        async let ndkSizeAsync = sumSizesInParallel(
+            oldNdks.map { (ndkPath as NSString).appendingPathComponent($0) }
+        )
+
+        // System Images (emuladores)
+        let systemImagesSize = await systemImagesSizeAsync
+        if systemImagesSize > 0 {
+            totalSize += systemImagesSize
+            let images = countSystemImages(at: systemImagesPath)
+            items.append("System Images (\(images) imagens): \(fileHelper.formatBytes(systemImagesSize))")
+            logger.log("System Images: \(fileHelper.formatBytes(systemImagesSize)) - \(images) imagens", level: .debug)
         }
 
         // AVDs (emuladores criados)
-        let avdPath = fileHelper.expandPath("~/.android/avd")
-        if fileHelper.fileExists(atPath: avdPath) {
-            let size = fileHelper.sizeOfDirectory(atPath: avdPath)
-            if size > 0 {
-                totalSize += size
-                let avdCount = countAVDs(at: avdPath)
-                items.append("AVDs (\(avdCount) emuladores): \(fileHelper.formatBytes(size))")
-                logger.log("AVDs: \(fileHelper.formatBytes(size)) - \(avdCount) emuladores", level: .debug)
-            }
+        let avdSize = await avdSizeAsync
+        if avdSize > 0 {
+            totalSize += avdSize
+            let avdCount = countAVDs(at: avdPath)
+            items.append("AVDs (\(avdCount) emuladores): \(fileHelper.formatBytes(avdSize))")
+            logger.log("AVDs: \(fileHelper.formatBytes(avdSize)) - \(avdCount) emuladores", level: .debug)
         }
 
         // Gradle caches
-        var gradleSize: Int64 = 0
-        let gradlePaths = ["~/.gradle/caches", "~/.gradle/daemon", "~/.gradle/wrapper/dists"]
-        for path in gradlePaths {
-            let expandedPath = fileHelper.expandPath(path)
-            if fileHelper.fileExists(atPath: expandedPath) {
-                gradleSize += fileHelper.sizeOfDirectory(atPath: expandedPath)
-            }
-        }
+        let gradleSize = await gradleSizeAsync
         if gradleSize > 0 {
             totalSize += gradleSize
             items.append("Gradle Cache: \(fileHelper.formatBytes(gradleSize))")
@@ -73,14 +78,7 @@ class AndroidSDKCleaningService: BaseCleaningService, CleaningService {
         }
 
         // Android build cache
-        var androidCacheSize: Int64 = 0
-        let androidCachePaths = ["~/.android/build-cache", "~/.android/cache"]
-        for path in androidCachePaths {
-            let expandedPath = fileHelper.expandPath(path)
-            if fileHelper.fileExists(atPath: expandedPath) {
-                androidCacheSize += fileHelper.sizeOfDirectory(atPath: expandedPath)
-            }
-        }
+        let androidCacheSize = await androidCacheSizeAsync
         if androidCacheSize > 0 {
             totalSize += androidCacheSize
             items.append("Android Build Cache: \(fileHelper.formatBytes(androidCacheSize))")
@@ -88,18 +86,11 @@ class AndroidSDKCleaningService: BaseCleaningService, CleaningService {
         }
 
         // NDKs antigos (a versão mais nova fica; as demais o SDK Manager re-baixa)
-        let ndkPath = fileHelper.expandPath("~/Library/Android/sdk/ndk")
-        let oldNdks = Self.oldNdkVersions(atPath: ndkPath)
-        if !oldNdks.isEmpty {
-            var ndkSize: Int64 = 0
-            for version in oldNdks {
-                ndkSize += fileHelper.sizeOfDirectory(atPath: (ndkPath as NSString).appendingPathComponent(version))
-            }
-            if ndkSize > 0 {
-                totalSize += ndkSize
-                items.append("Old NDKs (\(oldNdks.joined(separator: ", "))): \(fileHelper.formatBytes(ndkSize))")
-                logger.log("NDKs antigos: \(fileHelper.formatBytes(ndkSize))", level: .debug)
-            }
+        let ndkSize = await ndkSizeAsync
+        if ndkSize > 0 {
+            totalSize += ndkSize
+            items.append("Old NDKs (\(oldNdks.joined(separator: ", "))): \(fileHelper.formatBytes(ndkSize))")
+            logger.log("NDKs antigos: \(fileHelper.formatBytes(ndkSize))", level: .debug)
         }
 
         logger.log("Escaneamento Android SDK concluído: \(fileHelper.formatBytes(totalSize))", level: .info)
@@ -201,6 +192,21 @@ class AndroidSDKCleaningService: BaseCleaningService, CleaningService {
             executionTime: executionTime,
             success: errors.isEmpty
         )
+    }
+
+    /// Soma o tamanho de vários paths (já expandidos) medindo em paralelo.
+    /// Paths inexistentes contam zero.
+    private func sumSizesInParallel(_ expandedPaths: [String]) async -> Int64 {
+        await withTaskGroup(of: Int64.self) { group in
+            for path in expandedPaths where fileHelper.fileExists(atPath: path) {
+                group.addTask { await self.fileHelper.sizeOfDirectoryAsync(atPath: path) }
+            }
+            var total: Int64 = 0
+            for await size in group {
+                total += size
+            }
+            return total
+        }
     }
 
     private func cleanOldNdks(bytesRemoved: inout Int64, filesRemoved: inout Int, errors: inout [String]) {
