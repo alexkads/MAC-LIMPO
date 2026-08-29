@@ -28,8 +28,8 @@ APP="${APP:-build/app/${APP_NAME}.app}"
 
 # Fonte única de verdade da versão (SemVer). BUILD_NUMBER é o CFBundleVersion
 # monotônico; sobrescreva ao cortar um build: BUILD_NUMBER=3 ./Scripts/bundle-app.sh
-VERSION="$(tr -d ' \n' < VERSION 2>/dev/null || echo '1.3.2')"
-BUILD_NUMBER="${BUILD_NUMBER:-6}"
+VERSION="$(tr -d ' \n' < VERSION 2>/dev/null || echo '1.3.3')"
+BUILD_NUMBER="${BUILD_NUMBER:-7}"
 
 if [ "$(id -u)" -eq 0 ]; then
     echo "error: rode como seu usuário normal, não com sudo." >&2

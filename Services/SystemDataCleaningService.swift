@@ -1,6 +1,8 @@
 import Foundation
 
-class SystemDataCleaningService: BaseCleaningService, CleaningService {
+/// `@unchecked Sendable`: o service é imutável (só constantes e singletons
+/// thread-safe), e o clean paralelo despacha trabalho para o pool do GCD.
+final class SystemDataCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .systemData
 
     private let systemPaths: [(String, String, Bool)] = [
@@ -174,40 +176,41 @@ class SystemDataCleaningService: BaseCleaningService, CleaningService {
 
     func clean() async -> CleaningResult {
         let startTime = Date()
-        var bytesRemoved: Int64 = 0
-        var filesRemoved = 0
+        let freeBefore = fileHelper.availableDiskSpace()
         var errors: [String] = []
 
-        for (_, path, requiresConfirmation) in systemPaths {
-            // Pula itens que requerem confirmação (como Time Machine)
-            if requiresConfirmation {
-                continue
+        // Achata os alvos (glob raso, sempre limpa CONTEÚDO — nunca remove o
+        // diretório pai) e limpa em paralelo, espelhando o scan. O cleanGate
+        // limita as remoções simultâneas para não saturar o disco.
+        var targets: [String] = []
+        for (_, path, requiresConfirmation) in systemPaths where !requiresConfirmation {
+            let expanded = fileHelper.expandPath(path)
+            let paths = path.contains("*") ? Self.expandGlob(expanded) : [expanded]
+            targets.append(contentsOf: paths.filter { fileHelper.fileExists(atPath: $0) })
+        }
+
+        var (bytesRemoved, filesRemoved) = await withTaskGroup(of: (Int64, Int).self) { group in
+            for target in targets {
+                group.addTask { await self.cleanDirectorySafelyAsync(atPath: target) }
             }
-
-            let expandedPath = fileHelper.expandPath(path)
-
-            // ESTRATÉGIA NOVA: Sempre limpa CONTEÚDO, nunca remove o diretório pai
-            if path.contains("*") {
-                // Paths com wildcard - procura e limpa cada um
-                let foundPaths = Self.expandGlob(expandedPath)
-
-                for foundPath in foundPaths {
-                    let (size, count) = cleanDirectorySafely(atPath: foundPath)
-                    bytesRemoved += size
-                    filesRemoved += count
-                }
-            } else {
-                // Paths diretos - limpa conteúdo
-                if fileHelper.fileExists(atPath: expandedPath) {
-                    let (size, count) = cleanDirectorySafely(atPath: expandedPath)
-                    bytesRemoved += size
-                    filesRemoved += count
-                }
+            var bytes: Int64 = 0
+            var files = 0
+            for await (size, count) in group {
+                bytes += size
+                files += count
             }
+            return (bytes, files)
         }
 
         // Limpa cache do sistema com comandos seguros
         cleanSystemCaches(errors: &errors, bytesRemoved: &bytesRemoved)
+
+        // Snapshots do Time Machine e purge liberam espaço que não passa pelos
+        // nossos contadores (e nada aqui vai para a Lixeira), então o delta real
+        // de espaço livre é a medida honesta — usa o maior dos dois em vez das
+        // estimativas fabricadas que este service somava antes.
+        let freedDelta = fileHelper.availableDiskSpace() - freeBefore
+        bytesRemoved = max(bytesRemoved, freedDelta)
 
         let executionTime = Date().timeIntervalSince(startTime)
 
@@ -223,48 +226,98 @@ class SystemDataCleaningService: BaseCleaningService, CleaningService {
 
     // MARK: - Helper Methods
 
-    /// Limpa o conteúdo de um diretório de forma segura, ignorando erros de permissão
+    /// Teto de limpezas de diretório simultâneas — remoção é pesada de I/O.
+    private static let cleanGate = AsyncSemaphore(value: 4)
+
+    /// Versão assíncrona de `cleanDirectorySafely`: roda a remoção (bloqueante)
+    /// no pool do GCD, com o `cleanGate` limitando a concorrência global.
+    private func cleanDirectorySafelyAsync(atPath path: String) async -> (Int64, Int) {
+        await Self.cleanGate.acquire()
+        defer { Self.cleanGate.release() }
+        return await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .utility).async {
+                continuation.resume(returning: self.cleanDirectorySafely(atPath: path))
+            }
+        }
+    }
+
+    /// Limpa o conteúdo de um diretório de forma segura. Mede cada filho de
+    /// primeiro nível (enumerador com atributos pré-buscados: um stat por
+    /// arquivo) e o remove de uma vez — ordens de grandeza menos syscalls que
+    /// apagar arquivo por arquivo. Se a remoção do filho falhar (permissão),
+    /// cai para a varredura arquivo a arquivo só nele, preservando o
+    /// comportamento antigo de limpar o que der e ignorar o resto.
     private func cleanDirectorySafely(atPath path: String) -> (bytesRemoved: Int64, filesRemoved: Int) {
         var totalBytes: Int64 = 0
         var totalFiles = 0
 
-        let fileManager = FileManager.default
-
-        guard let enumerator = fileManager.enumerator(atPath: path) else {
-            return (0, 0)
-        }
-
-        // Coleta todos os arquivos primeiro
-        var filesToRemove: [(path: String, size: Int64)] = []
-
-        for case let file as String in enumerator {
-            let fullPath = (path as NSString).appendingPathComponent(file)
-
-            // Pula se não conseguir acessar
-            guard fileManager.isReadableFile(atPath: fullPath) else {
-                continue
-            }
-
-            // Pega tamanho antes de remover
-            if let attributes = try? fileManager.attributesOfItem(atPath: fullPath),
-               let size = attributes[.size] as? Int64
-            {
-                filesToRemove.append((fullPath, size))
-            }
-        }
-
-        // Remove arquivos individuais (mais seguro que remover diretórios)
-        for (filePath, size) in filesToRemove {
-            do {
-                try fileManager.removeItem(atPath: filePath)
+        for child in fileHelper.contentsOfDirectory(atPath: path) {
+            let childPath = (path as NSString).appendingPathComponent(child)
+            let (size, count) = Self.measureFiles(atPath: childPath)
+            if (try? FileManager.default.removeItem(atPath: childPath)) != nil {
                 totalBytes += size
-                totalFiles += 1
-            } catch {
-                // Ignora erros de permissão silenciosamente
-                continue
+                totalFiles += count
+            } else {
+                let (bytes, files) = removeFilesIndividually(atPath: childPath)
+                totalBytes += bytes
+                totalFiles += files
             }
         }
 
+        return (totalBytes, totalFiles)
+    }
+
+    /// Tamanho total e nº de arquivos regulares sob um path (o próprio arquivo,
+    /// se não for diretório), com atributos pré-buscados na enumeração.
+    private static func measureFiles(atPath path: String) -> (Int64, Int) {
+        let fileManager = FileManager.default
+        var isDir: ObjCBool = false
+        guard fileManager.fileExists(atPath: path, isDirectory: &isDir) else { return (0, 0) }
+
+        let keys: Set<URLResourceKey> = [.fileSizeKey, .isRegularFileKey]
+        guard isDir.boolValue else {
+            let attrs = try? fileManager.attributesOfItem(atPath: path)
+            return ((attrs?[.size] as? Int64) ?? 0, 1)
+        }
+
+        var bytes: Int64 = 0
+        var files = 0
+        let enumerator = fileManager.enumerator(
+            at: URL(fileURLWithPath: path),
+            includingPropertiesForKeys: Array(keys)
+        )
+        while let fileURL = enumerator?.nextObject() as? URL {
+            guard let values = try? fileURL.resourceValues(forKeys: keys),
+                  values.isRegularFile == true else { continue }
+            bytes += Int64(values.fileSize ?? 0)
+            files += 1
+        }
+        return (bytes, files)
+    }
+
+    /// Fallback para diretórios parcialmente protegidos: remove arquivo a
+    /// arquivo, ignorando erros de permissão silenciosamente.
+    private func removeFilesIndividually(atPath path: String) -> (Int64, Int) {
+        let fileManager = FileManager.default
+        let keys: Set<URLResourceKey> = [.fileSizeKey, .isRegularFileKey]
+        var toRemove: [(path: String, size: Int64)] = []
+
+        let enumerator = fileManager.enumerator(
+            at: URL(fileURLWithPath: path),
+            includingPropertiesForKeys: Array(keys)
+        )
+        while let fileURL = enumerator?.nextObject() as? URL {
+            guard let values = try? fileURL.resourceValues(forKeys: keys),
+                  values.isRegularFile == true else { continue }
+            toRemove.append((fileURL.path, Int64(values.fileSize ?? 0)))
+        }
+
+        var totalBytes: Int64 = 0
+        var totalFiles = 0
+        for (filePath, size) in toRemove where (try? fileManager.removeItem(atPath: filePath)) != nil {
+            totalBytes += size
+            totalFiles += 1
+        }
         return (totalBytes, totalFiles)
     }
 
@@ -302,16 +355,6 @@ class SystemDataCleaningService: BaseCleaningService, CleaningService {
         return paths
     }
 
-    private func cleanDirectoryContents(atPath path: String) throws {
-        let fileManager = FileManager.default
-        let contents = try fileManager.contentsOfDirectory(atPath: path)
-
-        for item in contents {
-            let itemPath = (path as NSString).appendingPathComponent(item)
-            try fileManager.removeItem(atPath: itemPath)
-        }
-    }
-
     private func getTimeMachineSnapshots() -> String? {
         let result = shell.execute("tmutil listlocalsnapshots /")
         if result.exitCode == 0, !result.output.isEmpty {
@@ -328,11 +371,11 @@ class SystemDataCleaningService: BaseCleaningService, CleaningService {
         _ = shell.execute("dscacheutil -flushcache")
         _ = shell.execute("killall -HUP mDNSResponder")
 
-        // 2. Limpa Font Cache
+        // 2. Limpa Font Cache (o espaço real liberado entra pelo delta de
+        //    espaço livre medido no clean(); nada de estimativas fabricadas)
         _ = shell.execute("atsutil databases -removeUser")
         _ = shell.execute("atsutil server -shutdown")
         _ = shell.execute("atsutil server -ping")
-        bytesRemoved += 100_000_000
 
         // 3. Purge memory
         _ = shell.execute("purge")
@@ -467,25 +510,22 @@ class SystemDataCleaningService: BaseCleaningService, CleaningService {
 
     // MARK: - Purgeable Space Cleanup
 
-    private func forcePurgeableSpace(errors _: inout [String], bytesRemoved: inout Int64) {
-        // Cria e remove arquivo grande para forçar purge
+    private func forcePurgeableSpace(errors _: inout [String], bytesRemoved _: inout Int64) {
+        // Escrever 5 GB com dd desgasta o SSD e demora — só faz sentido quando
+        // o usuário pediu limpeza agressiva. O que o purge liberar aparece no
+        // delta de espaço livre medido no clean() (nada de +10 GB estimados).
+        guard CleaningOptions.shared.aggressiveMode else { return }
+
         let tempPath = "/tmp/maclimpo_purge_\(Int(Date().timeIntervalSince1970)).tmp"
 
         // Tenta criar arquivo de 5GB (força o sistema a liberar purgeable)
-        let createCmd = "dd if=/dev/zero of=\(tempPath) bs=1m count=5000 2>/dev/null"
-        _ = shell.execute(createCmd)
-
-        // Remove imediatamente
-        let removeCmd = "rm -f \(tempPath)"
-        _ = shell.execute(removeCmd)
-
-        // Estima ~10GB de purgeable liberado
-        bytesRemoved += 10_000_000_000
+        _ = shell.execute("dd if=/dev/zero of=\(tempPath) bs=1m count=5000 2>/dev/null")
+        _ = shell.execute("rm -f \(tempPath)")
     }
 
     // MARK: - Time Machine with Sudo
 
-    private func cleanTimeMachineSnapshotsWithSudo(errors _: inout [String], bytesRemoved: inout Int64) {
+    private func cleanTimeMachineSnapshotsWithSudo(errors _: inout [String], bytesRemoved _: inout Int64) {
         // Lista snapshots primeiro (não precisa sudo)
         let listResult = shell.execute("tmutil listlocalsnapshots /")
         if listResult.exitCode != 0 || listResult.output.isEmpty {
@@ -500,34 +540,32 @@ class SystemDataCleaningService: BaseCleaningService, CleaningService {
             return
         }
 
-        // Usa AppleScript para pedir senha e executar com sudo
-        var removed = 0
-        for snapshot in snapshots {
-            // Extrai a data do snapshot
+        // Extrai as datas e apaga TODAS num único `do shell script` — um só
+        // pedido de senha, em vez do prompt por snapshot que havia antes.
+        // O espaço liberado entra pelo delta de espaço livre no clean().
+        let dates = snapshots.compactMap { snapshot -> String? in
             let components = snapshot.components(separatedBy: ".")
-            guard components.count >= 4 else { continue }
-            let snapshotDate = components[3]
-
-            // Usa AppleScript para executar com sudo
-            let appleScript = """
-            do shell script "tmutil deletelocalsnapshots \(snapshotDate)" with administrator privileges
-            """
-
-            let result = shell.execute("osascript -e '\(appleScript)'")
-            if result.exitCode == 0 {
-                removed += 1
-                bytesRemoved += 7_000_000_000 // Estima 7GB por snapshot
-            }
+            guard components.count >= 4 else { return nil }
+            return components[3]
         }
+        guard !dates.isEmpty else { return }
 
-        if removed > 0 {
-            print("Removed \(removed) Time Machine snapshots with sudo")
+        let deleteCommands = dates
+            .map { "tmutil deletelocalsnapshots \($0)" }
+            .joined(separator: "; ")
+        let appleScript = """
+        do shell script "\(deleteCommands)" with administrator privileges
+        """
+
+        let result = shell.execute("osascript -e '\(appleScript)'")
+        if result.exitCode == 0 {
+            logger.log("Removidos \(dates.count) snapshots do Time Machine", level: .info)
         }
     }
 
     // MARK: - Shell-based Cache Cleaning
 
-    private func cleanCachesViaShell(errors _: inout [String], bytesRemoved: inout Int64) {
+    private func cleanCachesViaShell(errors _: inout [String], bytesRemoved _: inout Int64) {
         // Limpa arquivos .cache individuais em vários diretórios
         let cacheCleanCommands = [
             // Limpa arquivos temporários antigos (>7 dias)
@@ -553,44 +591,7 @@ class SystemDataCleaningService: BaseCleaningService, CleaningService {
         ]
 
         for command in cacheCleanCommands {
-            let result = shell.execute(command)
-            if result.exitCode == 0 {
-                // Estima algum espaço liberado
-                bytesRemoved += 500_000_000 // ~500MB estimado por comando
-            }
-        }
-    }
-
-    // MARK: - Time Machine Snapshots Cleanup
-
-    private func cleanTimeMachineSnapshots(errors _: inout [String], bytesRemoved: inout Int64) {
-        // Lista snapshots locais
-        let listResult = shell.execute("tmutil listlocalsnapshots /")
-        if listResult.exitCode != 0 || listResult.output.isEmpty {
-            return // Sem snapshots ou comando falhou
-        }
-
-        let snapshots = listResult.output.components(separatedBy: "\n")
-            .filter { !$0.isEmpty }
-            .filter { $0.contains("com.apple.TimeMachine") }
-
-        if snapshots.isEmpty {
-            return
-        }
-
-        // Tenta remover todos os snapshots
-        var removed = 0
-        for snapshot in snapshots {
-            let deleteResult = shell.execute("tmutil deletelocalsnapshots \(snapshot)")
-            if deleteResult.exitCode == 0 {
-                removed += 1
-                // Estima 5-10GB por snapshot
-                bytesRemoved += 7_000_000_000
-            }
-        }
-
-        if removed > 0 {
-            print("Removed \(removed) Time Machine snapshots")
+            _ = shell.execute(command)
         }
     }
 
@@ -646,14 +647,10 @@ class SystemDataCleaningService: BaseCleaningService, CleaningService {
         for path in cachePaths {
             let expandedPath = fileHelper.expandPath(path)
             if fileHelper.fileExists(atPath: expandedPath) {
-                let size = fileHelper.sizeOfDirectory(atPath: expandedPath)
-
-                do {
-                    try cleanDirectoryContents(atPath: expandedPath)
-                    bytesRemoved += size
-                } catch {
-                    // Ignora erros
-                }
+                // Conta só o que foi realmente removido (a versão antiga somava
+                // o tamanho cheio mesmo quando a remoção falhava no meio).
+                let (bytes, _) = cleanDirectorySafely(atPath: expandedPath)
+                bytesRemoved += bytes
             }
         }
     }
