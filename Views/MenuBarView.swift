@@ -12,7 +12,10 @@ struct ConfirmationRequest: Identifiable {
 class MenuBarViewModel: ObservableObject {
     @Published var scanResults: [CleaningCategory: ScanResult] = [:]
     @Published var isScanning: [CleaningCategory: Bool] = [:]
-    @Published var isCleaning = false
+    /// Categorias com limpeza em andamento. Limpezas individuais rodam em
+    /// paralelo (cada card mostra o próprio spinner) — o overlay modal ficou
+    /// só para o "Clean All".
+    @Published var cleaningCategories: Set<CleaningCategory> = []
     @Published var cleaningProgress: Double = 0
     @Published var currentOperation = ""
     @Published var showProgress = false
@@ -222,36 +225,63 @@ class MenuBarViewModel: ObservableObject {
         }
     }
 
+    /// Resultados das limpezas individuais em andamento. Quando a última
+    /// termina, viram um único ResultsView (combinado se houve mais de uma).
+    private var pendingResults: [CleaningResult] = []
+    private var concurrentCleanStart: Date?
+
     private func performCleanCategory(_ category: CleaningCategory) {
         guard let service = services[category] else { return }
+        // Segundo clique na mesma categoria enquanto ela limpa: ignora.
+        guard !cleaningCategories.contains(category) else { return }
 
-        currentCleaningCategory = category
-        showProgress = true
-        cleaningProgress = 0
-        currentOperation = "Preparing to clean..."
+        if cleaningCategories.isEmpty {
+            concurrentCleanStart = Date()
+        }
+        cleaningCategories.insert(category)
 
         Task {
-            // Simula progresso
-            await updateProgress(0.2, operation: "Scanning files...")
-            try? await Task.sleep(nanoseconds: 500_000_000)
-
-            await updateProgress(0.5, operation: "Removing files...")
-
             let result = await service.clean()
 
-            await updateProgress(1.0, operation: "Complete!")
-            try? await Task.sleep(nanoseconds: 500_000_000)
-
             await MainActor.run {
-                showProgress = false
-                lastResult = result
-                showResults = true
+                cleaningCategories.remove(category)
+                pendingResults.append(result)
 
-                // Atualiza estatísticas
-                refreshDiskStats()
+                // Re-escaneia a categoria limpa sem esperar as demais.
                 scanCategory(category)
+
+                // Só mostra resultados quando a última limpeza simultânea acabar.
+                guard cleaningCategories.isEmpty else { return }
+                let results = pendingResults
+                pendingResults = []
+                let duration = Date().timeIntervalSince(concurrentCleanStart ?? Date())
+                lastResult = results.count == 1
+                    ? results[0]
+                    : Self.combinedResult(results, fallbackCategory: category, executionTime: duration)
+                showResults = true
+                refreshDiskStats()
             }
         }
+    }
+
+    /// Consolida vários CleaningResults num só (soma bytes/arquivos, junta erros).
+    /// Sucesso se nada falhou OU se, apesar de algum erro pontual, houve espaço
+    /// liberado — assim 18 GB limpos não viram "Failed" por um erro isolado.
+    private static func combinedResult(
+        _ results: [CleaningResult],
+        fallbackCategory: CleaningCategory,
+        executionTime: TimeInterval
+    ) -> CleaningResult {
+        let totalBytes = results.reduce(0) { $0 + $1.bytesRemoved }
+        let allErrors = results.flatMap(\.errors)
+        return CleaningResult(
+            category: results.first?.category ?? fallbackCategory,
+            bytesRemoved: totalBytes,
+            filesRemoved: results.reduce(0) { $0 + $1.filesRemoved },
+            errors: allErrors,
+            executionTime: executionTime,
+            success: allErrors.isEmpty || totalBytes > 0
+        )
     }
 
     /// Máximo de limpezas simultâneas. Menor que o de scan: deletar é mais pesado
@@ -265,7 +295,11 @@ class MenuBarViewModel: ObservableObject {
     }
 
     private func startCleanAll() {
-        let categories = services.keys.sorted { $0.rawValue < $1.rawValue }
+        // Exclui categorias que já estão sendo limpas individualmente agora —
+        // limpar o mesmo alvo duas vezes ao mesmo tempo só gera erros benignos.
+        let categories = services.keys
+            .filter { !cleaningCategories.contains($0) }
+            .sorted { $0.rawValue < $1.rawValue }
         let total = categories.count
 
         Task {
@@ -302,18 +336,10 @@ class MenuBarViewModel: ObservableObject {
             }
 
             // Resultado combinado (ResultsView mostra total liberado/arquivos/tempo).
-            let totalBytes = results.reduce(0) { $0 + $1.bytesRemoved }
-            let allErrors = results.flatMap(\.errors)
-            // Sucesso se nada falhou OU se, apesar de algum erro pontual, houve espaço
-            // liberado — assim 18 GB limpos não viram "Failed" por um erro isolado.
-            // Os erros continuam listados abaixo para transparência.
-            let combined = CleaningResult(
-                category: categories.first ?? .trash,
-                bytesRemoved: totalBytes,
-                filesRemoved: results.reduce(0) { $0 + $1.filesRemoved },
-                errors: allErrors,
-                executionTime: Date().timeIntervalSince(startTime),
-                success: allErrors.isEmpty || totalBytes > 0
+            let combined = Self.combinedResult(
+                results,
+                fallbackCategory: categories.first ?? .trash,
+                executionTime: Date().timeIntervalSince(startTime)
             )
 
             await MainActor.run {
@@ -323,13 +349,6 @@ class MenuBarViewModel: ObservableObject {
                 refreshDiskStats()
                 scanAllCategories()
             }
-        }
-    }
-
-    private func updateProgress(_ progress: Double, operation: String) async {
-        await MainActor.run {
-            cleaningProgress = progress
-            currentOperation = operation
         }
     }
 }
@@ -439,6 +458,7 @@ struct MenuBarView: View {
                                                         .formattedSize ?? "...",
                                                     isScanning: viewModel.isScanning[category] ?? false,
                                                     scanningStatus: viewModel.scanningStatus[category],
+                                                    isCleaning: viewModel.cleaningCategories.contains(category),
                                                     action: {
                                                         viewModel.cleanCategory(category)
                                                     }

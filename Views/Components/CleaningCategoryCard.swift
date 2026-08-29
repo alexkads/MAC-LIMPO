@@ -5,6 +5,9 @@ struct CleaningCategoryCard: View {
     let estimatedSize: String
     let isScanning: Bool
     let scanningStatus: String?
+    /// Limpeza desta categoria em andamento: mostra spinner no card e desativa
+    /// o clique — os demais cards continuam clicáveis (limpezas simultâneas).
+    var isCleaning = false
     let action: () -> Void
 
     @ObservedObject private var themeManager = ThemeManager.shared
@@ -52,7 +55,17 @@ struct CleaningCategoryCard: View {
 
                 Spacer()
 
-                if isScanning {
+                if isCleaning {
+                    HStack(spacing: 8) {
+                        Text("Cleaning…")
+                            .font(.system(size: 11))
+                            .foregroundColor(palette.secondaryText)
+                            .lineLimit(1)
+                        ProgressView()
+                            .controlSize(.small)
+                            .frame(width: 16, height: 16)
+                    }
+                } else if isScanning {
                     HStack(spacing: 8) {
                         if let status = scanningStatus {
                             Text(status)
@@ -85,6 +98,7 @@ struct CleaningCategoryCard: View {
             )
         }
         .buttonStyle(PlainButtonStyle())
+        .disabled(isCleaning)
         .onHover { hovering in
             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                 isHovered = hovering
