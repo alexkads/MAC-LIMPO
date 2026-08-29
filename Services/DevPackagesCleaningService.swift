@@ -13,7 +13,8 @@ class DevPackagesCleaningService: BaseCleaningService, CleaningService {
         ("Gradle", "~/.gradle/caches"),
         ("Go Build", "~/Library/Caches/go-build"),
         ("TypeScript", "~/Library/Caches/typescript"),
-        ("Postman Updates", "~/Library/Caches/com.postmanlabs.mac.ShipIt")
+        ("Postman Updates", "~/Library/Caches/com.postmanlabs.mac.ShipIt"),
+        ("Detox", "~/Library/Detox")
     ]
 
     func scan(progress _: ((String) -> Void)?) async -> ScanResult {

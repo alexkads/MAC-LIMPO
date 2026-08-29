@@ -87,6 +87,21 @@ class AndroidSDKCleaningService: BaseCleaningService, CleaningService {
             logger.log("Android Build Cache: \(fileHelper.formatBytes(androidCacheSize))", level: .debug)
         }
 
+        // NDKs antigos (a versão mais nova fica; as demais o SDK Manager re-baixa)
+        let ndkPath = fileHelper.expandPath("~/Library/Android/sdk/ndk")
+        let oldNdks = Self.oldNdkVersions(atPath: ndkPath)
+        if !oldNdks.isEmpty {
+            var ndkSize: Int64 = 0
+            for version in oldNdks {
+                ndkSize += fileHelper.sizeOfDirectory(atPath: (ndkPath as NSString).appendingPathComponent(version))
+            }
+            if ndkSize > 0 {
+                totalSize += ndkSize
+                items.append("Old NDKs (\(oldNdks.joined(separator: ", "))): \(fileHelper.formatBytes(ndkSize))")
+                logger.log("NDKs antigos: \(fileHelper.formatBytes(ndkSize))", level: .debug)
+            }
+        }
+
         logger.log("Escaneamento Android SDK concluído: \(fileHelper.formatBytes(totalSize))", level: .info)
 
         return ScanResult(
@@ -172,6 +187,9 @@ class AndroidSDKCleaningService: BaseCleaningService, CleaningService {
         // Limpar wrapper/dists antigos do Gradle (versões antigas)
         await cleanOldGradleDistributions(bytesRemoved: &bytesRemoved, filesRemoved: &filesRemoved, errors: &errors)
 
+        // Limpar NDKs antigos (mantém a versão mais nova)
+        cleanOldNdks(bytesRemoved: &bytesRemoved, filesRemoved: &filesRemoved, errors: &errors)
+
         let executionTime = Date().timeIntervalSince(startTime)
         logger.log("Limpeza Android SDK concluída: \(fileHelper.formatBytes(bytesRemoved)) liberados", level: .info)
 
@@ -183,6 +201,40 @@ class AndroidSDKCleaningService: BaseCleaningService, CleaningService {
             executionTime: executionTime,
             success: errors.isEmpty
         )
+    }
+
+    private func cleanOldNdks(bytesRemoved: inout Int64, filesRemoved: inout Int, errors: inout [String]) {
+        let ndkPath = fileHelper.expandPath("~/Library/Android/sdk/ndk")
+        for version in Self.oldNdkVersions(atPath: ndkPath) {
+            let versionPath = (ndkPath as NSString).appendingPathComponent(version)
+            let size = fileHelper.sizeOfDirectory(atPath: versionPath)
+            do {
+                try fileHelper.removeItem(atPath: versionPath)
+                bytesRemoved += size
+                filesRemoved += 1
+                logger.log("Removido NDK antigo: \(version) (\(fileHelper.formatBytes(size)))", level: .debug)
+            } catch {
+                errors.append("Falha ao limpar NDK \(version)")
+            }
+        }
+    }
+
+    /// Versões do NDK que não são a mais nova. Os diretórios têm nomes
+    /// numéricos ("27.1.12297006"); comparação por componente numérico.
+    static func oldNdkVersions(atPath ndkPath: String) -> [String] {
+        let helper = FileSystemHelper.shared
+        guard helper.fileExists(atPath: ndkPath) else { return [] }
+
+        let versions = helper.contentsOfDirectory(atPath: ndkPath)
+            .filter { $0.first?.isNumber == true }
+
+        func numbers(_ version: String) -> [Int] {
+            version.split(separator: ".").map { Int($0) ?? 0 }
+        }
+        guard let newest = versions.max(by: { numbers($0).lexicographicallyPrecedes(numbers($1)) })
+        else { return [] }
+
+        return versions.filter { $0 != newest }.sorted()
     }
 
     private func countSystemImages(at path: String) -> Int {

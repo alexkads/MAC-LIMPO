@@ -78,12 +78,24 @@ class SystemDataCleaningService: BaseCleaningService, CleaningService {
         ("Font Caches", "~/Library/Caches/com.apple.FontRegistry", false),
         ("Spotlight Cache", "~/Library/Caches/com.apple.iconservices.store", false),
         ("Metadata", "~/Library/Caches/Metadata", false),
+        // Índice do CoreSpotlight — o Spotlight reindexa depois
+        ("Spotlight Index", "~/Library/Metadata/CoreSpotlight", false),
 
         // === DOWNLOAD E SAVED STATE ===
         ("Saved Application State", "~/Library/Saved Application State", false),
 
         // === TIME MACHINE (ALTO IMPACTO - COM CONFIRMAÇÃO) ===
         ("Time Machine Local Snapshots", "/.MobileBackups", true)
+    ]
+
+    /// Caches pertencentes ao root, removidos em bloco com um único pedido de
+    /// senha (mesmo padrão AppleScript dos snapshots do Time Machine). Só no
+    /// modo agressivo, para o prompt de senha não surpreender numa limpeza comum.
+    /// Ambos são regeneráveis: o Options+ re-baixa os depots e o CoreSimulator
+    /// reconstrói o dyld cache no próximo boot de simulador.
+    private let rootOwnedCachePaths: [(name: String, path: String)] = [
+        ("Logi Options+ depots", "/Library/Application Support/Logi/LogiOptionsPlus/depots"),
+        ("Simulator dyld cache", "/Library/Developer/CoreSimulator/Caches/dyld")
     ]
 
     /// Paths adicionais para scan de node_modules e arquivos grandes
@@ -129,6 +141,18 @@ class SystemDataCleaningService: BaseCleaningService, CleaningService {
             }
 
             progress?("Scanning \(name)...")
+        }
+
+        // Caches root-owned (limpos só no modo agressivo, com senha de admin)
+        for (name, path) in rootOwnedCachePaths where fileHelper.fileExists(atPath: path) {
+            let size = fileHelper.sizeOfDirectory(atPath: path)
+            guard size > 0 else { continue }
+            if CleaningOptions.shared.aggressiveMode {
+                totalSize += size
+                items.append("\(name): \(fileHelper.formatBytes(size))")
+            } else {
+                items.append("\(name): \(fileHelper.formatBytes(size)) (aggressive mode only)")
+            }
         }
 
         // Adiciona informação sobre Time Machine snapshots
@@ -316,6 +340,39 @@ class SystemDataCleaningService: BaseCleaningService, CleaningService {
 
         // 9. Força purge de espaço purgeable (NOVO)
         forcePurgeableSpace(errors: &errors, bytesRemoved: &bytesRemoved)
+
+        // 10. Caches root-owned (modo agressivo; um único prompt de senha)
+        cleanRootOwnedCaches(errors: &errors, bytesRemoved: &bytesRemoved)
+    }
+
+    // MARK: - Root-owned Caches (admin)
+
+    private func cleanRootOwnedCaches(errors: inout [String], bytesRemoved: inout Int64) {
+        guard CleaningOptions.shared.aggressiveMode else { return }
+
+        var toRemove: [(path: String, size: Int64)] = []
+        for (_, path) in rootOwnedCachePaths where fileHelper.fileExists(atPath: path) {
+            let size = fileHelper.sizeOfDirectory(atPath: path)
+            if size > 0 {
+                toRemove.append((path, size))
+            }
+        }
+        guard !toRemove.isEmpty else { return }
+
+        // Um único `do shell script … with administrator privileges` remove
+        // todos os paths com um só pedido de senha. Paths são constantes do
+        // código (nunca entrada do usuário).
+        let quoted = toRemove.map { "\\\"\($0.path)\\\"" }.joined(separator: " ")
+        let appleScript = """
+        do shell script "rm -rf \(quoted)" with administrator privileges
+        """
+        let result = shell.execute("osascript -e '\(appleScript)'")
+        if result.exitCode == 0 {
+            bytesRemoved += toRemove.reduce(0) { $0 + $1.size }
+            logger.log("Caches root-owned removidos (\(toRemove.count) paths)", level: .info)
+        } else if !result.error.contains("User canceled") {
+            errors.append("Failed to clean root-owned caches")
+        }
     }
 
     // MARK: - Application Support Cleanup
