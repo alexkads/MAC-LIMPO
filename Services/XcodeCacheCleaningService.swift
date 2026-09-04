@@ -41,7 +41,10 @@ class XcodeCacheCleaningService: BaseCleaningService, CleaningService {
         "~/Library/Developer/Xcode/UserData/Previews",
 
         // Produtos de build antigos
-        "~/Library/Developer/Xcode/Products"
+        "~/Library/Developer/Xcode/Products",
+
+        // Cache de documentação (DocC/Apple docs); re-baixado sob demanda
+        "~/Library/Developer/Xcode/DocumentationCache"
     ]
 
     func scan(progress: ((String) -> Void)?) async -> ScanResult {
@@ -111,6 +114,8 @@ class XcodeCacheCleaningService: BaseCleaningService, CleaningService {
             "Xcode Previews"
         case let p where p.contains("Products"):
             "Build Products"
+        case let p where p.contains("DocumentationCache"):
+            "Documentation cache"
         default:
             (path as NSString).lastPathComponent
         }

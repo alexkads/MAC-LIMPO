@@ -103,11 +103,129 @@ class IDECacheCleaningService: BaseCleaningService, CleaningService {
         "~/Library/Caches/dev.lapce.Lapce-Stable"
     ]
 
+    // MARK: - Extensões obsoletas e histórico local
+
+    /// Pastas de extensões dos editores baseados em VS Code. Cada uma tem um
+    /// `.obsolete` (JSON `{ "<publisher.ext-versão>": true }`) onde o próprio
+    /// editor anota versões substituídas que ainda não conseguiu apagar.
+    private let extensionDirs = [
+        "~/.vscode/extensions",
+        "~/.vscode-insiders/extensions",
+        "~/.cursor/extensions",
+        "~/.trae/extensions",
+        "~/.antigravity/extensions",
+        "~/.windsurf/extensions",
+        "~/.kiro/extensions"
+    ]
+
+    /// Histórico local por arquivo (Timeline → Local History). Cresce sem
+    /// limite; só entradas sem toque há mais de 90 dias são removidas.
+    private let localHistoryDirs = [
+        "~/Library/Application Support/Code/User/History",
+        "~/Library/Application Support/Cursor/User/History"
+    ]
+
+    static let localHistoryMaxAgeDays = 90
+
+    /// Extensões marcadas em `.obsolete` que ainda existem em disco. Só o que o
+    /// editor já decidiu descartar — nunca inferimos por versão.
+    static func obsoleteExtensionPaths(extensionsDir: String) -> [String] {
+        let helper = FileSystemHelper.shared
+        let expanded = helper.expandPath(extensionsDir)
+        let marker = (expanded as NSString).appendingPathComponent(".obsolete")
+        guard let data = FileManager.default.contents(atPath: marker),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else { return [] }
+
+        return json.keys
+            .filter { !$0.isEmpty && !$0.contains("/") && $0 != "." && $0 != ".." }
+            .map { (expanded as NSString).appendingPathComponent($0) }
+            .filter { helper.fileExists(atPath: $0) }
+            .sorted()
+    }
+
+    /// Entradas de histórico local sem modificação há mais de `maxAgeDays`.
+    static func staleLocalHistoryPaths(historyDir: String, maxAgeDays: Int = localHistoryMaxAgeDays) -> [String] {
+        let helper = FileSystemHelper.shared
+        let expanded = helper.expandPath(historyDir)
+        guard helper.fileExists(atPath: expanded) else { return [] }
+        let cutoff = Double(maxAgeDays) * 86400
+        return helper.contentsOfDirectory(atPath: expanded)
+            .map { (expanded as NSString).appendingPathComponent($0) }
+            .filter { path in
+                guard let attrs = try? FileManager.default.attributesOfItem(atPath: path),
+                      let modDate = attrs[.modificationDate] as? Date else { return false }
+                return Date().timeIntervalSince(modDate) > cutoff
+            }
+    }
+
+    private func obsoleteExtensionPaths() -> [String] {
+        extensionDirs.flatMap { Self.obsoleteExtensionPaths(extensionsDir: $0) }
+    }
+
+    private func staleLocalHistoryPaths() -> [String] {
+        localHistoryDirs.flatMap { Self.staleLocalHistoryPaths(historyDir: $0) }
+    }
+
+    /// Mede extensões obsoletas e histórico local antigo para o relatório.
+    private func scanObsoleteExtensionsAndHistory() -> (size: Int64, items: [String]) {
+        var size: Int64 = 0
+        var items: [String] = []
+
+        let obsoleteExtensions = obsoleteExtensionPaths()
+        if !obsoleteExtensions.isEmpty {
+            let extensionsSize = obsoleteExtensions.reduce(Int64(0)) { $0 + fileHelper.sizeOfDirectory(atPath: $1) }
+            size += extensionsSize
+            items.append("Obsolete extensions: \(obsoleteExtensions.count) (\(fileHelper.formatBytes(extensionsSize)))")
+        }
+
+        let staleHistory = staleLocalHistoryPaths()
+        let historySize = staleHistory.reduce(Int64(0)) { $0 + fileHelper.sizeOfDirectory(atPath: $1) }
+        if historySize > 0 {
+            size += historySize
+            items.append(
+                "Local history older than \(Self.localHistoryMaxAgeDays) days: \(fileHelper.formatBytes(historySize))"
+            )
+        }
+        return (size, items)
+    }
+
+    private func cleanObsoleteExtensionsAndHistory(
+        bytesRemoved: inout Int64, filesRemoved: inout Int, errors: inout [String]
+    ) {
+        for path in obsoleteExtensionPaths() + staleLocalHistoryPaths() {
+            let size = fileHelper.sizeOfDirectory(atPath: path)
+            if trashOrRemove(path) {
+                bytesRemoved += size
+                filesRemoved += 1
+            } else {
+                errors.append("Falha ao limpar: \((path as NSString).lastPathComponent)")
+            }
+        }
+    }
+
+    /// Lixeira primeiro (reversível); remoção direta só se a Lixeira recusar.
+    private func trashOrRemove(_ path: String) -> Bool {
+        if fileHelper.trashItem(atPath: path) { return true }
+        do {
+            try fileHelper.removeItem(atPath: path)
+            return true
+        } catch {
+            logger.log("Falha ao remover: \(path)", level: .error)
+            return false
+        }
+    }
+
     func scan(progress _: ((String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
 
         logger.log("Iniciando escaneamento de caches de IDEs", level: .info)
+
+        // Extensões obsoletas (marcadas pelo próprio editor) e histórico local antigo
+        let extras = scanObsoleteExtensionsAndHistory()
+        totalSize += extras.size
+        items.append(contentsOf: extras.items)
 
         // JetBrains - versões antigas
         let jetBrainsPaths = getJetBrainsPaths()
@@ -200,6 +318,9 @@ class IDECacheCleaningService: BaseCleaningService, CleaningService {
 
         logger.log("Iniciando limpeza de caches de IDEs", level: .info)
         let startTime = Date()
+
+        // Extensões obsoletas e histórico local antigo (Lixeira)
+        cleanObsoleteExtensionsAndHistory(bytesRemoved: &bytesRemoved, filesRemoved: &filesRemoved, errors: &errors)
 
         // Limpar JetBrains (versões antigas e caches)
         let jetBrainsPaths = getJetBrainsPaths()

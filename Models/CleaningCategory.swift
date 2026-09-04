@@ -39,6 +39,7 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
     case podcasts = "Podcasts"
     case appLeftovers = "App Leftovers"
     case development = "Project Builds"
+    case rustTargets = "Rust Targets"
 
     // Novos serviços
     case pnpm = "pnpm Store"
@@ -58,17 +59,18 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
     case expoCache = "Expo Cache"
     case zedCache = "Zed Cache"
     case aiModels = "AI Models"
+    case dotnetSdks = ".NET SDKs"
 
     var group: CleaningGroup {
         switch self {
         case .docker, .xcodeCache, .devPackages, .ideCache, .androidSDK, .playwright, .cargo, .homebrew, .terminalLogs,
              .aiTools, .iosSimulators, .pnpm, .goCache, .devApiTools, .cypress,
              .nugetCache, .bunCache, .pubCache,
-             .nvmVersions, .azureTools, .expoCache, .zedCache, .aiModels:
+             .nvmVersions, .azureTools, .expoCache, .zedCache, .aiModels, .dotnetSdks:
             .development
         case .systemData, .tempFiles, .logs, .trash, .varFolders, .appLeftovers:
             .system
-        case .development:
+        case .development, .rustTargets:
             .development
         case .appCache, .browserCache, .adobeCache, .downloads, .creativeApps, .notionCache, .googleCache:
             .apps
@@ -93,6 +95,7 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .androidSDK: "apps.iphone"
         case .playwright: "theatermasks.fill"
         case .cargo: "shippingbox"
+        case .rustTargets: "cube.transparent"
         case .homebrew: "mug.fill"
         case .terminalLogs: "terminal.fill"
         case .tempFiles: "doc.fill"
@@ -129,6 +132,7 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .expoCache: "atom"
         case .zedCache: "bolt.fill"
         case .aiModels: "cpu.fill"
+        case .dotnetSdks: "square.stack.3d.up.fill"
         }
     }
 
@@ -142,6 +146,7 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .androidSDK: Color(hex: "3DDC84")
         case .playwright: Color(hex: "2EAD33")
         case .cargo: Color(hex: "FF6B35")
+        case .rustTargets: Color(hex: "CE422B")
         case .homebrew: Color(hex: "FBB040")
         case .terminalLogs: Color(hex: "00C9A7")
         case .tempFiles: Color(hex: "9C27B0")
@@ -178,6 +183,7 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .expoCache: Color(hex: "4630EB") // Expo indigo
         case .zedCache: Color(hex: "084CCF") // Zed blue
         case .aiModels: Color(hex: "5856D6") // System indigo
+        case .dotnetSdks: Color(hex: "512BD4") // .NET purple
         }
     }
 
@@ -248,7 +254,9 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
         case .appLeftovers:
             "Remove data from uninstalled apps (JetBrains, Trae, etc)"
         case .development:
-            "Clean node_modules, Rust targets, and build artifacts"
+            "Clean node_modules and build artifacts from projects"
+        case .rustTargets:
+            "Remove Cargo target/ build directories from Rust projects"
         case .pnpm:
             "Clean pnpm package store and dlx/metadata caches"
         case .goCache:
@@ -279,6 +287,8 @@ enum CleaningCategory: String, CaseIterable, Identifiable {
             "Remove Zed's downloaded runtimes, language servers, and logs"
         case .aiModels:
             "Remove local AI model caches (Ollama/LM Studio models need aggressive mode)"
+        case .dotnetSdks:
+            "Remove superseded .NET SDK and runtime patches (keeps newest of each line; asks admin password)"
         }
     }
 }

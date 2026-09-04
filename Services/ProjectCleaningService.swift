@@ -1,7 +1,9 @@
 import Foundation
 
 /// Service to clean development project artifacts
-/// Targets: node_modules, target (Rust), build, dist, vendor
+/// Targets: node_modules, build, dist, .gradle, venv
+/// Rust `target/` dirs live in `RustTargetsCleaningService` — they dwarf everything
+/// else here, so they get their own category instead of hiding inside this total.
 class ProjectCleaningService: BaseCleaningService, CleaningService {
     let category: CleaningCategory = .development
 
@@ -9,11 +11,10 @@ class ProjectCleaningService: BaseCleaningService, CleaningService {
     private let projectRoot = "~/Projects"
 
     /// Directories to target for cleaning
-    private let targets = ["node_modules", "target", "build", "dist", ".gradle", "venv", ".venv"]
+    private let targets = ["node_modules", "build", "dist", ".gradle", "venv", ".venv"]
 
     // Safety: Only delete if they look like build folders
-    // Heuristic: "target" folder in a folder containing "Cargo.toml" is safe to delete (Rust)
-    // "node_modules" in a folder containing "package.json" is safe
+    // Heuristic: "node_modules" in a folder containing "package.json" is safe
 
     func scan(progress: ((String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
@@ -46,9 +47,7 @@ class ProjectCleaningService: BaseCleaningService, CleaningService {
                 let parentPath = (path as NSString).deletingLastPathComponent
                 let parentContent = (try? fileManager.contentsOfDirectory(atPath: parentPath)) ?? []
 
-                if name == "target" && parentContent.contains("Cargo.toml") {
-                    safeToDelete = true // It's a Rust target
-                } else if name == "node_modules" && parentContent.contains("package.json") {
+                if name == "node_modules" && parentContent.contains("package.json") {
                     safeToDelete = true
                 } else if name == ".gradle" {
                     safeToDelete = true
@@ -110,8 +109,7 @@ class ProjectCleaningService: BaseCleaningService, CleaningService {
                 let parentPath = (path as NSString).deletingLastPathComponent
                 let parentContent = (try? fileManager.contentsOfDirectory(atPath: parentPath)) ?? []
 
-                if name == "target" && parentContent.contains("Cargo.toml") { safeToDelete = true }
-                else if name == "node_modules" && parentContent.contains("package.json") { safeToDelete = true }
+                if name == "node_modules" && parentContent.contains("package.json") { safeToDelete = true }
                 else if name == ".gradle" { safeToDelete = true }
                 else if name == "build" || name == "dist" { safeToDelete = true }
 

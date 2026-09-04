@@ -7,6 +7,13 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ## [Unreleased]
 
+### ✨ Adicionado
+- **.NET SDKs**: nova categoria que remove patches superados de SDKs, runtimes e targeting packs em `/usr/local/share/dotnet` (uma senha de admin) e `~/.dotnet`. Mantém o mais novo de cada *feature band* (SDK) e de cada `major.minor` (runtime/pack); previews e packs de workload nunca são tocados.
+- **Cargo/Rust**: remove toolchains rustup fixadas em versão que já foram superadas (canais, `default_toolchain` e `[overrides]` ficam) e o lixo de `~/.rustup/{downloads,tmp}`.
+- **IDE Cache**: apaga extensões que o próprio editor marcou em `extensions/.obsolete` (VS Code, Cursor, Trae, Antigravity, Windsurf, Kiro) e entradas do histórico local (`User/History`) sem toque há mais de 90 dias.
+- **Docker**: remove a cópia em `com.docker.install/in_progress` só quando a versão em staging não é mais nova que a instalada — uma atualização pendente é preservada.
+- Novos caminhos: cache do Yarn Berry (`~/.yarn/berry/cache`), `DocumentationCache` do Xcode e índice do Continue (`~/.continue/index`).
+
 ### Planejado
 - Agendamento automático de limpeza
 - Notificações quando espaço está baixo

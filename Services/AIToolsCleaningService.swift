@@ -116,6 +116,8 @@ final class AIToolsCleaningService: PathBasedCleaningService {
             // Tabnine
             CleanTarget("~/.tabnine", label: "Tabnine", strategy: .removeContents),
             CleanTarget("~/Library/Caches/com.tabnine.TabNine", label: "Tabnine cache", strategy: .removeContents),
+            // Continue (índice de código regenerado ao abrir o editor)
+            CleanTarget("~/.continue/index", label: "Continue index", strategy: .removeContents),
             // Amazon Q
             CleanTarget("~/Library/Application Support/Amazon Q", label: "Amazon Q", strategy: .removeContents),
             CleanTarget("~/Library/Caches/com.amazon.codewhisperer", label: "Amazon Q cache", strategy: .removeContents)

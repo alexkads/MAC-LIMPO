@@ -100,6 +100,7 @@ let package = Package(
                 "Services/PodcastsCleaningService.swift",
                 "Services/AppLeftoversCleaningService.swift",
                 "Services/ProjectCleaningService.swift",
+                "Services/RustTargetsCleaningService.swift",
                 // Novos serviços: pnpm, Go, API Tools, Notion, Cypress
                 "Services/PnpmCleaningService.swift",
                 "Services/GoCleaningService.swift",
@@ -116,6 +117,7 @@ let package = Package(
                 "Services/ExpoCleaningService.swift",
                 "Services/ZedCleaningService.swift",
                 "Services/AIModelsCleaningService.swift",
+                "Services/DotnetSdkCleaningService.swift",
                 // ViewModels
                 "ViewModels/TreemapViewModel.swift",
                 // Views

@@ -10,6 +10,8 @@ class DevPackagesCleaningService: BaseCleaningService, CleaningService {
         ("Cargo", "~/.cargo/registry/cache"),
         ("CocoaPods", "~/Library/Caches/CocoaPods"),
         ("Yarn", "~/Library/Caches/Yarn"),
+        // Yarn 2+ (Berry) guarda o cache global aqui, fora de ~/Library/Caches
+        ("Yarn Berry", "~/.yarn/berry/cache"),
         ("Gradle", "~/.gradle/caches"),
         ("Go Build", "~/Library/Caches/go-build"),
         ("TypeScript", "~/Library/Caches/typescript"),

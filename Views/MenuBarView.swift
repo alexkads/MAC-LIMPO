@@ -74,6 +74,7 @@ class MenuBarViewModel: ObservableObject {
         .appLeftovers: AppLeftoversCleaningService(),
         // New Project Cleaner
         .development: ProjectCleaningService(),
+        .rustTargets: RustTargetsCleaningService(),
         // New services: pnpm, Go, API Tools, Notion, Cypress
         .pnpm: PnpmCleaningService(),
         .goCache: GoCleaningService(),
@@ -89,7 +90,8 @@ class MenuBarViewModel: ObservableObject {
         .azureTools: AzureToolsCleaningService(),
         .expoCache: ExpoCleaningService(),
         .zedCache: ZedCleaningService(),
-        .aiModels: AIModelsCleaningService()
+        .aiModels: AIModelsCleaningService(),
+        .dotnetSdks: DotnetSdkCleaningService()
     ]
 
     init() {
