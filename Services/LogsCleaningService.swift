@@ -43,6 +43,11 @@ class LogsCleaningService: BaseCleaningService, CleaningService {
     }
 
     private func resolvePaths(_ path: String) -> [String] {
+        // Sem Full Disk Access, listar `~/Library/Containers/*` abre um diálogo
+        // de permissão por container (centenas). Pula antes de tocar no disco.
+        if !PermissionsHelper.hasFullDiskAccessCached(), PermissionsHelper.requiresFullDiskAccess(path: path) {
+            return []
+        }
         let expanded = fileHelper.expandPath(path)
 
         if path.contains("*") {

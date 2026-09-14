@@ -2,14 +2,80 @@ import AppKit
 import Foundation
 
 class PermissionsHelper {
-    /// Verifica se o app tem Full Disk Access
+    /// Verifica se o app tem Full Disk Access.
+    ///
+    /// Sonda o `TCC.db` do usuário: ele sempre existe e só é legível com FDA.
+    /// O probe antigo era o `History.db` do Safari, que **não existe** em quem
+    /// nunca abriu o Safari — nesse caso o app se achava sem FDA para sempre.
+    /// Mantemos o Safari como segunda tentativa.
+    ///
+    /// `isReadableFile` usa `access(2)`, que responde EPERM sem abrir o diálogo
+    /// do TCC — de propósito: esta checagem roda antes de cada scan e não pode
+    /// ser ela mesma uma fonte de pedidos de permissão.
     static func hasFullDiskAccess() -> Bool {
-        // Tenta acessar um diretório protegido que só é acessível com Full Disk Access
-        let protectedPath = NSHomeDirectory() + "/Library/Safari/History.db"
         let fileManager = FileManager.default
+        let probes = [
+            NSHomeDirectory() + "/Library/Application Support/com.apple.TCC/TCC.db",
+            NSHomeDirectory() + "/Library/Safari/History.db"
+        ]
+        return probes.contains { fileManager.isReadableFile(atPath: $0) }
+    }
 
-        // Se conseguir verificar se o arquivo existe, tem acesso
-        return fileManager.isReadableFile(atPath: protectedPath)
+    /// Igual a `hasFullDiskAccess()`, mas com o resultado memoizado por alguns
+    /// segundos. Um scan completo consulta isto dezenas de vezes (uma por
+    /// service) e o resultado não muda no meio de uma varredura.
+    static func hasFullDiskAccessCached() -> Bool {
+        cacheLock.lock()
+        defer { cacheLock.unlock() }
+        if let cached, Date().timeIntervalSince(cached.checkedAt) < cacheTTL {
+            return cached.granted
+        }
+        let granted = hasFullDiskAccess()
+        cached = (granted, Date())
+        return granted
+    }
+
+    /// Invalida o cache — chame depois de mandar o usuário às System Settings.
+    static func invalidateFullDiskAccessCache() {
+        cacheLock.lock()
+        cached = nil
+        cacheLock.unlock()
+    }
+
+    private static let cacheLock = NSLock()
+    private static var cached: (granted: Bool, checkedAt: Date)?
+    private static let cacheTTL: TimeInterval = 10
+
+    /// Prefixos (relativos ao home) que o macOS protege por TCC.
+    ///
+    /// `~/Library/Containers` e `~/Library/Group Containers` são os críticos:
+    /// sem Full Disk Access, **cada container** que o app toca abre um diálogo
+    /// "deseja acessar dados de outros apps" — e há centenas deles num Mac
+    /// usado. Era isso que fazia o scan virar uma fila infinita de pedidos de
+    /// permissão com os cards presos no spinner.
+    private static let protectedHomePrefixes = [
+        "/Library/Containers",
+        "/Library/Group Containers",
+        "/Library/Safari",
+        "/Library/Mail",
+        "/Library/Messages",
+        "/Library/Cookies",
+        "/Library/Suggestions",
+        "/Library/Metadata/CoreSpotlight",
+        "/Library/Application Support/CloudDocs",
+        "/Library/Application Support/AddressBook",
+        "/Library/Application Support/CallHistoryDB",
+        "/Library/Application Support/com.apple.TCC"
+    ]
+
+    /// `true` se ler `path` exige Full Disk Access. Aceita path já expandido ou
+    /// com `~`.
+    static func requiresFullDiskAccess(path: String) -> Bool {
+        let expanded = (path as NSString).expandingTildeInPath
+        let home = NSHomeDirectory()
+        guard expanded.hasPrefix(home) else { return false }
+        let relative = String(expanded.dropFirst(home.count))
+        return protectedHomePrefixes.contains { relative == $0 || relative.hasPrefix($0 + "/") }
     }
 
     /// Abre o painel de Full Disk Access nas System Settings
@@ -82,6 +148,7 @@ class PermissionsHelper {
 
         if response == .alertFirstButtonReturn {
             // Verifica se realmente tem acesso agora
+            invalidateFullDiskAccessCache()
             if hasFullDiskAccess() {
                 let successAlert = NSAlert()
                 successAlert.messageText = "✅ Full Disk Access Habilitado!"

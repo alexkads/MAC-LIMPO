@@ -56,10 +56,16 @@ class PathBasedCleaningService: BaseCleaningService, CleaningService {
         self.useTrash = useTrash
     }
 
-    /// Alvos considerados agora: exclui os agressivos quando o modo está desligado.
+    /// Alvos considerados agora: exclui os agressivos quando o modo está desligado
+    /// e, sem Full Disk Access, os que ficam em áreas protegidas por TCC — tocar
+    /// neles só abriria um diálogo de permissão por container.
     private var activeTargets: [CleanTarget] {
         let aggressiveOn = CleaningOptions.shared.aggressiveMode
-        return targets.filter { !$0.aggressive || aggressiveOn }
+        let hasFullDiskAccess = PermissionsHelper.hasFullDiskAccessCached()
+        return targets.filter { target in
+            guard !target.aggressive || aggressiveOn else { return false }
+            return hasFullDiskAccess || !PermissionsHelper.requiresFullDiskAccess(path: target.path)
+        }
     }
 
     // MARK: - Scan

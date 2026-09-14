@@ -118,8 +118,20 @@ final class SystemDataCleaningService: BaseCleaningService, CleaningService, @un
         // (índice da entrada, path concreto) para medir TUDO em paralelo — em
         // série eram ~50 `du` um após o outro e este era o scan mais lento do
         // app. O paralelismo real é limitado pelo duGate global do helper.
+        // Sem Full Disk Access, encostar em `~/Library/Containers/*` abre um
+        // diálogo "deseja acessar dados de outros apps" POR CONTAINER — e há
+        // centenas deles. Era essa fila de prompts que travava o scan com o
+        // card girando para sempre. Descartamos as entradas protegidas ANTES de
+        // expandir o glob: a expansão faz `stat` em cada container e por si só
+        // já dispararia os pedidos de permissão.
+        let hasFullDiskAccess = PermissionsHelper.hasFullDiskAccessCached()
         var flat: [(index: Int, path: String)] = []
+        var skippedForPermission: [String] = []
         for (index, entry) in systemPaths.enumerated() {
+            if !hasFullDiskAccess, PermissionsHelper.requiresFullDiskAccess(path: entry.1) {
+                skippedForPermission.append(entry.0)
+                continue
+            }
             let expanded = fileHelper.expandPath(entry.1)
             let paths = entry.1.contains("*") ? Self.expandGlob(expanded) : [expanded]
             for path in paths {
@@ -127,18 +139,17 @@ final class SystemDataCleaningService: BaseCleaningService, CleaningService, @un
             }
         }
 
-        let sizesByEntry: [Int: Int64] = await withTaskGroup(of: (Int, Int64).self) { group in
-            for unit in flat {
-                group.addTask {
-                    guard self.fileHelper.fileExists(atPath: unit.path) else { return (unit.index, 0) }
-                    return await (unit.index, self.fileHelper.sizeOfDirectoryAsync(atPath: unit.path))
-                }
-            }
-            var accumulated: [Int: Int64] = [:]
-            for await (index, size) in group {
-                accumulated[index, default: 0] += size
-            }
-            return accumulated
+        progress?("Measuring \(flat.count) paths...")
+
+        // Uma passada de `du` em lote para todos os paths. Antes era um processo
+        // `du` por path — só os globs de container geravam mais de mil — o que
+        // saturava o duGate e fazia o scan levar minutos.
+        let ownerByPath = Dictionary(flat.map { ($0.path, $0.index) }, uniquingKeysWith: { first, _ in first })
+        let measuredByPath = await fileHelper.sizesOfDirectoriesAsync(atPaths: Array(ownerByPath.keys))
+        var sizesByEntry: [Int: Int64] = [:]
+        for (path, size) in measuredByPath {
+            guard let index = ownerByPath[path] else { continue }
+            sizesByEntry[index, default: 0] += size
         }
 
         for (index, entry) in systemPaths.enumerated() {
@@ -159,6 +170,12 @@ final class SystemDataCleaningService: BaseCleaningService, CleaningService, @un
             } else {
                 items.append("\(name): \(fileHelper.formatBytes(size)) (aggressive mode only)")
             }
+        }
+
+        if !skippedForPermission.isEmpty {
+            items.append(
+                "\(skippedForPermission.count) protected areas skipped — grant Full Disk Access to include them"
+            )
         }
 
         // Adiciona informação sobre Time Machine snapshots
@@ -182,8 +199,14 @@ final class SystemDataCleaningService: BaseCleaningService, CleaningService, @un
         // Achata os alvos (glob raso, sempre limpa CONTEÚDO — nunca remove o
         // diretório pai) e limpa em paralelo, espelhando o scan. O cleanGate
         // limita as remoções simultâneas para não saturar o disco.
+        // Mesmo motivo do scan: sem FDA, expandir os globs de container abre um
+        // diálogo de permissão por container. O usuário já teve a chance de
+        // conceder a permissão antes desta limpeza; se não concedeu, pulamos as
+        // áreas protegidas em vez de enterrá-lo em prompts.
+        let hasFullDiskAccess = PermissionsHelper.hasFullDiskAccessCached()
         var targets: [String] = []
         for (_, path, requiresConfirmation) in systemPaths where !requiresConfirmation {
+            if !hasFullDiskAccess, PermissionsHelper.requiresFullDiskAccess(path: path) { continue }
             let expanded = fileHelper.expandPath(path)
             let paths = path.contains("*") ? Self.expandGlob(expanded) : [expanded]
             targets.append(contentsOf: paths.filter { fileHelper.fileExists(atPath: $0) })

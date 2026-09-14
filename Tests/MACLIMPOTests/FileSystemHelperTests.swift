@@ -91,4 +91,49 @@ final class FileSystemHelperTests: XCTestCase {
     func testSizeOfDirectoryOnMissingPathIsZero() {
         XCTAssertEqual(FileSystemHelper.shared.sizeOfDirectory(atPath: "/nonexistent/maclimpo/\(UUID().uuidString)"), 0)
     }
+
+    // MARK: - parseDuBatch / sizesOfDirectories
+
+    func testParseDuBatchParsesEveryLineAndKeepsSpacesInPath() {
+        let output = "4\t/tmp/a\n1024\t/tmp/with space/dir\n"
+        let parsed = FileSystemHelper.parseDuBatch(output)
+        XCTAssertEqual(parsed.map(\.path), ["/tmp/a", "/tmp/with space/dir"])
+        XCTAssertEqual(parsed.map(\.bytes), [4 * 1024, 1024 * 1024])
+    }
+
+    func testParseDuBatchIgnoresMalformedLines() {
+        let output = "du: /x: Permission denied\nabc\t/tmp/a\n8\t\n16\t/tmp/b"
+        let parsed = FileSystemHelper.parseDuBatch(output)
+        XCTAssertEqual(parsed.map(\.path), ["/tmp/b"])
+        XCTAssertEqual(parsed.first?.bytes, 16 * 1024)
+    }
+
+    func testSizesOfDirectoriesMeasuresAcrossBatchesAndSkipsMissing() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("du-batch-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let dirs = ["one", "two", "with space"].map { root.appendingPathComponent($0) }
+        for dir in dirs {
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            try Data(repeating: 0xAB, count: 64 * 1024).write(to: dir.appendingPathComponent("blob"))
+        }
+        let missing = root.appendingPathComponent("missing").path
+
+        // batchSize 2 força mais de uma invocação do `du`.
+        let sizes = FileSystemHelper.shared.sizesOfDirectories(
+            atPaths: dirs.map(\.path) + [missing],
+            batchSize: 2
+        )
+
+        XCTAssertEqual(Set(sizes.keys), Set(dirs.map(\.path)))
+        for dir in dirs {
+            XCTAssertGreaterThanOrEqual(sizes[dir.path] ?? 0, 64 * 1024)
+        }
+        XCTAssertNil(sizes[missing])
+    }
+
+    func testSizesOfDirectoriesEmptyInput() {
+        XCTAssertTrue(FileSystemHelper.shared.sizesOfDirectories(atPaths: []).isEmpty)
+    }
 }
