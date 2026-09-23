@@ -14,6 +14,14 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - **Docker**: remove a cópia em `com.docker.install/in_progress` só quando a versão em staging não é mais nova que a instalada — uma atualização pendente é preservada.
 - Novos caminhos: cache do Yarn Berry (`~/.yarn/berry/cache`), `DocumentationCache` do Xcode e índice do Continue (`~/.continue/index`).
 
+### 🐛 Corrigido
+- **Docker — volumes de cache de build**: desde a 1.3.5 todo volume nomeado não usado era preservado, inclusive caches reconstruíveis como `cargo-target`, `node-modules` e `next-cache` de projetos compose (um único `cargo-target` chegava a 53 GB, invisível ao Rust Targets por viver dentro do `Docker.raw`). Volumes não usados com esses nomes voltam a ser limpos; bancos, uploads e demais volumes de dados continuam preservados.
+- **Pedidos de permissão em loop**: sem Full Disk Access, os scans de System Data, Logs e dos apps em containers (WhatsApp, Teams, Podcasts, apps criativos) abriam um diálogo do macOS por container em `~/Library/Containers` e `~/Library/Group Containers` — centenas deles — e os cards ficavam girando para sempre. Essas áreas agora são puladas sem a permissão, e o System Data informa quantas ficaram de fora.
+- **Detecção de Full Disk Access**: passa a sondar o `TCC.db` do usuário; o probe antigo (`Safari/History.db`) não existe em quem nunca abriu o Safari, e o app se achava sem permissão para sempre.
+
+### ⚡️ Desempenho
+- System Data mede os caminhos com `du` em lotes, em vez de um processo por caminho (antes eram mais de mil só nos containers).
+
 ### Planejado
 - Agendamento automático de limpeza
 - Notificações quando espaço está baixo

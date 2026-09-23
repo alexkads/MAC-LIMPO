@@ -51,4 +51,35 @@ final class DockerCleaningServiceTests: XCTestCase {
         XCTAssertEqual(DockerCleaningService.parseDockerSize("2GB"), 2_000_000_000)
         XCTAssertNotEqual(DockerCleaningService.parseDockerSize("2GB"), 2)
     }
+
+    // MARK: - Volumes de cache de build
+
+    func testRecognizesComposeBuildCacheVolumes() {
+        // Nomes reais: o `cargo-target` sozinho tinha 53,5 GB e ficava preservado
+        // junto com os bancos, por ser um volume nomeado.
+        XCTAssertTrue(DockerCleaningService.isRegenerableVolumeName("recordarfotos-dev_cargo-target"))
+        XCTAssertTrue(DockerCleaningService.isRegenerableVolumeName("recordarfotos-dev_cargo-registry"))
+        XCTAssertTrue(DockerCleaningService.isRegenerableVolumeName("recordarfotos-dev_next-cache"))
+        XCTAssertTrue(DockerCleaningService.isRegenerableVolumeName("recordarfotos-dev_node-modules"))
+    }
+
+    func testNormalizesUnderscoresAndCase() {
+        XCTAssertTrue(DockerCleaningService.isRegenerableVolumeName("myapp_node_modules"))
+        XCTAssertTrue(DockerCleaningService.isRegenerableVolumeName("MyApp_Cargo_Target"))
+        XCTAssertTrue(DockerCleaningService.isRegenerableVolumeName("target"))
+    }
+
+    func testPreservesApplicationDataVolumes() {
+        XCTAssertFalse(DockerCleaningService.isRegenerableVolumeName("recordarfotos-dev_pgdata"))
+        XCTAssertFalse(DockerCleaningService.isRegenerableVolumeName("recordarfotos-dev_uploads"))
+        XCTAssertFalse(DockerCleaningService.isRegenerableVolumeName("unimed360_redisdata"))
+        XCTAssertFalse(DockerCleaningService.isRegenerableVolumeName("normativa.apphost-57e71cff77-postgres-data"))
+        XCTAssertFalse(DockerCleaningService.isRegenerableVolumeName("myapp_redis-cache"))
+    }
+
+    func testMatchesOnlyWholeSuffixComponents() {
+        // "-target" precisa ser um componente inteiro, não o fim de uma palavra.
+        XCTAssertFalse(DockerCleaningService.isRegenerableVolumeName("myapp_retarget"))
+        XCTAssertFalse(DockerCleaningService.isRegenerableVolumeName("myapp_target-db"))
+    }
 }

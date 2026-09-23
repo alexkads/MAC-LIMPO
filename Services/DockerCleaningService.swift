@@ -60,6 +60,33 @@ class DockerCleaningService: BaseCleaningService, CleaningService {
         /// Docker. É a marca autoritativa: adivinhar pelo nome (64 hex) erraria em
         /// volumes nomeados com hash e em anônimos de versões antigas.
         let isAnonymous: Bool
+
+        /// Cache de build com nome conhecido (ver `isRegenerableVolumeName`).
+        var isRegenerable: Bool { DockerCleaningService.isRegenerableVolumeName(name) }
+
+        /// Só entra na limpeza o que não está montado e é órfão ou cache de build.
+        var isRemovable: Bool { !inUse && (isAnonymous || isRegenerable) }
+    }
+
+    /// Sufixos de nome que indicam cache de build — tudo reconstruível pela própria
+    /// ferramenta (`cargo build`, `npm install`, `next build`...). Casados contra o
+    /// FINAL do nome normalizado (`_` → `-`), porque o compose nomeia volumes como
+    /// `<projeto>_<chave>`: "recordarfotos-dev_cargo-target" termina em "-target".
+    /// Nada genérico como "cache" ou "data": "redis-cache", "pgdata" e "uploads"
+    /// guardam estado de aplicação e continuam preservados.
+    static let regenerableVolumeSuffixes: [String] = [
+        "target", "cargo-registry", "cargo-git", "sccache",
+        "node-modules", "next-cache", "nuxt-cache", "turbo-cache", "vite-cache",
+        "npm-cache", "yarn-cache", "pnpm-store", "bun-cache",
+        "gradle-cache", "maven-cache", "m2-cache", "nuget-cache", "nuget-packages",
+        "go-mod-cache", "go-build-cache", "pip-cache", "build-cache"
+    ]
+
+    static func isRegenerableVolumeName(_ name: String) -> Bool {
+        let normalized = name.lowercased().replacingOccurrences(of: "_", with: "-")
+        return regenerableVolumeSuffixes.contains { suffix in
+            normalized == suffix || normalized.hasSuffix("-" + suffix)
+        }
     }
 
     /// Lista os volumes locais com tamanho e uso. Uma chamada só — `docker system
@@ -271,11 +298,25 @@ class DockerCleaningService: BaseCleaningService, CleaningService {
             estimatedSize += anonymousBytes
         }
 
-        // Nomeados NUNCA entram na limpeza automática nem no total estimado: um
-        // volume "não usado" é só um volume sem container anexado agora, e um
-        // compose parado deixa o banco de dados exatamente nesse estado. Listamos
-        // com nome e tamanho para a remoção ser uma decisão consciente.
-        let named = unused.filter { !$0.isAnonymous }.sorted { $0.size > $1.size }
+        // Nomeados de cache de build (cargo target, node_modules, .next...) são
+        // reconstruíveis e costumam ser os maiores do Docker — um `cargo-target`
+        // passa fácil de 50 GB e fica dentro do Docker.raw, invisível ao scan de
+        // `target/` do Rust Targets.
+        let caches = unused.filter { !$0.isAnonymous && $0.isRegenerable }.sorted { $0.size > $1.size }
+        if !caches.isEmpty {
+            let cacheBytes = caches.reduce(Int64(0)) { $0 + $1.size }
+            items.append("\(caches.count) unused build-cache volumes: \(fileHelper.formatBytes(cacheBytes))")
+            for volume in caches {
+                items.append("    \(volume.name)  (\(fileHelper.formatBytes(volume.size)))")
+            }
+            estimatedSize += cacheBytes
+        }
+
+        // Os demais nomeados NUNCA entram na limpeza automática nem no total
+        // estimado: um volume "não usado" é só um volume sem container anexado
+        // agora, e um compose parado deixa o banco de dados exatamente nesse
+        // estado. Listamos com nome e tamanho para a remoção ser consciente.
+        let named = unused.filter { !$0.isAnonymous && !$0.isRegenerable }.sorted { $0.size > $1.size }
         if !named.isEmpty {
             let namedBytes = named.reduce(Int64(0)) { $0 + $1.size }
             items.append("⚠ \(named.count) unused named volumes (\(fileHelper.formatBytes(namedBytes))) " +
@@ -372,14 +413,14 @@ class DockerCleaningService: BaseCleaningService, CleaningService {
                 .filter { !$0.isEmpty && !$0.hasSuffix(":") }.count
         }
 
-        // 5. Volumes: SÓ os anônimos não usados, um a um. Nunca `docker volume
-        //    prune`, que varre também os nomeados — um banco de um compose parado
-        //    conta como "não usado" e seria apagado junto.
-        for volume in localVolumes() where !volume.inUse && volume.isAnonymous {
+        // 5. Volumes: SÓ os não usados que são anônimos ou cache de build, um a um.
+        //    Nunca `docker volume prune`, que varre também os nomeados — um banco
+        //    de um compose parado conta como "não usado" e seria apagado junto.
+        for volume in localVolumes() where volume.isRemovable {
             let removal = shell.execute("docker volume rm \(volume.name)", timeout: 60)
             if removal.exitCode == 0 {
                 filesRemoved += 1
-                logger.log("Volume anônimo removido: \(volume.name)", level: .info)
+                logger.log("Volume removido: \(volume.name)", level: .info)
             } else {
                 errors.append("Failed to remove volume \(volume.name)")
             }
