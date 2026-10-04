@@ -12,6 +12,7 @@ struct MACLIMPOApp: App {
     }
 }
 
+@MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem!
     var popover: NSPopover!
@@ -25,7 +26,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 // Ativa a instância existente
                 for app in runningApps {
                     if app != NSRunningApplication.current {
-                        app.activate(options: .activateIgnoringOtherApps)
+                        app.activate(options: [])
                         break
                     }
                 }
@@ -50,7 +51,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Configura o popover
         popover = NSPopover()
-        popover.contentSize = NSSize(width: 420, height: 600)
+        popover.contentSize = NSSize(width: 420, height: 700)
         popover.behavior = .transient
         popover.contentViewController = NSHostingController(rootView: MenuBarView(onOpenTreemap: { [weak self] in
             self?.openTreemapWindow()

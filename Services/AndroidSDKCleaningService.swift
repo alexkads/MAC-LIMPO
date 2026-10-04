@@ -1,6 +1,6 @@
 import Foundation
 
-class AndroidSDKCleaningService: BaseCleaningService, CleaningService {
+class AndroidSDKCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .androidSDK
 
     /// Caminhos do Android SDK que podem ser limpos com segurança
@@ -26,7 +26,7 @@ class AndroidSDKCleaningService: BaseCleaningService, CleaningService {
     // ~/Library/Android/sdk/build-tools (compilação)
     // ~/Library/Android/sdk/platforms (SDKs)
 
-    func scan(progress _: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress _: (@Sendable (String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
 

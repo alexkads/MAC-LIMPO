@@ -1,6 +1,6 @@
 import Foundation
 
-class XcodeCacheCleaningService: BaseCleaningService, CleaningService {
+class XcodeCacheCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .xcodeCache
 
     /// Caches e dados derivados do Xcode
@@ -47,7 +47,7 @@ class XcodeCacheCleaningService: BaseCleaningService, CleaningService {
         "~/Library/Developer/Xcode/DocumentationCache"
     ]
 
-    func scan(progress: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress: (@Sendable (String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
 

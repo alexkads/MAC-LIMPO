@@ -17,7 +17,7 @@ import Foundation
 ///
 /// Só versões estáveis `X.Y.Z` entram; previews (`10.0.100-rc.1`) ficam
 /// intocados — geralmente são a única cópia daquela linha.
-final class DotnetSdkCleaningService: BaseCleaningService, CleaningService {
+final class DotnetSdkCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .dotnetSdks
 
     /// Raízes de instalação do .NET. Cada uma tem a mesma estrutura interna.
@@ -136,7 +136,7 @@ final class DotnetSdkCleaningService: BaseCleaningService, CleaningService {
 
     // MARK: - Scan
 
-    func scan(progress: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress: (@Sendable (String) -> Void)?) async -> ScanResult {
         progress?("Scanning .NET SDKs...")
         logger.log("Iniciando escaneamento de SDKs .NET", level: .info)
 

@@ -9,6 +9,7 @@ struct ConfirmationRequest: Identifiable {
     let onConfirm: () -> Void
 }
 
+@MainActor
 class MenuBarViewModel: ObservableObject {
     @Published var scanResults: [CleaningCategory: ScanResult] = [:]
     @Published var isScanning: [CleaningCategory: Bool] = [:]
@@ -36,72 +37,13 @@ class MenuBarViewModel: ObservableObject {
     /// Atualiza automaticamente apenas o card de Storage de hora em hora.
     private var diskStatsTimer: Timer?
 
-    /// Registry categoria → serviço. Ao adicionar um serviço, lembre de incluir o
-    /// fonte em `sources:` do Package.swift (SPM não faz glob). Ver a skill
-    /// `add-cleaning-service`.
-    let services: [CleaningCategory: CleaningService] = [
-        .docker: DockerCleaningService(),
-        .devPackages: DevPackagesCleaningService(),
-        .tempFiles: TempFilesCleaningService(),
-        .logs: LogsCleaningService(),
-        .appCache: AppCacheCleaningService(),
-        .xcodeCache: XcodeCacheCleaningService(),
-        .iosSimulators: IOSSimulatorsCleaningService(),
-        .downloads: DownloadsCleaningService(),
-        .trash: TrashCleaningService(),
-        .browserCache: BrowserCacheCleaningService(),
-        .spotifyCache: SpotifyCacheCleaningService(),
-        .slackCache: SlackCacheCleaningService(),
-        .adobeCache: AdobeCleaningService(),
-        .mailAttachments: MailAttachmentsCleaningService(),
-        .messagesAttachments: MessagesAttachmentsCleaningService(),
-        .ideCache: IDECacheCleaningService(),
-        .androidSDK: AndroidSDKCleaningService(),
-        .messagingApps: MessagingAppsCleaningService(),
-        // New cleaning services
-        .playwright: PlaywrightCleaningService(),
-        .cargo: CargoCleaningService(),
-        .homebrew: HomebrewCleaningService(),
-        .terminalLogs: TerminalLogsCleaningService(),
-        // System deep clean
-        .systemData: SystemDataCleaningService(),
-        // New services for temp files and AI tools
-        .varFolders: VarFoldersCleaningService(),
-        .aiTools: AIToolsCleaningService(),
-        // Niche services
-        .creativeApps: CreativeAppsCleaningService(),
-        .podcasts: PodcastsCleaningService(),
-        .appLeftovers: AppLeftoversCleaningService(),
-        // New Project Cleaner
-        .development: ProjectCleaningService(),
-        .rustTargets: RustTargetsCleaningService(),
-        // New services: pnpm, Go, API Tools, Notion, Cypress
-        .pnpm: PnpmCleaningService(),
-        .goCache: GoCleaningService(),
-        .devApiTools: DevApiToolsCleaningService(),
-        .notionCache: NotionCleaningService(),
-        .cypress: CypressCleaningService(),
-        .tiktokLiveStudio: TikTokLiveStudioCleaningService(),
-        .nugetCache: NuGetCleaningService(),
-        .bunCache: BunCleaningService(),
-        .pubCache: PubCacheCleaningService(),
-        .googleCache: GoogleCacheCleaningService(),
-        .nvmVersions: NvmCleaningService(),
-        .azureTools: AzureToolsCleaningService(),
-        .expoCache: ExpoCleaningService(),
-        .zedCache: ZedCleaningService(),
-        .aiModels: AIModelsCleaningService(),
-        .dotnetSdks: DotnetSdkCleaningService()
-    ]
+    /// Shared registry used by the UI, App Intents and Apple Intelligence.
+    let services = CleaningServiceRegistry.shared.services
 
     init() {
         refreshDiskStats()
         scanAllCategories()
         startDiskStatsTimer()
-    }
-
-    deinit {
-        diskStatsTimer?.invalidate()
     }
 
     func refreshDiskStats() {
@@ -115,7 +57,9 @@ class MenuBarViewModel: ObservableObject {
     private func startDiskStatsTimer() {
         diskStatsTimer?.invalidate()
         let timer = Timer(timeInterval: 3600, repeats: true) { [weak self] _ in
-            self?.refreshDiskStats()
+            Task { @MainActor [weak self] in
+                self?.refreshDiskStats()
+            }
         }
         timer.tolerance = 300
         RunLoop.main.add(timer, forMode: .common)
@@ -124,12 +68,28 @@ class MenuBarViewModel: ObservableObject {
 
     @Published var scanningStatus: [CleaningCategory: String] = [:]
 
+    /// Evita que atualizações disparadas enquanto um scan ainda está em andamento
+    /// criem outra árvore de Tasks. Isso era especialmente problemático nas
+    /// categorias com muitos paths: cada rodada extra ficava esperando no
+    /// `duGate` e o card permanecia girando por tempo indefinido.
+    private var scanAllInProgress = false
+    private var scanAllRequestedWhileRunning = false
+
     /// Máximo de scans simultâneos, dimensionado pelos núcleos do Mac. Cada scan
     /// mede tamanhos via `du` no pool do GCD (não trava o pool cooperativo), então
     /// podemos usar todos os cores. Limitado a 8 para não saturar o I/O do disco.
     private let maxConcurrentScans = min(8, max(2, ProcessInfo.processInfo.activeProcessorCount))
 
     func scanAllCategories() {
+        // A UI pode chamar este método pelo botão de refresh, pela troca do modo
+        // agressivo ou depois de uma limpeza. Não sobreponha rodadas; basta
+        // garantir uma única atualização adicional ao terminar a atual.
+        guard !scanAllInProgress else {
+            scanAllRequestedWhileRunning = true
+            return
+        }
+
+        scanAllInProgress = true
         let categories = Array(services.keys)
         Task {
             await withTaskGroup(of: Void.self) { group in
@@ -147,10 +107,31 @@ class MenuBarViewModel: ObservableObject {
                     }
                 }
             }
+
+            await MainActor.run { [weak self] in
+                guard let self else { return }
+                self.scanAllInProgress = false
+
+                if self.scanAllRequestedWhileRunning {
+                    self.scanAllRequestedWhileRunning = false
+                    self.scanAllCategories()
+                }
+            }
         }
     }
 
     func scanCategory(_ category: CleaningCategory) {
+        // Um scan completo já inclui esta categoria. Se ele estiver rodando,
+        // transforma o pedido em uma atualização completa pendente em vez de
+        // iniciar uma segunda medição dos mesmos diretórios.
+        guard !scanAllInProgress else {
+            scanAllRequestedWhileRunning = true
+            return
+        }
+
+        // Limpezas individuais reescaneiam a categoria ao terminar. Protege
+        // contra dois callbacks chegando antes de o primeiro marcar o estado.
+        guard !(isScanning[category] ?? false) else { return }
         Task { await performScan(category) }
     }
 
@@ -360,6 +341,10 @@ struct MenuBarView: View {
     @StateObject private var launchAtLoginService = LaunchAtLoginService()
     @ObservedObject private var cleaningOptions = CleaningOptions.shared
     @ObservedObject private var themeManager = ThemeManager.shared
+    @State private var searchText = ""
+    @State private var intelligenceInsight: String?
+    @State private var intelligenceStatus: AppleIntelligenceAvailability?
+    @State private var isGeneratingInsight = false
     let onOpenTreemap: () -> Void
 
     init(onOpenTreemap: @escaping () -> Void = {}) {
@@ -373,7 +358,7 @@ struct MenuBarView: View {
 
             VStack(spacing: 0) {
                 // FIXED HEADER SECTION
-                VStack(spacing: 20) {
+                VStack(spacing: 16) {
                     // Header Title & Buttons
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
@@ -423,18 +408,61 @@ struct MenuBarView: View {
                         totalSpace: viewModel.totalDiskSpace
                     )
                     .padding(.horizontal, 20)
+
+                    HStack(spacing: 10) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(themeManager.palette.secondaryText)
+
+                        TextField("Search cleaning categories", text: $searchText)
+                            .textFieldStyle(.plain)
+                            .font(.system(size: 13))
+                            .foregroundColor(themeManager.palette.primaryText)
+
+                        if !searchText.isEmpty {
+                            Button {
+                                searchText = ""
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 13))
+                                    .foregroundColor(themeManager.palette.secondaryText)
+                            }
+                            .buttonStyle(.plain)
+                            .help("Clear search")
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .themedSurface(themeManager.palette, cornerRadius: 12)
+                    .padding(.horizontal, 20)
                 }
                 .padding(.bottom, 10)
 
                 // SCROLLABLE LIST SECTION
                 ScrollView {
                     VStack(spacing: 20) {
+                        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+
+                        AppleIntelligenceInsightView(
+                            insight: intelligenceInsight,
+                            status: intelligenceStatus,
+                            isGenerating: isGeneratingInsight,
+                            generateInsight: generateStorageInsight
+                        )
+                        .padding(.horizontal, 20)
+                        .padding(.top, 10)
+
                         // Cleaning Categories (apenas as implementadas)
                         // Cleaning Categories by Group
                         VStack(spacing: 20) {
                             ForEach(CleaningGroup.allCases) { group in
                                 let categoriesInGroup = viewModel.services.keys
-                                    .filter { $0.group == group }
+                                    .filter {
+                                        guard $0.group == group else { return false }
+                                        guard !query.isEmpty else { return true }
+                                        return $0.rawValue.localizedCaseInsensitiveContains(query)
+                                            || $0.description.localizedCaseInsensitiveContains(query)
+                                    }
                                     .sorted { $0.rawValue < $1.rawValue }
 
                                 if !categoriesInGroup.isEmpty {
@@ -447,6 +475,16 @@ struct MenuBarView: View {
                                             Text(group.rawValue)
                                                 .font(.system(size: 13, weight: .semibold))
                                                 .foregroundColor(themeManager.palette.secondaryText)
+
+                                            Text("\(categoriesInGroup.count)")
+                                                .font(.system(size: 10, weight: .bold, design: .rounded))
+                                                .foregroundColor(themeManager.palette.secondaryText)
+                                                .padding(.horizontal, 7)
+                                                .padding(.vertical, 3)
+                                                .background(
+                                                    Capsule()
+                                                        .fill(themeManager.palette.secondaryText.opacity(0.12))
+                                                )
                                             Spacer()
                                         }
                                         .padding(.horizontal, 4)
@@ -473,6 +511,25 @@ struct MenuBarView: View {
                         }
                         .padding(.horizontal, 20)
                         .padding(.top, 10)
+
+                        if !query.isEmpty && !viewModel.services.keys.contains(where: {
+                            $0.rawValue.localizedCaseInsensitiveContains(query)
+                                || $0.description.localizedCaseInsensitiveContains(query)
+                        }) {
+                            VStack(spacing: 10) {
+                                Image(systemName: "magnifyingglass")
+                                    .font(.system(size: 24, weight: .semibold))
+                                    .foregroundColor(themeManager.palette.secondaryText)
+                                Text("No categories found")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(themeManager.palette.primaryText)
+                                Text("Try another search term")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(themeManager.palette.secondaryText)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 28)
+                        }
 
                         // Clean All Button
                         Button(action: {
@@ -571,14 +628,47 @@ struct MenuBarView: View {
                 )
             }
         }
-        .frame(width: 420, height: 600)
+        .frame(width: 420, height: 700)
         .fontDesign(themeManager.palette.fontDesign)
         .animation(.easeInOut(duration: 0.35), value: themeManager.theme)
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewModel.showProgress)
         .animation(.easeInOut(duration: 0.2), value: viewModel.confirmationRequest?.id)
-        .onChange(of: cleaningOptions.aggressiveMode) { _ in
+        .onChange(of: cleaningOptions.aggressiveMode) { _, _ in
             // As estimativas mudam com o modo agressivo; re-escaneia para refletir.
             viewModel.scanAllCategories()
+        }
+    }
+
+    private func generateStorageInsight() {
+        guard !isGeneratingInsight else { return }
+        isGeneratingInsight = true
+
+        let results = Array(viewModel.scanResults.values)
+        let total = viewModel.totalDiskSpace
+        let used = viewModel.usedDiskSpace
+
+        Task {
+            let service = AppleIntelligenceService.shared
+            let availability = await service.availability()
+
+            do {
+                let insight = try await service.generateStorageInsight(
+                    scanResults: results,
+                    totalDiskSpace: total,
+                    usedDiskSpace: used
+                )
+                await MainActor.run {
+                    intelligenceStatus = availability
+                    intelligenceInsight = insight
+                    isGeneratingInsight = false
+                }
+            } catch {
+                await MainActor.run {
+                    intelligenceStatus = availability
+                    intelligenceInsight = error.localizedDescription
+                    isGeneratingInsight = false
+                }
+            }
         }
     }
 }

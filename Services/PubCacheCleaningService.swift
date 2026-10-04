@@ -3,7 +3,7 @@ import Foundation
 /// Limpa os pacotes baixados do pub (Dart/Flutter). São re-obtidos com
 /// `flutter pub get` / `dart pub get`. Preserva `~/.pub-cache/bin` e pacotes
 /// ativados globalmente, limpando apenas os caches de download.
-final class PubCacheCleaningService: PathBasedCleaningService {
+final class PubCacheCleaningService: PathBasedCleaningService, @unchecked Sendable {
     init() {
         super.init(category: .pubCache, targets: [
             CleanTarget("~/.pub-cache/hosted", label: "pub hosted packages"),

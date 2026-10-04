@@ -117,9 +117,9 @@ Adicione qualquer outro contexto ou screenshots sobre a feature.
 
 ### Requisitos
 
-- macOS 13.0 (Ventura) ou superior
-- Xcode 15.0 ou superior
-- Swift 5.9 ou superior
+- macOS 27.0 ou superior
+- Xcode 27 ou superior
+- Swift 6.4
 - Git
 
 ### Setup Inicial

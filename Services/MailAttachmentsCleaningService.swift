@@ -1,6 +1,6 @@
 import Foundation
 
-class MailAttachmentsCleaningService: BaseCleaningService, CleaningService {
+class MailAttachmentsCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .mailAttachments
 
     private let mailPaths = [
@@ -34,7 +34,7 @@ class MailAttachmentsCleaningService: BaseCleaningService, CleaningService {
         return [expanded]
     }
 
-    func scan(progress _: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress _: (@Sendable (String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
 

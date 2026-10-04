@@ -1,12 +1,12 @@
 import Foundation
 
-class DownloadsCleaningService: BaseCleaningService, CleaningService {
+class DownloadsCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .downloads
 
     private let downloadsPath = "~/Downloads"
     private let daysOld = 30
 
-    func scan(progress _: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress _: (@Sendable (String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
 

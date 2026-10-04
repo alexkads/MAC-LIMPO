@@ -1,6 +1,6 @@
 import Foundation
 
-struct CleaningResult {
+struct CleaningResult: Sendable {
     var category: CleaningCategory
     var bytesRemoved: Int64
     var filesRemoved: Int
@@ -29,7 +29,7 @@ struct CleaningResult {
     }
 }
 
-struct ScanResult {
+struct ScanResult: Sendable {
     var category: CleaningCategory
     var estimatedSize: Int64
     var itemCount: Int

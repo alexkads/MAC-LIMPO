@@ -1,7 +1,7 @@
 import Foundation
 
 /// Remove caches regeneráveis do Notion (asset, GPU, code). Preserva as pastas.
-final class NotionCleaningService: PathBasedCleaningService {
+final class NotionCleaningService: PathBasedCleaningService, @unchecked Sendable {
     init() {
         super.init(category: .notionCache, targets: [
             CleanTarget(

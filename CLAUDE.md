@@ -44,7 +44,7 @@ Anything added under `Installer/` or `Scripts/` must stay in the `exclude:` list
 
 The `MACLIMPOTests` target `@testable import MAC_LIMPO`s the executable (note the underscore — hyphens in the target name become underscores in the module name). VS Code launch configs live in `.vscode/launch.json` (Swift extension).
 
-Requires macOS 13+, Swift 5.9.
+Requires macOS 27.0+, Swift 6.4, and Xcode 27.
 
 ## Architecture
 

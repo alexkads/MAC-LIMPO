@@ -21,7 +21,6 @@ struct ThemePalette {
     let fontDesign: Font.Design
     /// Se `true`, mantém as cores por-categoria; se `false`, tinge tudo no accent.
     let usesCategoryColors: Bool
-
     var accentGradient: LinearGradient {
         LinearGradient(colors: accent, startPoint: .leading, endPoint: .trailing)
     }
@@ -116,7 +115,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
 }
 
 /// Fonte única de verdade do tema atual. Persiste a escolha em UserDefaults.
-final class ThemeManager: ObservableObject {
+final class ThemeManager: ObservableObject, @unchecked Sendable {
     static let shared = ThemeManager()
 
     private static let storageKey = "selectedTheme"

@@ -3,7 +3,7 @@ import Foundation
 /// Limpa caches regeneráveis do perfil do Chrome (Service Worker CacheStorage,
 /// Code Cache, GPU caches) e versões antigas do Google Updater. Não toca em
 /// histórico, senhas, extensões ou favoritos — só dados recriados pelo uso.
-final class GoogleCacheCleaningService: PathBasedCleaningService {
+final class GoogleCacheCleaningService: PathBasedCleaningService, @unchecked Sendable {
     init() {
         let base = "~/Library/Application Support/Google/Chrome/Default"
         super.init(category: .googleCache, targets: [

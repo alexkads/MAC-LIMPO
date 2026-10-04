@@ -1,6 +1,6 @@
 import Foundation
 
-class SpotifyCacheCleaningService: BaseCleaningService, CleaningService {
+class SpotifyCacheCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .spotifyCache
 
     private let spotifyPaths = [
@@ -36,7 +36,7 @@ class SpotifyCacheCleaningService: BaseCleaningService, CleaningService {
         return [expanded]
     }
 
-    func scan(progress _: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress _: (@Sendable (String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
 

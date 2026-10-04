@@ -1,6 +1,10 @@
 import Foundation
 
-class ShellExecutor {
+class ShellExecutor: @unchecked Sendable {
+    private final class DataBox: @unchecked Sendable {
+        var value = Data()
+    }
+
     static let shared = ShellExecutor()
 
     /// Executa um comando via `zsh -c`. Conveniente para pipelines, mas NÃO
@@ -56,12 +60,12 @@ class ShellExecutor {
         // Drena os pipes em threads separadas. Ler só depois de o processo sair
         // (código antigo) trava se a saída passar de ~64KB e encher o buffer do
         // pipe enquanto o processo ainda escreve.
-        var outputData = Data()
-        var errorData = Data()
+        let outputData = DataBox()
+        let errorData = DataBox()
         let ioGroup = DispatchGroup()
         let ioQueue = DispatchQueue(label: "com.maclimpo.shell.io", attributes: .concurrent)
-        ioQueue.async(group: ioGroup) { outputData = outputPipe.fileHandleForReading.readDataToEndOfFile() }
-        ioQueue.async(group: ioGroup) { errorData = errorPipe.fileHandleForReading.readDataToEndOfFile() }
+        ioQueue.async(group: ioGroup) { outputData.value = outputPipe.fileHandleForReading.readDataToEndOfFile() }
+        ioQueue.async(group: ioGroup) { errorData.value = errorPipe.fileHandleForReading.readDataToEndOfFile() }
 
         do {
             try task.run()
@@ -77,8 +81,8 @@ class ShellExecutor {
         }
 
         ioGroup.wait() // garante leitura completa da saída antes de retornar
-        let output = String(data: outputData, encoding: .utf8) ?? ""
-        let error = String(data: errorData, encoding: .utf8) ?? ""
+        let output = String(data: outputData.value, encoding: .utf8) ?? ""
+        let error = String(data: errorData.value, encoding: .utf8) ?? ""
         return (output, error, task.terminationStatus)
     }
 

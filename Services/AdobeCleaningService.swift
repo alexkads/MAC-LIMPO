@@ -1,6 +1,6 @@
 import Foundation
 
-class AdobeCleaningService: BaseCleaningService, CleaningService {
+class AdobeCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .adobeCache
     let logger = Logger.shared
 
@@ -42,7 +42,7 @@ class AdobeCleaningService: BaseCleaningService, CleaningService {
         return [expanded]
     }
 
-    func scan(progress: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress: (@Sendable (String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
 

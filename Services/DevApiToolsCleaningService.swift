@@ -2,7 +2,7 @@ import Foundation
 
 /// Limpa caches de clientes REST (Postman, Insomnia, Bruno, Hoppscotch, Paw).
 /// Pastas "Partitions" (cache do Electron) têm só o conteúdo removido.
-final class DevApiToolsCleaningService: PathBasedCleaningService {
+final class DevApiToolsCleaningService: PathBasedCleaningService, @unchecked Sendable {
     init() {
         super.init(category: .devApiTools, targets: [
             // Postman

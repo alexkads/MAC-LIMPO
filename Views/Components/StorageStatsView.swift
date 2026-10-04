@@ -8,11 +8,11 @@ struct StorageStatsView: View {
 
     private var usedPercentage: Double {
         guard totalSpace > 0 else { return 0 }
-        return Double(usedSpace) / Double(totalSpace)
+        return min(max(Double(usedSpace) / Double(totalSpace), 0), 1)
     }
 
     private var freeSpace: Int64 {
-        totalSpace - usedSpace
+        max(0, totalSpace - usedSpace)
     }
 
     var body: some View {

@@ -3,7 +3,7 @@ import Foundation
 /// Limpa os caches do Expo CLI em ~/.expo: apps Expo Go baixados, APKs,
 /// apps de simulador iOS e caches de template/schema. Tudo é re-baixado
 /// sob demanda pelo próprio CLI.
-final class ExpoCleaningService: PathBasedCleaningService {
+final class ExpoCleaningService: PathBasedCleaningService, @unchecked Sendable {
     init() {
         super.init(category: .expoCache, targets: [
             CleanTarget("~/.expo/expo-go", label: "Expo Go downloads", strategy: .removeContents),

@@ -1,10 +1,10 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 6.4
 import PackageDescription
 
 let package = Package(
     name: "MAC-LIMPO",
     platforms: [
-        .macOS(.v13)
+        .macOS(.v27)
     ],
     products: [
         .executable(
@@ -64,6 +64,8 @@ let package = Package(
                 "Models/Theme.swift",
                 "Models/FileNode.swift",
                 "Services/CleaningService.swift",
+                "Services/CleaningServiceRegistry.swift",
+                "Services/AppleIntelligenceService.swift",
                 "Services/PathBasedCleaningService.swift",
                 "Services/DockerCleaningService.swift",
                 "Services/DevPackagesCleaningService.swift",
@@ -137,7 +139,9 @@ let package = Package(
                 "Utilities/TreemapLayout.swift",
                 "Utilities/PermissionsHelper.swift",
                 "Utilities/NSAlert+MenuBar.swift",
-                "Utilities/AsyncSemaphore.swift"
+                "Utilities/AsyncSemaphore.swift",
+                "Views/Components/AppleIntelligenceInsightView.swift",
+                "Intents/MACLIMPOIntents.swift"
             ]
         ),
         .testTarget(
@@ -145,5 +149,6 @@ let package = Package(
             dependencies: ["MAC-LIMPO"],
             path: "Tests/MACLIMPOTests"
         )
-    ]
+    ],
+    swiftLanguageModes: [.v6]
 )

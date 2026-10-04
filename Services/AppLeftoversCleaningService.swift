@@ -1,7 +1,7 @@
 import Foundation
 
 /// Service to clean leftovers from uninstalled applications
-class AppLeftoversCleaningService: BaseCleaningService, CleaningService {
+class AppLeftoversCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .appLeftovers
 
     /// Known apps to check for leftovers
@@ -51,7 +51,7 @@ class AppLeftoversCleaningService: BaseCleaningService, CleaningService {
         fileHelper.fileExists(atPath: path)
     }
 
-    func scan(progress: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress: (@Sendable (String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
 

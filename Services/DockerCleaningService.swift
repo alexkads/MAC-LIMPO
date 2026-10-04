@@ -1,6 +1,6 @@
 import Foundation
 
-class DockerCleaningService: BaseCleaningService, CleaningService {
+class DockerCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .docker
 
     /// `docker system df -v` mede o tamanho de cada volume percorrendo o disco da
@@ -230,7 +230,7 @@ class DockerCleaningService: BaseCleaningService, CleaningService {
         ScanResult(category: category, estimatedSize: size, itemCount: items.count, items: items)
     }
 
-    func scan(progress: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress: (@Sendable (String) -> Void)?) async -> ScanResult {
         var items: [String] = []
         var estimatedSize: Int64 = 0
 

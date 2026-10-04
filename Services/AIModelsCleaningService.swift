@@ -4,7 +4,7 @@ import Foundation
 /// usuário (Ollama, LM Studio) são grandes e custosos de re-baixar, então só
 /// entram no modo agressivo; caches regeneráveis (Hugging Face, U²-Net) são
 /// limpos sempre.
-final class AIModelsCleaningService: PathBasedCleaningService {
+final class AIModelsCleaningService: PathBasedCleaningService, @unchecked Sendable {
     init() {
         super.init(category: .aiModels, targets: [
             CleanTarget("~/.ollama/models", label: "Ollama models", strategy: .removeContents, aggressive: true),

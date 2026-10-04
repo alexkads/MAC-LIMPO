@@ -179,12 +179,12 @@ Antes de usar a aplicação, verifique:
 - `AppKit` para menu bar integration
 
 ### Compatibilidade
-- **macOS 13.0+** (Ventura ou superior)
-- Usa APIs modernas do Swift 5.5+
-- Requer Xcode 14+ para compilar
+- **macOS 27.0+**
+- Swift 6.4 em modo Swift 6
+- Requer Xcode 27 para compilar
 
 ---
 
-**Data da última análise:** 04/12/2025
-**Versão do código:** 1.0
+**Data da última análise:** 23/09/2026
+**Versão do código:** 1.3.7
 **Status:** ✅ Problemas críticos corrigidos

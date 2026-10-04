@@ -1,7 +1,7 @@
 import Foundation
 import os.log
 
-class DiskMapService {
+class DiskMapService: @unchecked Sendable {
     static let shared = DiskMapService()
     private let fileManager = FileManager.default
     private let logger = Logger.shared
@@ -37,7 +37,7 @@ class DiskMapService {
         path: String,
         maxDepth: Int = 5,
         currentDepth: Int = 0,
-        progress: @escaping (String, Double) -> Void
+        progress: @escaping @Sendable (String, Double) -> Void
     ) async -> FileNode {
         // Reset contador no início
         if currentDepth == 0 {

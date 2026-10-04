@@ -1,6 +1,6 @@
 import Foundation
 
-class LogsCleaningService: BaseCleaningService, CleaningService {
+class LogsCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .logs
 
     private let logPaths = [
@@ -14,7 +14,7 @@ class LogsCleaningService: BaseCleaningService, CleaningService {
         "/var/log/install.log"
     ]
 
-    func scan(progress _: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress _: (@Sendable (String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
 

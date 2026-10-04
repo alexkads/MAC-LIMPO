@@ -1,7 +1,7 @@
 import Foundation
 
 /// Remove logs antigos do terminal Warp.
-final class TerminalLogsCleaningService: PathBasedCleaningService {
+final class TerminalLogsCleaningService: PathBasedCleaningService, @unchecked Sendable {
     init() {
         super.init(category: .terminalLogs, targets: [
             CleanTarget("~/Library/Logs/warp.log", label: "Warp terminal logs"),

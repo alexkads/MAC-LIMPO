@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 
+@MainActor
 class TreemapViewModel: ObservableObject {
     @Published var rootNode: FileNode?
     @Published var currentNode: FileNode?
@@ -28,12 +29,13 @@ class TreemapViewModel: ObservableObject {
         scanProgress = 0
         scanStatus = "Preparing scan..."
 
-        scanTask = Task {
+        scanTask = Task { [weak self] in
+            guard let self else { return }
             let node = await diskMapService.scanDirectory(
                 path: path,
                 maxDepth: maxDepth,
                 progress: { [weak self] status, progress in
-                    Task { @MainActor in
+                    Task { @MainActor [weak self] in
                         self?.scanStatus = status
                         self?.scanProgress = progress
                     }
@@ -42,14 +44,12 @@ class TreemapViewModel: ObservableObject {
 
             // Verifica se a task foi cancelada antes de atualizar a UI
             if !Task.isCancelled {
-                await MainActor.run {
-                    rootNode = node
-                    currentNode = node
-                    breadcrumbs = [node]
-                    isScanning = false
-                    scanStatus = "Scan complete!"
-                    scanProgress = 1.0
-                }
+                rootNode = node
+                currentNode = node
+                breadcrumbs = [node]
+                isScanning = false
+                scanStatus = "Scan complete!"
+                scanProgress = 1.0
             }
         }
     }

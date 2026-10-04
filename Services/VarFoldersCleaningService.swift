@@ -2,7 +2,7 @@ import Foundation
 
 /// Service to clean /private/var/folders caches
 /// This directory contains per-process temporary caches that can grow very large
-class VarFoldersCleaningService: BaseCleaningService, CleaningService {
+class VarFoldersCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .varFolders
 
     /// Safe caches to clean in /private/var/folders
@@ -36,7 +36,7 @@ class VarFoldersCleaningService: BaseCleaningService, CleaningService {
         "com.apple.kernel"
     ]
 
-    func scan(progress _: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress _: (@Sendable (String) -> Void)?) async -> ScanResult {
         Logger.shared.scan(category: "VarFolders", message: "Starting scan of /private/var/folders")
 
         var totalSize: Int64 = 0

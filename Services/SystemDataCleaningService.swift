@@ -108,7 +108,7 @@ final class SystemDataCleaningService: BaseCleaningService, CleaningService, @un
         ("pip cache", "~/Library/Caches/pip")
     ]
 
-    func scan(progress: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress: (@Sendable (String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
 

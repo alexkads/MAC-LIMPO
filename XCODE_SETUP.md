@@ -1,53 +1,30 @@
 # Como Criar o Projeto no Xcode
 
-Como não posso criar o arquivo `.xcodeproj` diretamente (requer Xcode), siga estes passos:
+O projeto usa Swift Package Manager e não mantém um `.xcodeproj` versionado. No Xcode 27, abra diretamente o `Package.swift`.
 
 ## Passos para Configurar no Xcode
 
 ### 1. Abrir o Xcode
 - Abra o Xcode da pasta Applications
 
-### 2. Criar Novo Projeto
-- File > New > Project
-- Selecione **macOS** tab
-- Escolha **App**
-- Clique em Next
+### 2. Abrir o pacote
+- File > Open...
+- Selecione `Package.swift` na raiz do repositório
+- Escolha o produto executável `MAC-LIMPO`
 
-### 3. Configurar Projeto
+### 3. Conferir a configuração
 Preencha os campos:
 - **Product Name**: `MAC-LIMPO`
-- **Team**: Selecione seu time (ou None para desenvolvimento local)
-- **Organization Identifier**: `com.maclimpo` (ou seu identificador)
-- **Bundle Identifier**: Será `com.maclimpo.MAC-LIMPO`
-- **Interface**: `SwiftUI`
-- **Language**: `Swift`
-- **Desmarque**: "Use Core Data" e "Include Tests"
+- **Deployment target**: macOS `27.0`
+- **Swift tools**: `6.4`
+- **Arquitetura de distribuição**: `arm64`
+- O target já inclui Foundation Models e App Intents por meio dos imports do pacote.
 
-Clique em Next
+### 4. Arquivos do pacote
 
-### 4. Salvar Projeto
-- Navegue até: `/Users/alexkads/MAC-LIMPO`
-- **IMPORTANTE**: Ao salvar, escolha a opção para **SUBSTITUIR** a pasta existente
-- Ou salve com outro nome e depois copie os arquivos .swift para dentro
+Não adicione os arquivos manualmente. O `Package.swift` lista explicitamente todas as fontes, incluindo `Intents/`, `Services/AppleIntelligenceService.swift` e `Views/Components/AppleIntelligenceInsightView.swift`.
 
-### 5. Adicionar Arquivos ao Projeto
-
-No Xcode:
-1. Delete o arquivo `ContentView.swift` criado automaticamente
-2. Delete o arquivo `MACLIMPOApp.swift` padrão se existir
-3. Clique com botão direito no grupo "MAC-LIMPO" (azul) no navigator
-4. Add Files to "MAC-LIMPO"...
-5. Selecione TODOS os arquivos .swift da pasta
-6. Marque "Copy items if needed"
-7. Clique em Add
-
-Organize em grupos:
-- Crie grupo "Models" e adicione arquivos da pasta Models/
-- Crie grupo "Services" e adicione arquivos da pasta Services/
-- Crie grupo "Views" e adicione arquivos da pasta Views/
-- Crie grupo "Utilities" e adicione arquivos da pasta Utilities/
-
-### 6. Configurar Info.plist
+### 5. Configurar Info.plist
 
 1. No Project Navigator, selecione o projeto (ícone azul no topo)
 2. Selecione o Target "MAC-LIMPO"
@@ -58,13 +35,13 @@ Organize em grupos:
      - Type: `Boolean`
      - Value: `YES`
 
-### 7. Configurar Deployment Target
+### 6. Configurar Deployment Target
 
 1. Na aba "General"
 2. Em "Minimum Deployments"
-3. Defina "macOS" para `13.0` ou superior
+3. Defina "macOS" para `27.0` — o projeto não oferece suporte a versões anteriores
 
-### 8. Build e Executar
+### 7. Build e Executar
 
 1. Selecione "My Mac" como destination
 2. Pressione ⌘R (ou Product > Run)
@@ -75,7 +52,7 @@ Organize em grupos:
 
 ```
 MAC-LIMPO/
-├── MAC-LIMPO.xcodeproj/
+├── Package.swift
 ├── MACLIMPOApp.swift
 ├── Info.plist
 ├── Assets.xcassets/
@@ -84,6 +61,8 @@ MAC-LIMPO/
 │   └── CleaningResult.swift
 ├── Services/
 │   ├── CleaningService.swift
+│   ├── CleaningServiceRegistry.swift
+│   ├── AppleIntelligenceService.swift
 │   ├── DockerCleaningService.swift
 │   ├── DevPackagesCleaningService.swift
 │   ├── TempFilesCleaningService.swift
@@ -92,6 +71,7 @@ MAC-LIMPO/
 ├── Views/
 │   ├── MenuBarView.swift
 │   └── Components/
+│       ├── AppleIntelligenceInsightView.swift
 │       ├── CleaningCategoryCard.swift
 │       ├── StorageStatsView.swift
 │       ├── CleaningProgressView.swift
@@ -99,6 +79,8 @@ MAC-LIMPO/
 ├── Utilities/
 │   ├── FileSystemHelper.swift
 │   └── ShellExecutor.swift
+├── Intents/
+│   └── MACLIMPOIntents.swift
 └── README.md
 ```
 

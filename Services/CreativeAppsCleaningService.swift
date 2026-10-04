@@ -1,7 +1,7 @@
 import Foundation
 
 /// Service to clean Creative Apps caches (Canva, Affinity, Adobe Group Containers)
-class CreativeAppsCleaningService: BaseCleaningService, CleaningService {
+class CreativeAppsCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .creativeApps
 
     /// Creative tools caches
@@ -31,7 +31,7 @@ class CreativeAppsCleaningService: BaseCleaningService, CleaningService {
         ])
     ]
 
-    func scan(progress _: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress _: (@Sendable (String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
 

@@ -6,7 +6,7 @@ import Foundation
 /// maior pasta do disco inteiro (dezenas de GB) e ficava diluído no total de
 /// "Project Builds", sem indicar de onde vinha o peso. Tudo aqui é reconstruível
 /// com `cargo build` — o próprio cargo marca o diretório com `CACHEDIR.TAG`.
-final class RustTargetsCleaningService: BaseCleaningService, CleaningService {
+final class RustTargetsCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .rustTargets
 
     /// Raiz varrida em busca de crates. Mesma convenção do `ProjectCleaningService`.
@@ -107,7 +107,7 @@ final class RustTargetsCleaningService: BaseCleaningService, CleaningService {
 
     // MARK: - CleaningService
 
-    func scan(progress: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress: (@Sendable (String) -> Void)?) async -> ScanResult {
         logger.log("Iniciando escaneamento de targets Rust", level: .info)
         progress?("Scanning Rust projects...")
 

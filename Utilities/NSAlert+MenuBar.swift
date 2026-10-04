@@ -13,6 +13,7 @@ extension NSAlert {
     /// Use este método em vez de `runModal()` em qualquer alerta alcançável a
     /// partir do popover.
     @discardableResult
+    @MainActor
     func runModalAboveMenuBarPopover() -> NSApplication.ModalResponse {
         NSApp.activate(ignoringOtherApps: true)
         window.level = NSWindow.Level(rawValue: NSWindow.Level.popUpMenu.rawValue + 1)

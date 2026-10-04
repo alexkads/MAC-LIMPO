@@ -4,7 +4,7 @@ import Foundation
 /// Targets: node_modules, build, dist, .gradle, venv
 /// Rust `target/` dirs live in `RustTargetsCleaningService` — they dwarf everything
 /// else here, so they get their own category instead of hiding inside this total.
-class ProjectCleaningService: BaseCleaningService, CleaningService {
+class ProjectCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .development
 
     /// Configurable paths to scan
@@ -16,7 +16,7 @@ class ProjectCleaningService: BaseCleaningService, CleaningService {
     // Safety: Only delete if they look like build folders
     // Heuristic: "node_modules" in a folder containing "package.json" is safe
 
-    func scan(progress: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress: (@Sendable (String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
 

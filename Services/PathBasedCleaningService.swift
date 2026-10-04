@@ -43,7 +43,7 @@ struct CleanTarget {
 ///     init() { super.init(category: .homebrew, targets: [CleanTarget("~/Library/Caches/Homebrew")]) }
 /// }
 /// ```
-class PathBasedCleaningService: BaseCleaningService, CleaningService {
+class PathBasedCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory
     let targets: [CleanTarget]
     /// Se `true` (produção), remoções vão para a Lixeira (reversível). Testes usam
@@ -70,7 +70,7 @@ class PathBasedCleaningService: BaseCleaningService, CleaningService {
 
     // MARK: - Scan
 
-    func scan(progress: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress: (@Sendable (String) -> Void)?) async -> ScanResult {
         progress?("Scanning \(category.rawValue)...")
 
         // Mede todos os alvos em paralelo (um por core disponível). Preserva a

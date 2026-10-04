@@ -1,7 +1,7 @@
 import Foundation
 
 /// Remove episódios baixados e caches do app Podcasts (preserva as pastas).
-final class PodcastsCleaningService: PathBasedCleaningService {
+final class PodcastsCleaningService: PathBasedCleaningService, @unchecked Sendable {
     init() {
         super.init(category: .podcasts, targets: [
             CleanTarget(

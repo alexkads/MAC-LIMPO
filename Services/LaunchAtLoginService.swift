@@ -1,6 +1,7 @@
 import Foundation
 import ServiceManagement
 
+@MainActor
 class LaunchAtLoginService: ObservableObject {
     @Published var isEnabled: Bool {
         didSet {

@@ -10,7 +10,7 @@ enum LogLevel {
 }
 
 /// Helper para logging consistente em toda a aplicação
-class Logger {
+class Logger: @unchecked Sendable {
     static let shared = Logger()
 
     private let subsystem = Bundle.main.bundleIdentifier ?? "com.maclimpo.app"

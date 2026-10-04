@@ -1,7 +1,7 @@
 import Foundation
 
 /// Limpa module cache, build cache e gopls do Go.
-final class GoCleaningService: PathBasedCleaningService {
+final class GoCleaningService: PathBasedCleaningService, @unchecked Sendable {
     init() {
         super.init(category: .goCache, targets: [
             CleanTarget("~/go/pkg/mod/cache", label: "Go module cache"),

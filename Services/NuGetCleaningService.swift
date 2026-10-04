@@ -2,7 +2,7 @@ import Foundation
 
 /// Limpa o cache global de pacotes do NuGet (.NET). O diretório `packages` é um
 /// cache de restore — é recriado automaticamente no próximo `dotnet restore`/build.
-final class NuGetCleaningService: PathBasedCleaningService {
+final class NuGetCleaningService: PathBasedCleaningService, @unchecked Sendable {
     init() {
         super.init(category: .nugetCache, targets: [
             CleanTarget("~/.nuget/packages", label: "NuGet packages"),

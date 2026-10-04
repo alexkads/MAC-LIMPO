@@ -2,7 +2,7 @@ import Foundation
 
 /// Limpa caches de ferramentas de IA (Claude, Antigravity, Trae, Cursor, Copilot,
 /// Codeium, Tabnine, Amazon Q). Remove o conteúdo, preservando as pastas.
-final class AIToolsCleaningService: PathBasedCleaningService {
+final class AIToolsCleaningService: PathBasedCleaningService, @unchecked Sendable {
     init() {
         super.init(category: .aiTools, targets: [
             // Claude

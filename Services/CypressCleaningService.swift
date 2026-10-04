@@ -1,7 +1,7 @@
 import Foundation
 
 /// Limpa dados de teste do Cypress (preservando as pastas) e o cache do binário.
-final class CypressCleaningService: PathBasedCleaningService {
+final class CypressCleaningService: PathBasedCleaningService, @unchecked Sendable {
     init() {
         super.init(category: .cypress, targets: [
             CleanTarget("~/Library/Application Support/Cypress/cy", strategy: .removeContents),

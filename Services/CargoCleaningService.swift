@@ -2,7 +2,7 @@ import Foundation
 
 /// Limpa cache de registry, index e git do Cargo/Rust, além de toolchains
 /// rustup fixadas em versão (`1.92.0-…`) que já foram superadas.
-final class CargoCleaningService: PathBasedCleaningService {
+final class CargoCleaningService: PathBasedCleaningService, @unchecked Sendable {
     init() {
         super.init(category: .cargo, targets: [
             CleanTarget("~/.cargo/registry/cache"),

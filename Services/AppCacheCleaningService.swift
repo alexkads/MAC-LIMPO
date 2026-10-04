@@ -1,6 +1,6 @@
 import Foundation
 
-class AppCacheCleaningService: BaseCleaningService, CleaningService {
+class AppCacheCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .appCache
 
     private let cachePaths = [
@@ -31,7 +31,7 @@ class AppCacheCleaningService: BaseCleaningService, CleaningService {
         }
     }
 
-    func scan(progress _: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress _: (@Sendable (String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
 

@@ -3,7 +3,7 @@ import Foundation
 /// Limpa cache de browser (gecko), fileCache e logs do TikTok LIVE Studio.
 /// NÃO toca em effects, overlays, imagens, aiassets ou Local Storage — são
 /// dados/criações do usuário.
-final class TikTokLiveStudioCleaningService: PathBasedCleaningService {
+final class TikTokLiveStudioCleaningService: PathBasedCleaningService, @unchecked Sendable {
     init() {
         let base = "~/Library/Application Support/TikTok LIVE Studio"
         super.init(category: .tiktokLiveStudio, targets: [

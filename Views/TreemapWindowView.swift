@@ -3,9 +3,9 @@ import SwiftUI
 /// View do treemap para janela separada (sem overlay de fundo)
 struct TreemapWindowView: View {
     @StateObject private var viewModel: TreemapViewModel
-    let onClose: () -> Void
+    let onClose: @MainActor @Sendable () -> Void
 
-    init(onClose: @escaping () -> Void, maxDepth: Int = 5) {
+    init(onClose: @escaping @MainActor @Sendable () -> Void, maxDepth: Int = 5) {
         self.onClose = onClose
         _viewModel = StateObject(wrappedValue: TreemapViewModel(maxDepth: maxDepth))
     }

@@ -6,7 +6,7 @@ import Foundation
 /// era ignorado. Aqui enumeramos todos os profiles dinamicamente.
 ///
 /// Só mexe em caches. NÃO apaga histórico/LocalStorage (dados do usuário).
-final class BrowserCacheCleaningService: BaseCleaningService, CleaningService {
+final class BrowserCacheCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .browserCache
 
     /// Se `true` (produção), envia à Lixeira; testes usam `false`.
@@ -122,7 +122,7 @@ final class BrowserCacheCleaningService: BaseCleaningService, CleaningService {
         return result
     }
 
-    func scan(progress: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress: (@Sendable (String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
 

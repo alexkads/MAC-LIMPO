@@ -1,6 +1,6 @@
 import Foundation
 
-class IOSSimulatorsCleaningService: BaseCleaningService, CleaningService {
+class IOSSimulatorsCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .iosSimulators
 
     /// Runtime de simulador instalado como disk image (simctl). Os runtimes
@@ -14,7 +14,7 @@ class IOSSimulatorsCleaningService: BaseCleaningService, CleaningService {
         let deletable: Bool
     }
 
-    func scan(progress _: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress _: (@Sendable (String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
 

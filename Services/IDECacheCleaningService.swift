@@ -1,6 +1,6 @@
 import Foundation
 
-class IDECacheCleaningService: BaseCleaningService, CleaningService {
+class IDECacheCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .ideCache
 
     // Caches de IDEs - JetBrains, VS Code, Cursor
@@ -216,7 +216,7 @@ class IDECacheCleaningService: BaseCleaningService, CleaningService {
         }
     }
 
-    func scan(progress _: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress _: (@Sendable (String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
 

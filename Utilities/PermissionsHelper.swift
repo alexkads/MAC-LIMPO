@@ -43,7 +43,7 @@ class PermissionsHelper {
     }
 
     private static let cacheLock = NSLock()
-    private static var cached: (granted: Bool, checkedAt: Date)?
+    private nonisolated(unsafe) static var cached: (granted: Bool, checkedAt: Date)?
     private static let cacheTTL: TimeInterval = 10
 
     /// Prefixos (relativos ao home) que o macOS protege por TCC.
@@ -79,13 +79,15 @@ class PermissionsHelper {
     }
 
     /// Abre o painel de Full Disk Access nas System Settings
+    @MainActor
     static func openFullDiskAccessSettings() {
         let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")!
         NSWorkspace.shared.open(url)
     }
 
     /// Mostra alerta pedindo Full Disk Access
-    static func requestFullDiskAccess(onGrant: @escaping () -> Void) {
+    @MainActor
+    static func requestFullDiskAccess(onGrant: @escaping @MainActor @Sendable () -> Void) {
         let alert = NSAlert()
         alert.messageText = "Full Disk Access Necessário"
         alert.informativeText = """
@@ -126,7 +128,8 @@ class PermissionsHelper {
     }
 
     /// Mostra alerta de follow-up após abrir as configurações
-    private static func showFollowUpAlert(onGrant: @escaping () -> Void) {
+    @MainActor
+    private static func showFollowUpAlert(onGrant: @escaping @MainActor @Sendable () -> Void) {
         let alert = NSAlert()
         alert.messageText = "Habilite Full Disk Access"
         alert.informativeText = """

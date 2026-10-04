@@ -1,7 +1,7 @@
 import Foundation
 
 /// Limpa cache e arquivos temporários do Slack.
-final class SlackCacheCleaningService: PathBasedCleaningService {
+final class SlackCacheCleaningService: PathBasedCleaningService, @unchecked Sendable {
     init() {
         super.init(category: .slackCache, targets: [
             CleanTarget("~/Library/Application Support/Slack/Cache"),

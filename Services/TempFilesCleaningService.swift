@@ -1,6 +1,6 @@
 import Foundation
 
-class TempFilesCleaningService: BaseCleaningService, CleaningService {
+class TempFilesCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .tempFiles
 
     private let tempPaths = [
@@ -21,7 +21,7 @@ class TempFilesCleaningService: BaseCleaningService, CleaningService {
         "com.apple.Photos"
     ]
 
-    func scan(progress _: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress _: (@Sendable (String) -> Void)?) async -> ScanResult {
         Logger.shared.scan(category: "TempFiles", message: "Starting scan")
 
         var totalSize: Int64 = 0

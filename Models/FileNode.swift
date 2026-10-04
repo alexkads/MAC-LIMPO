@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-class FileNode: Identifiable, ObservableObject {
+class FileNode: Identifiable, ObservableObject, @unchecked Sendable {
     let id = UUID()
     let name: String
     let path: String

@@ -1,6 +1,6 @@
 import SwiftUI
 
-enum CleaningCategory: String, CaseIterable, Identifiable {
+enum CleaningCategory: String, CaseIterable, Identifiable, Sendable {
     // Desenvolvimento
     case docker = "Docker"
     case devPackages = "Dev Packages"

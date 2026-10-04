@@ -1,6 +1,6 @@
 import Foundation
 
-class DevPackagesCleaningService: BaseCleaningService, CleaningService {
+class DevPackagesCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .devPackages
 
     private let cachePaths = [
@@ -19,7 +19,7 @@ class DevPackagesCleaningService: BaseCleaningService, CleaningService {
         ("Detox", "~/Library/Detox")
     ]
 
-    func scan(progress _: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress _: (@Sendable (String) -> Void)?) async -> ScanResult {
         // Mede todos os caches em paralelo (o duGate global limita os `du`
         // simultâneos); preserva a ordem original via índice.
         let measured: [(index: Int, name: String, size: Int64)] = await withTaskGroup(

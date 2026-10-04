@@ -3,7 +3,7 @@ import Foundation
 /// Remove versões antigas do Node.js instaladas pelo nvm, preservando a versão
 /// do alias `default` e a mais nova de cada linha major (18.x, 20.x, 22.x…).
 /// Qualquer versão removida pode voltar com `nvm install <versão>`.
-final class NvmCleaningService: PathBasedCleaningService {
+final class NvmCleaningService: PathBasedCleaningService, @unchecked Sendable {
     init() {
         super.init(category: .nvmVersions, targets: Self.obsoleteVersionTargets())
     }

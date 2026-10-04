@@ -3,7 +3,7 @@ import Foundation
 /// Limpa os downloads regeneráveis do Zed em Application Support: runtimes Node
 /// empacotados, language servers, binário do Copilot, agentes externos e
 /// Prettier. O Zed re-baixa o que precisar na próxima abertura.
-final class ZedCleaningService: PathBasedCleaningService {
+final class ZedCleaningService: PathBasedCleaningService, @unchecked Sendable {
     init() {
         let base = "~/Library/Application Support/Zed"
         super.init(category: .zedCache, targets: [

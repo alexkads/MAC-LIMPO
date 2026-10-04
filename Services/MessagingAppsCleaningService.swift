@@ -1,6 +1,6 @@
 import Foundation
 
-class MessagingAppsCleaningService: BaseCleaningService, CleaningService {
+class MessagingAppsCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .messagingApps
 
     /// Caches e dados temporários de apps de mensagens
@@ -65,7 +65,7 @@ class MessagingAppsCleaningService: BaseCleaningService, CleaningService {
         ])
     ]
 
-    func scan(progress _: ((String) -> Void)?) async -> ScanResult {
+    func scan(progress _: (@Sendable (String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
 

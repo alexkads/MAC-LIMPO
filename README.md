@@ -2,7 +2,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-macOS-blue" alt="Platform">
-  <img src="https://img.shields.io/badge/Swift-5.9-orange" alt="Swift">
+  <img src="https://img.shields.io/badge/Swift-6.4-orange" alt="Swift">
   <img src="https://img.shields.io/badge/SwiftUI-✓-green" alt="SwiftUI">
   <img src="https://img.shields.io/badge/License-MIT-lightgrey" alt="License">
 </p>
@@ -99,8 +99,8 @@ _Cards bonitos com gradientes para seleção de diretórios_
 
 ### Pré-requisitos
 
-- macOS 13.0 (Ventura) ou superior
-- Swift 5.9 ou superior
+- macOS 27.0 ou superior
+- Swift 6.4
 
 ### Instalação via .pkg (recomendado)
 

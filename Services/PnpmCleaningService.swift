@@ -1,7 +1,7 @@
 import Foundation
 
 /// Limpa o store global e caches (dlx/metadata) do pnpm.
-final class PnpmCleaningService: PathBasedCleaningService {
+final class PnpmCleaningService: PathBasedCleaningService, @unchecked Sendable {
     init() {
         super.init(category: .pnpm, targets: [
             CleanTarget("~/Library/Caches/pnpm/dlx", label: "pnpm cache (dlx)"),
