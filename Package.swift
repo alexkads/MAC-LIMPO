@@ -140,6 +140,7 @@ let package = Package(
                 "Utilities/PermissionsHelper.swift",
                 "Utilities/NSAlert+MenuBar.swift",
                 "Utilities/AsyncSemaphore.swift",
+                "Utilities/Deadline.swift",
                 "Views/Components/AppleIntelligenceInsightView.swift",
                 "Intents/MACLIMPOIntents.swift"
             ]

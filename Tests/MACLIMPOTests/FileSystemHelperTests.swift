@@ -22,6 +22,15 @@ final class FileSystemHelperTests: XCTestCase {
         XCTAssertNil(FileSystemHelper.parseDuKilobytes("du: No such file"))
     }
 
+    // MARK: - isTimeout
+
+    func testIsTimeoutOnlyForShellTimeoutResult() {
+        let timedOut = ShellExecutor.shared.execute("sleep 5", timeout: 1)
+        XCTAssertTrue(FileSystemHelper.isTimeout(timedOut))
+        XCTAssertFalse(FileSystemHelper.isTimeout(("", "du: x: No such file", 1)))
+        XCTAssertFalse(FileSystemHelper.isTimeout(("", "failed to launch", -1)))
+    }
+
     // MARK: - expandPath
 
     func testExpandPathResolvesTilde() {

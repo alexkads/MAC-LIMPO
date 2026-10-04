@@ -74,6 +74,17 @@ class MenuBarViewModel: ObservableObject {
     /// `duGate` e o card permanecia girando por tempo indefinido.
     private var scanAllInProgress = false
     private var scanAllRequestedWhileRunning = false
+    /// Categorias pedidas individualmente (ex.: ao fim de uma limpeza) enquanto o
+    /// scan completo rodava. Reescaneia só elas depois — antes, qualquer pedido
+    /// individual virava um scan completo de todas as categorias.
+    private var pendingCategoryScans: Set<CleaningCategory> = []
+
+    /// Prazo por categoria. Um scan que não termina deixava `scanAllInProgress`
+    /// verdadeiro para sempre: o refresh passava a ser ignorado e só reabrir o
+    /// app destravava.
+    static let scanDeadline: TimeInterval = 420
+    /// Scan mais lento que isto é registrado, para dar pista de qual categoria trava.
+    private static let slowScanThreshold: TimeInterval = 60
 
     /// Máximo de scans simultâneos, dimensionado pelos núcleos do Mac. Cada scan
     /// mede tamanhos via `du` no pool do GCD (não trava o pool cooperativo), então
@@ -114,7 +125,12 @@ class MenuBarViewModel: ObservableObject {
 
                 if self.scanAllRequestedWhileRunning {
                     self.scanAllRequestedWhileRunning = false
+                    self.pendingCategoryScans.removeAll()
                     self.scanAllCategories()
+                } else if !self.pendingCategoryScans.isEmpty {
+                    let pending = self.pendingCategoryScans
+                    self.pendingCategoryScans.removeAll()
+                    for category in pending { self.scanCategory(category) }
                 }
             }
         }
@@ -122,10 +138,10 @@ class MenuBarViewModel: ObservableObject {
 
     func scanCategory(_ category: CleaningCategory) {
         // Um scan completo já inclui esta categoria. Se ele estiver rodando,
-        // transforma o pedido em uma atualização completa pendente em vez de
-        // iniciar uma segunda medição dos mesmos diretórios.
+        // adia só esta categoria em vez de iniciar uma segunda medição dos
+        // mesmos diretórios (ou de refazer o scan completo).
         guard !scanAllInProgress else {
-            scanAllRequestedWhileRunning = true
+            pendingCategoryScans.insert(category)
             return
         }
 
@@ -144,12 +160,29 @@ class MenuBarViewModel: ObservableObject {
             scanningStatus[category] = "Starting..."
         }
 
-        let result = await service.scan(progress: { [weak self] status in
-            Task { @MainActor in self?.scanningStatus[category] = status }
-        })
+        let started = Date()
+        let scanned = await withDeadline(Self.scanDeadline) { [weak self] in
+            await service.scan(progress: { status in
+                Task { @MainActor in self?.scanningStatus[category] = status }
+            })
+        }
+        let elapsed = Date().timeIntervalSince(started)
+
+        if scanned == nil {
+            logger.log("Scan de \(category.rawValue) excedeu \(Int(Self.scanDeadline))s e foi abandonado", level: .error)
+        } else if elapsed > Self.slowScanThreshold {
+            logger.log("Scan de \(category.rawValue) demorou \(Int(elapsed))s", level: .warning)
+        }
 
         await MainActor.run {
-            scanResults[category] = result
+            // No prazo estourado mantém a última medição boa; sem ela, mostra zero.
+            if let scanned {
+                scanResults[category] = scanned
+            } else if scanResults[category] == nil {
+                scanResults[category] = ScanResult(
+                    category: category, estimatedSize: 0, itemCount: 0, items: ["Scan timed out — refresh to retry"]
+                )
+            }
             isScanning[category] = false
             scanningStatus[category] = nil
         }

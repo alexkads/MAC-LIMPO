@@ -35,7 +35,25 @@ final class RustTargetsCleaningService: BaseCleaningService, CleaningService, @u
 
     /// Enumera `projectRoot` atrás de `target/` com um `Cargo.toml` irmão.
     /// Compartilhado por `scan` e `clean` para os dois nunca divergirem.
-    private func findTargets(progress: ((String) -> Void)?) -> [Candidate] {
+    ///
+    /// A varredura de diretórios bloqueia, então roda fora do pool cooperativo; os
+    /// tamanhos são medidos por `sizeOfDirectoryAsync`, atrás do `duGate` global.
+    private func findTargets(progress: (@Sendable (String) -> Void)?) async -> [Candidate] {
+        let found = await runBlocking { self.discoverTargetDirectories() }
+
+        var candidates: [Candidate] = []
+        for (path, displayName) in found {
+            progress?("Measuring \(displayName)...")
+            let size = await fileHelper.sizeOfDirectoryAsync(atPath: path)
+            guard size >= minimumSize else { continue }
+            candidates.append(Candidate(path: path, size: size, displayName: displayName))
+        }
+
+        return candidates.sorted { $0.size > $1.size }
+    }
+
+    /// Só descoberta (sem medir tamanho): pares (caminho do `target/`, nome de exibição).
+    private func discoverTargetDirectories() -> [(path: String, displayName: String)] {
         let root = fileHelper.expandPath(projectRoot)
         let fileManager = FileManager.default
 
@@ -45,7 +63,7 @@ final class RustTargetsCleaningService: BaseCleaningService, CleaningService, @u
             options: [.skipsHiddenFiles, .skipsPackageDescendants]
         ) else { return [] }
 
-        var candidates: [Candidate] = []
+        var found: [(String, String)] = []
 
         while let url = enumerator.nextObject() as? URL {
             guard (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true else { continue }
@@ -64,16 +82,10 @@ final class RustTargetsCleaningService: BaseCleaningService, CleaningService, @u
             let parent = url.deletingLastPathComponent()
             guard fileManager.fileExists(atPath: parent.appendingPathComponent("Cargo.toml").path) else { continue }
 
-            let displayName = "\(parent.lastPathComponent)/target"
-            progress?("Measuring \(displayName)...")
-
-            let size = fileHelper.sizeOfDirectory(atPath: url.path)
-            guard size >= minimumSize else { continue }
-
-            candidates.append(Candidate(path: url.path, size: size, displayName: displayName))
+            found.append((url.path, "\(parent.lastPathComponent)/target"))
         }
 
-        return candidates.sorted { $0.size > $1.size }
+        return found
     }
 
     /// O cargo protege o diretório de build com um `flock(2)` em
@@ -111,7 +123,7 @@ final class RustTargetsCleaningService: BaseCleaningService, CleaningService, @u
         logger.log("Iniciando escaneamento de targets Rust", level: .info)
         progress?("Scanning Rust projects...")
 
-        let candidates = findTargets(progress: progress)
+        let candidates = await findTargets(progress: progress)
         let totalSize = candidates.reduce(Int64(0)) { $0 + $1.size }
 
         let items = candidates.map { candidate -> String in
@@ -141,7 +153,7 @@ final class RustTargetsCleaningService: BaseCleaningService, CleaningService, @u
 
         logger.log("Iniciando limpeza de targets Rust", level: .info)
 
-        for candidate in findTargets(progress: nil) {
+        for candidate in await findTargets(progress: nil) {
             if isBuildInProgress(targetPath: candidate.path) {
                 errors.append("Skipped \(candidate.displayName): a Cargo build is running")
                 logger.log("Pulando \(candidate.path): build do cargo em andamento", level: .warning)

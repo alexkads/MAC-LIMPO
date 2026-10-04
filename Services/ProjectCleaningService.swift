@@ -59,7 +59,7 @@ class ProjectCleaningService: BaseCleaningService, CleaningService, @unchecked S
                 if safeToDelete {
                     // Calculate size
                     progress?("Analyzing \(name) in \(url.deletingLastPathComponent().lastPathComponent)...")
-                    let size = fileHelper.sizeOfDirectory(atPath: path)
+                    let size = await fileHelper.sizeOfDirectoryAsync(atPath: path)
 
                     if size > 50 * 1024 * 1024 { // Only suggest big folders (> 50MB) to avoid noise
                         totalSize += size

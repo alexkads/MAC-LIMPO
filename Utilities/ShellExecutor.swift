@@ -7,6 +7,10 @@ class ShellExecutor: @unchecked Sendable {
 
     static let shared = ShellExecutor()
 
+    /// Tempo que o processo tem para encerrar (e fechar os pipes) depois de um
+    /// timeout, antes do SIGKILL e, por fim, de abandonarmos a espera.
+    static let terminateGrace: TimeInterval = 2
+
     /// Executa um comando via `zsh -c`. Conveniente para pipelines, mas NÃO
     /// interpole paths do usuário aqui (aspas/espaços quebram); use `run(_:_:)`.
     @discardableResult
@@ -76,7 +80,15 @@ class ShellExecutor: @unchecked Sendable {
         // Espera o término respeitando o timeout.
         if exitSemaphore.wait(timeout: .now() + timeout) == .timedOut {
             task.terminate()
-            ioGroup.wait() // pipes fecham no terminate; deixa as leituras encerrarem
+            // Os pipes normalmente fecham no terminate. Se o processo ignorar o
+            // SIGTERM (ou um filho herdar o pipe), um `ioGroup.wait()` sem prazo
+            // prendia esta thread — e o slot do `duGate` — para sempre.
+            if ioGroup.wait(timeout: .now() + Self.terminateGrace) == .timedOut {
+                kill(task.processIdentifier, SIGKILL)
+                // Se ainda assim não fechar (processo preso em I/O), abandona as
+                // leituras em vez de bloquear o chamador.
+                _ = ioGroup.wait(timeout: .now() + Self.terminateGrace)
+            }
             return ("", "Command timed out after \(timeout) seconds", -1)
         }
 

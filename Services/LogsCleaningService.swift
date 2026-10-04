@@ -24,7 +24,7 @@ class LogsCleaningService: BaseCleaningService, CleaningService, @unchecked Send
 
             for expandedPath in paths {
                 if fileHelper.fileExists(atPath: expandedPath) {
-                    let size = fileHelper.sizeOfDirectory(atPath: expandedPath)
+                    let size = await fileHelper.sizeOfDirectoryAsync(atPath: expandedPath)
                     if size > 0 {
                         totalSize += size
                         let pathName = (expandedPath as NSString).lastPathComponent

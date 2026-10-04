@@ -24,9 +24,26 @@ final class FileSystemHelper: @unchecked Sendable {
             return bytes
         }
 
-        // Fallback para método lento se du falhar
+        // Timeout do `du` NÃO cai no fallback: o enumerador é mais lento que o
+        // `du` e não tem teto, então repetia a varredura que já estourou 120s
+        // segurando um dos slots do `duGate`. Com 4 pastas assim o scan inteiro
+        // parava e o card ficava girando até reabrir o app.
+        if Self.isTimeout(result) {
+            Logger.shared.log("du excedeu \(Int(Self.sizeMeasurementTimeout))s: \(path)", level: .warning)
+            return 0
+        }
+
+        // Fallback para método lento se du falhar (com prazo).
         return sizeOfDirectoryFallback(atPath: path)
     }
+
+    /// `ShellExecutor` sinaliza timeout com exitCode -1 e esta mensagem.
+    static func isTimeout(_ result: (output: String, error: String, exitCode: Int32)) -> Bool {
+        result.exitCode == -1 && result.error.contains("timed out")
+    }
+
+    /// Prazo do fallback lento — melhor subcontar que travar o scan.
+    static let fallbackMeasurementDeadline: TimeInterval = 30
 
     /// Converte a saída de `du -sk` (KB) em bytes. Função pura (testável).
     /// Aceita saída com espaços/quebras de linha; retorna nil se não for numérica.
@@ -60,6 +77,10 @@ final class FileSystemHelper: @unchecked Sendable {
             // então um lote de 48 não pode herdar o mesmo teto de um path só.
             let timeout = min(Self.batchMeasurementCeiling, 30 + Double(batch.count) * 4)
             let result = ShellExecutor.shared.run("/usr/bin/du", ["-sk"] + batch, timeout: timeout)
+            if Self.isTimeout(result) {
+                // O lote inteiro se perde (saída parcial é descartada no timeout).
+                Logger.shared.log("du em lote excedeu \(Int(timeout))s (\(batch.count) paths)", level: .warning)
+            }
             for (path, bytes) in Self.parseDuBatch(result.output) {
                 sizes[path, default: 0] += bytes
             }
@@ -131,9 +152,14 @@ final class FileSystemHelper: @unchecked Sendable {
     // Fallback: Calcula o tamanho recursivamente (lento)
     private func sizeOfDirectoryFallback(atPath path: String) -> Int64 {
         var totalSize: Int64 = 0
+        let deadline = Date().addingTimeInterval(Self.fallbackMeasurementDeadline)
 
         if let enumerator = fileManager.enumerator(atPath: path) {
             while let file = enumerator.nextObject() as? String {
+                if Date() > deadline {
+                    Logger.shared.log("Fallback de tamanho excedeu o prazo: \(path)", level: .warning)
+                    break
+                }
                 let filePath = (path as NSString).appendingPathComponent(file)
 
                 do {

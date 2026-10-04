@@ -28,6 +28,19 @@ final class ShellExecutorTests: XCTestCase {
         XCTAssertTrue(r.error.contains("timed out"))
     }
 
+    /// Processo que ignora SIGTERM não pode prender o chamador (nem o slot do
+    /// `duGate`): após o prazo de graça vem SIGKILL e, no pior caso, abandona-se a leitura.
+    func testTimeoutReturnsEvenWhenProcessIgnoresSigterm() {
+        let started = Date()
+        let r = shell.execute("trap '' TERM; sleep 20", timeout: 1)
+        XCTAssertEqual(r.exitCode, -1)
+        XCTAssertLessThan(
+            Date().timeIntervalSince(started),
+            1 + 2 * ShellExecutor.terminateGrace + 2,
+            "deve voltar logo após timeout + graça"
+        )
+    }
+
     func testCheckCommandExists() {
         XCTAssertTrue(shell.checkCommandExists("ls"))
         XCTAssertFalse(shell.checkCommandExists("definitely-not-a-real-command-xyz"))
