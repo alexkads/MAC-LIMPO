@@ -1443,6 +1443,9 @@ e este projeto adere ao <a href="https://semver.org/lang/pt-BR/">Semantic Versio
 </ul>
 <h3 id="corrigido">🐛 Corrigido<a class="headerlink" href="#corrigido" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>Disk X-Ray — rótulos embolados no mapa</strong>: pastas com um filho só ou dominante (≥ 90%) viram um cabeçalho com o caminho (<code>Users › alexkads</code>), no máximo três níveis de título, tamanho alinhado à direita (sai antes de cortar o nome) e caminhos longos cortados no começo para manter a pasta final.</li>
+<li><strong>Disk X-Ray — contorno da seleção cortado</strong>: o contorno azul era desenhado para fora do bloco e sumia nos blocos colados na borda do mapa; agora fica inteiro por dentro do bloco e da área visível.</li>
+<li><strong>Avisos no Xcode</strong>: <code>Invalid Exclude</code> de <code>MAC-LIMPO.dmg</code>/<code>dmg_staging</code> (o <code>.dmg</code>, sua montagem e o site do MkDocs agora são gerados em <code>build/</code>, que existe em todo clone) e captura <code>weak</code>/forte de <code>self</code> no scan do Disk X-Ray.</li>
 <li><strong>Disk X-Ray — espaço vazio entre os blocos do mapa</strong>: o recuo das pastas se acumulava a cada nível e a folga/arredondamento valia até para blocos minúsculos, ilhando os arquivos pequenos. Agora o recuo é proporcional (só em pastas grandes e rasas) e folga e cantos só existem em blocos que os comportam.</li>
 <li><strong>Disk X-Ray — navegação lenta</strong>: a árvore virou um <code>NSOutlineView</code> nativo (virtualizado, como o list control do WinDirStat), com ícones de pasta carregados em segundo plano; o destaque por extensão no mapa deixou de varrer milhões de itens a cada movimento do mouse.</li>
 <li><strong>Disk X-Ray — threads por máquina</strong>: a quantidade de threads e o buffer do scan são decididos pelo hardware e pelo volume (SSD: um por núcleo, 4–16; HD mecânico: 2; rede: 4 com buffer de 64 KiB), em vez de 8 fixo.</li>
