@@ -63,7 +63,7 @@ let package = Package(
                 "Models/CleaningOptions.swift",
                 "Models/Theme.swift",
                 "Models/DiskXRay.swift",
-                "Models/DiskXRayHints.swift",
+                "Models/DiskScanIndex.swift",
                 "Services/CleaningService.swift",
                 "Services/CleaningServiceRegistry.swift",
                 "Services/AppleIntelligenceService.swift",
@@ -76,6 +76,7 @@ let package = Package(
                 "Services/LaunchAtLoginService.swift",
                 "Services/Logger.swift",
                 "Services/DiskXRayService.swift",
+                "Services/DiskScanner.swift",
                 // Novos serviços de limpeza
                 "Services/XcodeCacheCleaningService.swift",
                 "Services/IOSSimulatorsCleaningService.swift",
@@ -139,6 +140,8 @@ let package = Package(
                 "Utilities/NSAlert+MenuBar.swift",
                 "Utilities/AsyncSemaphore.swift",
                 "Utilities/Deadline.swift",
+                "Utilities/CushionTreemap.swift",
+                "Utilities/WinDirStatFormat.swift",
                 "Views/Components/AppleIntelligenceInsightView.swift",
                 "Intents/MACLIMPOIntents.swift"
             ]

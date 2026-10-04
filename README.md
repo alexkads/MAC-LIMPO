@@ -59,14 +59,16 @@ _Interface limpa e moderna no menu bar com cards de categorias de limpeza_
 
 - **💾 System Data**: Limpeza profunda de caches do sistema, Safari, dados de desenvolvimento e Time Machine snapshots
 
-### 🩻 Disk X-Ray
+### 🩻 Disk X-Ray — o WinDirStat no Mac
 
-- **A conta fecha**: barra do disco inteiro a partir do APFS — dados, macOS, Preboot, swap, Recovery e livre somam exatamente a capacidade
-- **Espaço real**: mede o espaço alocado com `du -x` (o `Docker.raw` aparece com o tamanho que ocupa, não o máximo), inclui pastas ocultas e não conta montagens virtuais como o DeviceFS do iPhone
-- **Nada some**: o que o APFS diz que existe e não pôde ser lido vira a linha "Not measured", com o motivo
-- **Do macro ao micro**: desce pasta a pasta até o arquivo; "Largest files" mostra os maiores arquivos de qualquer subárvore
-- **Cada linha diz o que é**: pastas conhecidas mostram o card que as limpa ou o que fazer fora do app
-- **Ações**: Quick Look, Reveal in Finder, Copy Path e Move to Trash (só dentro da sua home)
+Port fiel do [WinDirStat](https://github.com/windirstat/windirstat): as mesmas três telas sincronizadas, com as fórmulas, cores e padrões do código original.
+
+- **Árvore "All Files"**: Name, Size Proportion (barra por nível), Percentage, Physical Size, Logical Size, Files e Last Change (Items e Folders pelo menu do cabeçalho); ordenação clicando no cabeçalho
+- **"Largest Files"**: os 50 maiores arquivos do scan
+- **Extensões**: cor, descrição do sistema, bytes, % e quantidade; selecionar destaca todos os arquivos daquele tipo no mapa
+- **Treemap cushion**: um retângulo por arquivo, cor pela extensão; clique seleciona na árvore, duplo clique dá zoom, botão do meio reseta, roda seleciona pai/filho, Ctrl+roda dá zoom
+- **`<Free Space>` (F6) e `<Unknown>` (F7)**: fecham a conta com o disco inteiro; **Use Logical Size** (Ctrl+L)
+- Lê ~3 milhões de arquivos em cerca de um minuto; ações: Open, Select in Finder, Copy Path, Delete (to Trash)
 
 ### 🎨 Interface Moderna
 
@@ -181,22 +183,25 @@ MAC-LIMPO/
 ├── Models/
 │   ├── CleaningCategory.swift  # Definição de categorias
 │   ├── CleaningResult.swift    # Modelos de resultados
-│   ├── DiskXRay.swift          # Conta do APFS, árvore e parsers do du
-│   └── DiskXRayHints.swift     # O que cada pasta é e quem a limpa
+│   ├── DiskXRay.swift          # Conta do APFS e firmlinks
+│   └── DiskScanIndex.swift     # Todos os itens do scan em arrays paralelos
 ├── Services/
 │   ├── CleaningService.swift   # Protocolo base
-│   ├── DiskXRayService.swift   # APFS + du do volume de dados
+│   ├── DiskScanner.swift       # Varredura fts(3) de cada arquivo
+│   ├── DiskXRayService.swift   # APFS + Lixeira
 │   └── [22 cleaning services]  # Um para cada categoria
 ├── ViewModels/
 │   ├── MenuBarViewModel.swift
-│   └── DiskXRayViewModel.swift # Navegação, carga sob demanda, Lixeira
+│   └── DiskXRayViewModel.swift # Árvore, extensões, zoom, seleção (regras do WinDirStat)
 ├── Views/
 │   ├── MenuBarView.swift       # View principal
 │   ├── DiskXRayWindowView.swift # Janela do Disk X-Ray
 │   └── Components/             # Cards, progresso, resultados
 ├── Utilities/
 │   ├── FileSystemHelper.swift  # Operações de arquivo
-│   └── ShellExecutor.swift     # Execução de comandos
+│   ├── ShellExecutor.swift     # Execução de comandos
+│   ├── CushionTreemap.swift    # Port do treemap do WinDirStat
+│   └── WinDirStatFormat.swift  # Formatos de bytes/data do WinDirStat
 └── Assets.xcassets/
 ```
 

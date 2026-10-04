@@ -82,14 +82,17 @@ Services subclass `BaseCleaningService` to get `fileHelper` (`FileSystemHelper.s
 - `logger` — a **global** (`let logger = Logger.shared` in `Services/Logger.swift`) wrapping `os.log`. Call `logger.log(msg, level:)`. Messages in this codebase are typically Portuguese; UI-facing strings are English.
 - `PermissionsHelper` — Full Disk Access checks. Some cleaners need FDA or sudo.
 
-### Disk X-Ray
+### Disk X-Ray (port of WinDirStat)
 
-The account must close: every byte of the container is shown, nothing estimated.
+A faithful port of WinDirStat's main window (github.com/windirstat/windirstat): file tree with "All Files" / "Largest Files" tabs, extension list, and the cushion treemap, kept in sync. **Don't adapt it** — behaviour, defaults, colours and formulas come from the WinDirStat source and are cited in comments (`// TreeMap.cpp`, `Item.Extended.cpp:49-167`…). Check the source before changing behaviour.
 
-- `Models/DiskXRay.swift` — `DiskOverview.parse` (container of the Data volume from `diskutil apfs list -plist`; volumes + overhead + free = capacity), `DuOutput` (parses `du -k` stdout/stderr and builds the `XRayNode` tree, adding a "Files in this folder" row per folder), `Firmlinks` (`/System/Volumes/Data/Users` → `/Users`, from `/usr/share/firmlinks`).
-- `Services/DiskXRayService.swift` — one streaming `du -x -k -d 6` over `/System/Volumes/Data` (`-x`: no virtual mounts like DeviceFS; allocated size, so sparse `Docker.raw` is real), progress from finished top-level lines, cancel terminates the process. Deeper levels load on demand (`du -d 3` of that branch); `largestFiles(under:)` walks a subtree for the biggest files.
-- `ViewModels/DiskXRayViewModel.swift` — APFS Data bytes minus what `du` read becomes an explicit "Not measured" row (protected areas; needs Full Disk Access or root). Trash only inside home, never its base folders (`XRayHints.canTrash`).
-- `Models/DiskXRayHints.swift` — what a path is and which card cleans it; hand-written table plus every non-glob `PathBasedCleaningService` target, so the X-Ray and the cleaners never disagree.
+- `Services/DiskScanner.swift` — WinDirStat's basic engine on macOS: `getattrlistbulk(2)` (the `NtQueryDirectoryFile` equivalent: name, type, alloc/logical size, mtime, inode for many entries per call, 4 MiB buffer) with `ScanningThreads` workers pulling folders from a shared queue, then a single pre-order pass builds the index. WinDirStat's fast engine reads the NTFS MFT; APFS has no accessible equivalent, so parallelism is the lever — measured on 2.9M items: 1 thread 52.6 s, 4 → 20.2 s, 8 (default) → 15.9 s. With `FSOPT_PACK_INVAL_ATTRS`, dir attributes are absent from file entries and vice versa (parse by `returned.dirattr`). Physical = allocated size, hard links once, mount points not crossed.
+- `Models/DiskScanIndex.swift` — every item as an index into parallel arrays (no object per file). Pre-order indices make a subtree the contiguous range `i+1…subtreeEnd[i]`. Extension key follows `CItem::GetExtension` (from the last `.`, lowercased, `""` if none).
+- `Utilities/CushionTreemap.swift` — port of `TreeMap.cpp`/`TreeMapLayout.cpp`: "Rows" layout (`MinProportion` 0.4, integer rects), `AddRidge`/`DrawCushion`, default options (brightness 0.88, height 0.38, scaleFactor 0.91, ambient 0.13), 18-colour palette through `MakeBrightColor(…, 0.6)`, `NormalizeColor`.
+- `Utilities/WinDirStatFormat.swift` — `FormatBytes` (KiB/MiB/GiB, 2 decimals), `FormatDouble`, `FormatFileTime`.
+- `ViewModels/DiskXRayViewModel.swift` — columns/sorting, `<Free Space>` (F6) and `<Unknown>` (F7, = APFS container used − scanned), Use Logical Size (Ctrl+L), extension colours by rank of logical bytes (`palette[min(i,17)]`), Largest Files (top 50 by logical size), zoom / select parent / reselect child, highlight rules, status bar.
+- `Models/DiskXRay.swift` — `DiskOverview` (APFS container from `diskutil apfs list -plist`) and `Firmlinks`.
+- Dev hooks (env vars): `MACLIMPO_OPEN_XRAY=1` opens the window at launch; `MACLIMPO_SNAPSHOT=<png>` (+ `MACLIMPO_SNAPSHOT_DELAY`) saves a picture of the window without Screen Recording permission; `MACLIMPO_XRAY_DEMO=1` turns on F6/F7 and selects the largest file after the scan.
 
 ## Conventions
 

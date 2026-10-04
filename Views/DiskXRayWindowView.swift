@@ -1,524 +1,952 @@
+import AppKit
 import SwiftUI
 
-/// Raio-X do disco: a conta inteira do APFS numa barra que fecha, e a lista
-/// navegável do volume Data, onde cada linha diz o que é e quem limpa.
+/// Janela principal do WinDirStat: árvore ("All Files" / "Largest Files") e
+/// lista de extensões em cima, treemap embaixo, barra de status.
 struct DiskXRayWindowView: View {
-    @StateObject private var viewModel = DiskXRayViewModel()
-    @State private var pendingTrash: XRayNode?
+    @StateObject private var model = DiskXRayViewModel()
+    @StateObject private var hover = HoverState()
+    @State private var pendingTrash: Int32?
+    @Environment(\.colorScheme) private var colorScheme
     let onClose: () -> Void
-
-    private let format = FileSystemHelper.shared.formatBytes
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-            if !viewModel.hasFullDiskAccess { fullDiskAccessBanner }
-            if let overview = viewModel.overview {
-                overviewSection(overview)
-                Divider()
+            WdsToolbar(model: model, pendingTrash: $pendingTrash)
+            Divider()
+            VSplitView {
+                HSplitView {
+                    FileTabbedView(model: model, pendingTrash: $pendingTrash)
+                        .frame(minWidth: 520, maxWidth: .infinity)
+                    ExtensionListView(model: model)
+                        .frame(minWidth: 300, idealWidth: 440, maxWidth: .infinity)
+                }
+                .frame(minHeight: 160, idealHeight: 330)
+                TreeMapView(model: model, hover: hover, pendingTrash: $pendingTrash)
+                    .frame(minHeight: 160, idealHeight: 380)
             }
-            content
+            Divider()
+            StatusBar(model: model, hover: hover)
         }
-        .frame(minWidth: 860, minHeight: 620)
+        .frame(minWidth: 960, minHeight: 640)
         .background(Color(nsColor: .windowBackgroundColor))
-        .onAppear { if viewModel.root == nil, !viewModel.isScanning { viewModel.startScan() } }
+        .onAppear {
+            applySystemColors()
+            if model.index == nil, !model.isScanning { model.startScan() }
+        }
+        .onChange(of: colorScheme) {
+            applySystemColors()
+            model.scheduleRender()
+        }
         .confirmationDialog(
-            "Move \"\(pendingTrash?.name ?? "")\" to the Trash?",
+            "Delete (to Trash)",
             isPresented: Binding(get: { pendingTrash != nil }, set: { if !$0 { pendingTrash = nil } }),
             presenting: pendingTrash
-        ) { node in
-            Button("Move to Trash (\(format(node.size)))", role: .destructive) { viewModel.moveToTrash(node) }
+        ) { item in
+            Button("Move to Trash", role: .destructive) { model.moveToTrash(item) }
             Button("Cancel", role: .cancel) {}
-        } message: { node in
-            Text("\(node.displayPath)\n\nYou can restore it from the Trash. Space is freed when the Trash is emptied.")
+        } message: { item in
+            Text("Do you really want to move \"\(model.path(item))\" (\(WinDirStatFormat.bytes(model.physicalSize(item) ?? 0))) to the Trash?")
         }
         .alert(
-            "Disk X-Ray",
-            isPresented: Binding(
-                get: { viewModel.errorMessage != nil },
-                set: { if !$0 { viewModel.errorMessage = nil } }
-            )
+            "MAC-LIMPO",
+            isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })
         ) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text(viewModel.errorMessage ?? "")
+            Text(model.errorMessage ?? "")
         }
     }
 
-    // MARK: - Cabeçalho
-
-    private var header: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "rays")
-                .font(.system(size: 22, weight: .semibold))
-                .foregroundStyle(.purple)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Disk X-Ray").font(.title2.bold())
-                Text("Where every byte of this disk goes — measured, not estimated.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
-            if viewModel.isScanning {
-                Button("Cancel") { viewModel.cancelScan() }
-            } else {
-                Button {
-                    viewModel.startScan()
-                } label: {
-                    Label("Rescan", systemImage: "arrow.clockwise")
-                }
-            }
-            Button("Close") { onClose() }
-                .keyboardShortcut(.cancelAction)
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 14)
+    /// COLOR_WINDOW e COLOR_3DSHADOW do tema atual.
+    private func applySystemColors() {
+        model.treemapBackground = rgb(NSColor.windowBackgroundColor)
+        model.treemapShadow = rgb(NSColor.separatorColor.blended(withFraction: 0.5, of: .gray) ?? .gray)
     }
 
-    private var fullDiskAccessBanner: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "lock.trianglebadge.exclamationmark")
-                .foregroundStyle(.orange)
-            Text("Full Disk Access is off. Protected folders (Mail, Messages, app containers) can't be measured and show up as \"Not measured\".")
-                .font(.callout)
-                .fixedSize(horizontal: false, vertical: true)
-            Spacer()
-            Button("Grant Access…") { viewModel.openFullDiskAccessSettings() }
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 10)
-        .background(Color.orange.opacity(0.12))
+    private func rgb(_ color: NSColor) -> CushionTreemap.RGB {
+        let c = color.usingColorSpace(.deviceRGB) ?? .gray
+        return CushionTreemap.RGB(
+            r: Int(c.redComponent * 255), g: Int(c.greenComponent * 255), b: Int(c.blueComponent * 255)
+        )
+    }
+}
+
+@MainActor
+final class HoverState: ObservableObject {
+    @Published var item: Int32?
+}
+
+// MARK: - Cores compartilhadas
+
+private enum Palette {
+    /// Highlight de seleção sem foco: (190,190,190) claro / (90,90,90) escuro.
+    static func selection(focused: Bool, dark: Bool) -> Color {
+        if focused { return Color(nsColor: .selectedContentBackgroundColor) }
+        return dark ? Color(red: 90 / 255, green: 90 / 255, blue: 90 / 255)
+            : Color(red: 190 / 255, green: 190 / 255, blue: 190 / 255)
     }
 
-    // MARK: - Conta do disco
+    static let rowHeight: CGFloat = 20
+}
 
-    private func overviewSection(_ overview: DiskOverview) -> some View {
-        let segments = Self.segments(for: overview)
-        return VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("\(format(overview.used)) used of \(format(overview.capacity))")
-                    .font(.headline)
-                Spacer()
-                Text("\(format(overview.free)) free")
-                    .font(.headline)
-                    .foregroundStyle(.green)
-            }
+// MARK: - Barra de ferramentas
 
-            GeometryReader { geometry in
-                HStack(spacing: 1) {
-                    ForEach(segments) { segment in
-                        Rectangle()
-                            .fill(segment.color)
-                            .frame(width: max(2, geometry.size.width * segment.fraction(of: overview.capacity)))
-                            .help("\(segment.name): \(format(segment.bytes))")
-                    }
-                }
-            }
-            .frame(height: 24)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+private struct WdsToolbar: View {
+    @ObservedObject var model: DiskXRayViewModel
+    @Binding var pendingTrash: Int32?
 
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 250), alignment: .topLeading)], spacing: 10) {
-                ForEach(segments) { segment in
-                    HStack(alignment: .top, spacing: 8) {
-                        Circle().fill(segment.color).frame(width: 10, height: 10).padding(.top, 4)
-                        VStack(alignment: .leading, spacing: 2) {
-                            HStack {
-                                Text(segment.name).font(.callout.weight(.semibold))
-                                Spacer()
-                                Text(format(segment.bytes)).font(.callout.monospacedDigit())
-                            }
-                            Text(segment.explanation)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-                }
-            }
-        }
-        .padding(.horizontal, 20)
-        .padding(.bottom, 16)
-    }
-
-    struct Segment: Identifiable {
-        let id: String
-        let name: String
-        let bytes: Int64
-        let color: Color
-        let explanation: String
-
-        func fraction(of total: Int64) -> CGFloat {
-            total > 0 ? CGFloat(Double(bytes) / Double(total)) : 0
-        }
-    }
-
-    static func segments(for overview: DiskOverview) -> [Segment] {
-        let order: [VolumeRole] = [.data, .vm, .preboot, .system, .recovery, .update, .other]
-        var result: [Segment] = []
-        for role in order {
-            for volume in overview.volumes where volume.role == role && volume.bytes > 0 {
-                result.append(Segment(
-                    id: volume.id, name: displayName(volume), bytes: volume.bytes,
-                    color: color(for: role), explanation: role.explanation
-                ))
-            }
-        }
-        if overview.containerOverhead > 0 {
-            result.append(Segment(
-                id: "overhead", name: "APFS overhead", bytes: overview.containerOverhead,
-                color: .secondary.opacity(0.6),
-                explanation: "Container metadata and reserves outside any volume."
-            ))
-        }
-        result.append(Segment(
-            id: "free", name: "Free", bytes: overview.free, color: .green.opacity(0.35),
-            explanation: "Unallocated space in the container."
-        ))
-        return result
-    }
-
-    private static func displayName(_ volume: VolumeSlice) -> String {
-        switch volume.role {
-        case .data: "Data (your files)"
-        case .system: "macOS (System)"
-        case .vm: "Swap (VM)"
-        case .preboot: "Preboot"
-        case .recovery: "Recovery"
-        case .update: "Pending update"
-        case .other: volume.name
-        }
-    }
-
-    private static func color(for role: VolumeRole) -> Color {
-        switch role {
-        case .data: .purple
-        case .vm: .teal
-        case .preboot: .orange
-        case .system: .gray
-        case .recovery: .brown
-        case .update: .yellow
-        case .other: .pink
-        }
-    }
-
-    // MARK: - Lista
-
-    @ViewBuilder
-    private var content: some View {
-        if viewModel.isScanning {
-            scanProgress
-        } else if let current = viewModel.current {
-            VStack(spacing: 0) {
-                breadcrumbBar(current)
-                Divider()
-                list(for: current)
-                Divider()
-                detailPanel(viewModel.selected ?? current)
-            }
-        } else {
-            VStack(spacing: 12) {
-                Spacer()
-                Text("Nothing measured yet").font(.title3)
-                Button("Scan Disk") { viewModel.startScan() }
-                Spacer()
-            }
-            .frame(maxWidth: .infinity)
-        }
-    }
-
-    private var scanProgress: some View {
-        VStack(spacing: 14) {
-            Spacer()
-            let dataBytes = viewModel.overview?.dataVolume?.bytes ?? 0
-            if dataBytes > 0 {
-                ProgressView(value: min(1, Double(viewModel.measuredBytes) / Double(dataBytes)))
-                    .frame(maxWidth: 420)
-                Text("\(format(viewModel.measuredBytes)) of \(format(dataBytes)) measured")
-                    .font(.headline.monospacedDigit())
-            } else {
-                ProgressView()
-            }
-            Text(Firmlinks.system().displayPath(viewModel.currentPath))
-                .font(.caption.monospaced())
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .frame(maxWidth: 560)
-            if let started = viewModel.scanStarted {
-                TimelineView(.periodic(from: started, by: 1)) { context in
-                    Text("Walking the whole data volume… \(Int(context.date.timeIntervalSince(started)))s")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            Spacer()
-        }
-        .frame(maxWidth: .infinity)
-        .padding()
-    }
-
-    private func breadcrumbBar(_ current: XRayNode) -> some View {
+    var body: some View {
+        let selected = model.selected.flatMap { $0 >= 0 ? $0 : nil }
         HStack(spacing: 6) {
-            Button {
-                viewModel.goUp()
+            Menu {
+                Button("Macintosh HD") { model.startScan() }
+                Button("Folder…") { model.chooseFolderAndScan() }
             } label: {
-                Image(systemName: "chevron.left")
+                Label("Select Target", systemImage: "internaldrive")
             }
-            .disabled(viewModel.breadcrumbs.count <= 1)
+            .fixedSize()
+            .help("Select Target…")
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 4) {
-                    ForEach(Array(viewModel.breadcrumbs.enumerated()), id: \.offset) { index, node in
-                        if index > 0 {
-                            Image(systemName: "chevron.right").font(.caption2).foregroundStyle(.tertiary)
-                        }
-                        Button(index == 0 ? "Data volume" : node.name) { viewModel.open(node) }
-                            .buttonStyle(.plain)
-                            .font(.callout.weight(node === current ? .semibold : .regular))
-                    }
-                }
+            if model.isScanning {
+                Button("Stop") { model.cancelScan() }
+            } else {
+                Button { model.startScan(root: model.scanRoot) } label: { Image(systemName: "arrow.clockwise") }
+                    .help("Refresh All")
+                    .keyboardShortcut("r", modifiers: .command)
             }
+
+            Divider().frame(height: 16)
+
+            Button { model.zoomIn() } label: { Image(systemName: "plus.magnifyingglass") }
+                .help("Zoom In (+)")
+                .keyboardShortcut("+", modifiers: [])
+                .disabled(!model.canZoomIn)
+            Button { model.zoomOut() } label: { Image(systemName: "minus.magnifyingglass") }
+                .help("Zoom Out (-)")
+                .keyboardShortcut("-", modifiers: [])
+                .disabled(!model.isZoomed)
+            Button { model.zoomReset() } label: { Image(systemName: "arrow.up.left.and.arrow.down.right") }
+                .help("Zoom Reset (Ctrl+.)")
+                .keyboardShortcut(".", modifiers: .control)
+                .disabled(!model.isZoomed)
+
+            Divider().frame(height: 16)
+
+            Toggle(isOn: $model.showFreeSpace) { Text("Free Space") }
+                .toggleStyle(.button)
+                .help("Show Free Space (F6)")
+                .keyboardShortcut(KeyEquivalent(Character(UnicodeScalar(NSF6FunctionKey)!)), modifiers: [])
+                .disabled(!model.isDriveScan)
+            Toggle(isOn: $model.showUnknown) { Text("Unknown") }
+                .toggleStyle(.button)
+                .help("Show Unknown (F7)")
+                .keyboardShortcut(KeyEquivalent(Character(UnicodeScalar(NSF7FunctionKey)!)), modifiers: [])
+                .disabled(!model.isDriveScan)
+            Toggle(isOn: $model.useLogicalSize) { Text("Logical Size") }
+                .toggleStyle(.button)
+                .help("Use Logical Size (Ctrl+L)")
+                .keyboardShortcut("l", modifiers: .control)
+
+            Divider().frame(height: 16)
+
+            Button { selected.map(model.open) } label: { Image(systemName: "arrow.up.forward.app") }
+                .help("Open…")
+                .disabled(selected == nil)
+            Button { selected.map(model.selectInFinder) } label: { Image(systemName: "folder") }
+                .help("Select in Finder…")
+                .disabled(selected == nil)
+            Button { selected.map(model.copyPath) } label: { Image(systemName: "doc.on.doc") }
+                .help("Copy Path")
+                .disabled(selected == nil)
+            Button { pendingTrash = selected } label: { Image(systemName: "trash") }
+                .help("Delete (to Trash)")
+                .keyboardShortcut(.delete, modifiers: [])
+                .disabled(!(selected.map(model.canTrash) ?? false))
+
             Spacer()
-            Picker("", selection: $viewModel.mode) {
-                ForEach(DiskXRayViewModel.Mode.allCases) { mode in
-                    Text(mode.rawValue).tag(mode)
-                }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(width: 210)
-            .help("Largest files: the biggest files anywhere inside this folder")
-            if let loading = viewModel.loadingNode, loading === current {
-                ProgressView().controlSize(.small)
-                Text("Measuring \(loading.name)…").font(.caption).foregroundStyle(.secondary)
-            }
-            Text(format(current.size)).font(.callout.monospacedDigit().weight(.semibold))
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 8)
+        .buttonStyle(.borderless)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
     }
+}
 
-    private func list(for current: XRayNode) -> some View {
-        let showingFiles = viewModel.mode == .largestFiles
-        let children = showingFiles ? viewModel.largestFiles : (current.children ?? [])
-        let largest = max(1, children.map(\.size).max() ?? 1)
-        return ScrollView {
-            LazyVStack(spacing: 0) {
-                ForEach(children) { node in
-                    row(node, largest: largest)
-                        .contentShape(Rectangle())
-                        .onTapGesture(count: 2) {
-                            if node.kind == .file { viewModel.quickLook(node) } else { viewModel.open(node) }
+// MARK: - FileTabbedView
+
+private struct FileTabbedView: View {
+    @ObservedObject var model: DiskXRayViewModel
+    @Binding var pendingTrash: Int32?
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                ForEach(DiskXRayViewModel.Tab.allCases) { tab in
+                    Button(tab.rawValue) { model.tab = tab }
+                        .buttonStyle(.plain)
+                        .font(.system(size: 12, weight: model.tab == tab ? .semibold : .regular))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(model.tab == tab ? Color(nsColor: .controlBackgroundColor) : .clear)
+                        .overlay(alignment: .bottom) {
+                            if model.tab == tab { Rectangle().fill(Color.accentColor).frame(height: 2) }
                         }
-                        .simultaneousGesture(TapGesture().onEnded { viewModel.selected = node })
-                        .contextMenu { contextMenu(for: node) }
-                    Divider().padding(.leading, 52)
                 }
-                if children.isEmpty {
-                    HStack(spacing: 8) {
-                        if showingFiles ? viewModel.isFindingLargestFiles : viewModel.loadingNode === current {
-                            ProgressView().controlSize(.small)
-                        }
-                        Text(emptyText(showingFiles: showingFiles, current: current))
+                Spacer()
+            }
+            .background(Color(nsColor: .underPageBackgroundColor).opacity(0.4))
+            Divider()
+
+            if model.index == nil {
+                ScanProgressView(model: model)
+            } else if model.tab == .allFiles {
+                FileTreeView(model: model, pendingTrash: $pendingTrash)
+            } else {
+                LargestFilesView(model: model, pendingTrash: $pendingTrash)
+            }
+        }
+        .background(Color(nsColor: .controlBackgroundColor))
+    }
+}
+
+private struct ScanProgressView: View {
+    @ObservedObject var model: DiskXRayViewModel
+
+    var body: some View {
+        VStack(spacing: 10) {
+            Spacer()
+            if model.isScanning {
+                if let progress = model.progress, progress.estimatedItems > 0 {
+                    ProgressView(value: min(1, Double(progress.items) / Double(progress.estimatedItems)))
+                        .frame(maxWidth: 380)
+                    Text("\(WinDirStatFormat.count(progress.items)) items · \(WinDirStatFormat.bytes(progress.physicalBytes))")
+                        .font(.system(size: 12).monospacedDigit())
+                    Text(Firmlinks.system().displayPath(progress.currentPath))
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .frame(maxWidth: 520)
+                } else {
+                    ProgressView()
+                }
+                if let started = model.scanStarted {
+                    TimelineView(.periodic(from: started, by: 1)) { context in
+                        let seconds = Int(context.date.timeIntervalSince(started))
+                        Text(String(format: "[%d:%02d]", seconds / 60, seconds % 60))
+                            .font(.system(size: 11).monospacedDigit())
                             .foregroundStyle(.secondary)
                     }
-                    .padding(30)
                 }
+            } else {
+                Button("Select Target…") { model.startScan() }
+            }
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+// MARK: - All Files
+
+private struct FileTreeView: View {
+    @ObservedObject var model: DiskXRayViewModel
+    @Binding var pendingTrash: Int32?
+    @FocusState private var focused: Bool
+
+    private var columns: [DiskXRayViewModel.TreeColumn] {
+        DiskXRayViewModel.TreeColumn.allCases.filter { model.visibleColumns.contains($0) }
+    }
+
+    /// Largura mínima de todas as colunas; acima disso a Name estica.
+    private var contentWidth: CGFloat {
+        columns.reduce(0) { $0 + $1.width } + 120
+    }
+
+    var body: some View {
+        GeometryReader { geometry in
+            ScrollView(.horizontal) {
+                VStack(spacing: 0) {
+                    header
+                    Divider()
+                    rowsList
+                }
+                .frame(width: max(geometry.size.width, contentWidth))
+                .frame(maxHeight: .infinity)
             }
         }
     }
 
-    private func emptyText(showingFiles: Bool, current: XRayNode) -> String {
-        if showingFiles {
-            return viewModel.isFindingLargestFiles ? "Finding the largest files in \(current.name)…" : "No files"
-        }
-        return viewModel.loadingNode === current ? "Measuring…" : "Empty folder"
-    }
-
-    private func row(_ node: XRayNode, largest: Int64) -> some View {
-        let hint = viewModel.hint(for: node)
-        let capacity = viewModel.overview?.capacity ?? 0
-        return HStack(spacing: 12) {
-            Image(systemName: icon(for: node))
-                .font(.system(size: 16))
-                .foregroundStyle(iconColor(for: node))
-                .frame(width: 24)
-
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 6) {
-                    Text(node.name).font(.body.weight(.medium)).lineLimit(1).truncationMode(.middle)
-                    if node.isPartial {
-                        Image(systemName: "lock.fill").font(.caption2).foregroundStyle(.orange)
-                            .help("Some folders inside could not be read")
+    private var rowsList: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.vertical) {
+                LazyVStack(spacing: 0) {
+                    ForEach(model.rows) { row in
+                        FileTreeRow(model: model, row: row, columns: columns, listFocused: focused)
+                            .id(row.id)
+                            .contextMenu { ItemMenu(model: model, item: row.id, pendingTrash: $pendingTrash) }
                     }
-                    if let hint { hintChip(hint) }
-                }
-                if let subtitle = subtitle(for: node, hint: hint) {
-                    Text(subtitle).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                 }
             }
+            .onChange(of: model.revealToken) {
+                if let selected = model.selected { proxy.scrollTo(selected) }
+            }
+        }
+        .focusable()
+        .focusEffectDisabled()
+        .focused($focused)
+        .onChange(of: focused) { if focused { model.focusedPane = .tree } }
+        .onKeyPress(.upArrow) { model.moveSelection(.up); return .handled }
+        .onKeyPress(.downArrow) { model.moveSelection(.down); return .handled }
+        .onKeyPress(.leftArrow) { model.moveSelection(.left); return .handled }
+        .onKeyPress(.rightArrow) { model.moveSelection(.right); return .handled }
+        .onKeyPress(.space) { model.moveSelection(.space); return .handled }
+        .onKeyPress(.return) {
+            if let selected = model.selected { model.open(selected) }
+            return .handled
+        }
+    }
 
-            Spacer(minLength: 12)
+    private var header: some View {
+        HStack(spacing: 0) {
+            ForEach(columns) { column in
+                HeaderCell(
+                    title: column.title,
+                    sorted: model.sortColumn == column ? model.sortAscending : nil,
+                    alignLeft: column.alignLeft
+                ) { model.sortTree(by: column) }
+                    .frame(width: column == .name ? nil : column.width)
+                    .frame(minWidth: column == .name ? column.width : nil, maxWidth: column == .name ? .infinity : nil)
+            }
+        }
+        .contextMenu {
+            ForEach(DiskXRayViewModel.TreeColumn.allCases) { column in
+                Toggle(column.title, isOn: Binding(
+                    get: { model.visibleColumns.contains(column) },
+                    set: { _ in model.toggleColumn(column) }
+                ))
+                .disabled(column.isRequired)
+            }
+        }
+    }
+}
 
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Color.secondary.opacity(0.12))
-                    Capsule().fill(barColor(for: node, hint: hint))
-                        .frame(width: max(3, geometry.size.width * CGFloat(Double(node.size) / Double(largest))))
+private struct HeaderCell: View {
+    let title: String
+    let sorted: Bool?
+    let alignLeft: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 3) {
+                if !alignLeft { Spacer(minLength: 0) }
+                Text(title).lineLimit(1)
+                if let ascending = sorted {
+                    Image(systemName: ascending ? "chevron.up" : "chevron.down").font(.system(size: 8, weight: .bold))
                 }
+                if alignLeft { Spacer(minLength: 0) }
             }
-            .frame(width: 160, height: 8)
+            .padding(.horizontal, 5)
+            .frame(height: 22)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .font(.system(size: 12))
+        .overlay(alignment: .trailing) { Rectangle().fill(Color.secondary.opacity(0.25)).frame(width: 1) }
+    }
+}
 
-            Text(format(node.size))
-                .font(.callout.monospacedDigit().weight(.semibold))
-                .frame(width: 84, alignment: .trailing)
-            Text(capacity > 0 ? String(format: "%.1f%%", Double(node.size) / Double(capacity) * 100) : "")
-                .font(.caption.monospacedDigit())
-                .foregroundStyle(.secondary)
-                .frame(width: 44, alignment: .trailing)
+private struct FileTreeRow: View {
+    @ObservedObject var model: DiskXRayViewModel
+    let row: DiskXRayViewModel.Row
+    let columns: [DiskXRayViewModel.TreeColumn]
+    let listFocused: Bool
+    @Environment(\.colorScheme) private var colorScheme
 
-            Button {
-                viewModel.open(node)
-            } label: {
-                Image(systemName: "chevron.right")
+    var body: some View {
+        let item = row.id
+        let isSelected = model.selected == item
+        let focusedSelection = isSelected && listFocused
+        HStack(spacing: 0) {
+            ForEach(columns) { column in
+                cell(column, item: item)
+                    .frame(width: column == .name ? nil : column.width)
+                    .frame(minWidth: column == .name ? column.width : nil, maxWidth: column == .name ? .infinity : nil,
+                           alignment: column.alignLeft ? .leading : .trailing)
             }
-            .buttonStyle(.plain)
-            .opacity(node.isNavigable ? 1 : 0)
-            .disabled(!node.isNavigable)
-            .frame(width: 16)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 8)
-        .background(viewModel.selected === node ? Color.accentColor.opacity(0.15) : .clear)
-    }
-
-    private func hintChip(_ hint: XRayHint) -> some View {
-        let (text, color): (String, Color) = switch hint.tone {
-        case .cleanable: (hint.category.map { "Cleaner: \($0.rawValue)" } ?? "Cleanable", .green)
-        case .manual: ("Manual", .orange)
-        case .info: ("Info", .secondary)
+        .font(.system(size: 12).monospacedDigit())
+        .foregroundStyle(focusedSelection ? Color.white : Color.primary)
+        .frame(height: Palette.rowHeight)
+        .background(isSelected ? Palette.selection(focused: listFocused, dark: colorScheme == .dark) : .clear)
+        .contentShape(Rectangle())
+        .onTapGesture(count: 2) {
+            // Duplo clique: arquivo abre pelo sistema; pasta alterna.
+            if model.hasChildren(item) { model.toggle(item) } else { model.open(item) }
         }
-        return Text(text)
-            .font(.caption2.weight(.semibold))
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(color.opacity(0.18), in: Capsule())
-            .foregroundStyle(color)
-    }
-
-    private func subtitle(for node: XRayNode, hint: XRayHint?) -> String? {
-        switch node.kind {
-        case .unmeasured: return "Protected areas and APFS metadata — see details below"
-        case .looseFiles: return "Files directly in this folder"
-        case .file where viewModel.mode == .largestFiles:
-            return viewModel.relativeLocation(of: node)
-        case .directory, .file: return hint?.label
-        }
-    }
-
-    private func icon(for node: XRayNode) -> String {
-        switch node.kind {
-        case .directory: "folder.fill"
-        case .file: "doc.fill"
-        case .looseFiles: "doc.on.doc"
-        case .unmeasured: "eye.slash"
-        }
-    }
-
-    private func iconColor(for node: XRayNode) -> Color {
-        switch node.kind {
-        case .directory: .blue
-        case .file: .secondary
-        case .looseFiles: .secondary
-        case .unmeasured: .orange
-        }
-    }
-
-    private func barColor(for node: XRayNode, hint: XRayHint?) -> Color {
-        if node.kind == .unmeasured { return .orange }
-        switch hint?.tone {
-        case .cleanable: return .green
-        case .manual: return .orange
-        default: return .purple
-        }
+        .simultaneousGesture(TapGesture().onEnded {
+            model.focusedPane = .tree
+            model.select(item, reveal: false)
+        })
     }
 
     @ViewBuilder
-    private func contextMenu(for node: XRayNode) -> some View {
-        if node.kind == .directory || node.kind == .file {
-            if node.isNavigable { Button("Open") { viewModel.open(node) } }
-            if node.kind == .file {
-                Button("Quick Look") { viewModel.quickLook(node) }
-                Button("Open with Default App") { viewModel.openWithDefaultApp(node) }
+    private func cell(_ column: DiskXRayViewModel.TreeColumn, item: Int32) -> some View {
+        switch column {
+        case .name:
+            HStack(spacing: 3) {
+                Spacer().frame(width: CGFloat(row.depth) * 16)
+                if model.hasChildren(item) {
+                    Button { model.toggle(item) } label: {
+                        Image(systemName: model.expanded.contains(item) ? "chevron.down" : "chevron.right")
+                            .font(.system(size: 9, weight: .semibold))
+                            .frame(width: 12, height: 16)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    Spacer().frame(width: 12)
+                }
+                ItemIcon(model: model, item: item)
+                Text(model.name(item)).lineLimit(1).truncationMode(.tail)
             }
-            Button("Reveal in Finder") { viewModel.revealInFinder(node) }
-            Button("Copy Path") { viewModel.copyPath(node) }
-            if viewModel.canTrash(node) {
-                Divider()
-                Button("Move to Trash…", role: .destructive) { pendingTrash = node }
+            .padding(.leading, 4)
+        case .sizeProportion:
+            SizeProportionBar(
+                subtree: model.fractionOfParent(item),
+                absolute: model.fractionOfRoot(item),
+                indent: row.depth,
+                dark: colorScheme == .dark
+            )
+            .help(model.sizeProportionTooltip(item))
+        default:
+            Text(model.text(column, item))
+                .lineLimit(1)
+                .padding(.horizontal, 5)
+        }
+    }
+}
+
+/// Ícone do item; pseudo-itens com os glifos de IconHandler.cpp:32-38.
+private struct ItemIcon: View {
+    @ObservedObject var model: DiskXRayViewModel
+    let item: Int32
+
+    var body: some View {
+        Group {
+            switch item {
+            case DiskXRayViewModel.freeSpaceItem:
+                Text("▢").foregroundStyle(Color(red: 0x3A / 255, green: 0xCC / 255, blue: 0x3A / 255))
+            case DiskXRayViewModel.unknownItem:
+                Text("?").bold().foregroundStyle(Color(red: 0xCC / 255, green: 0xB8 / 255, blue: 0x66 / 255))
+            case DiskXRayViewModel.largestFilesRoot:
+                Text("⋙").foregroundStyle(.secondary)
+            default:
+                if let image = model.icon(item) {
+                    Image(nsImage: image).resizable()
+                }
+            }
+        }
+        .font(.system(size: 13))
+        .frame(width: 16, height: 16)
+    }
+}
+
+/// Barra "Size Proportion" (Item.Extended.cpp:49-167): trilho, barra do
+/// subtree (fração do pai) e barra absoluta (fração da raiz), cor por nível.
+private struct SizeProportionBar: View {
+    let subtree: Double
+    let absolute: Double
+    let indent: Int
+    let dark: Bool
+
+    /// Options.h:260-267, FileTreeColors.
+    private static let fileTreeColors: [(Double, Double, Double)] = [
+        (64, 64, 140), (140, 64, 64), (64, 140, 64), (140, 140, 64),
+        (0, 0, 255), (255, 0, 0), (0, 255, 0), (255, 255, 0)
+    ]
+
+    var body: some View {
+        Canvas { context, size in
+            // rc.Deflate(2, 4); rc.left += indent * SizeProportionIndent(16)
+            var rc = CGRect(origin: .zero, size: size).insetBy(dx: 2, dy: 4)
+            let indentWidth = CGFloat(indent) * 16
+            rc.origin.x += indentWidth
+            rc.size.width -= indentWidth
+            guard rc.width > 0, rc.height > 0 else { return }
+
+            let base = Self.fileTreeColors[indent % Self.fileTreeColors.count]
+            let color = (base.0, base.1, base.2)
+            let neutralBack: (Double, Double, Double) = dark ? (40, 40, 40) : (225, 225, 225)
+            let white = (255.0, 255.0, 255.0), black = (0.0, 0.0, 0.0)
+            func blend(_ a: (Double, Double, Double), _ b: (Double, Double, Double), _ t: Double) -> (Double, Double, Double) {
+                let t = min(max(t, 0), 1)
+                return ((a.0 + (b.0 - a.0) * t).rounded(), (a.1 + (b.1 - a.1) * t).rounded(), (a.2 + (b.2 - a.2) * t).rounded())
+            }
+            func blendDark(_ c: (Double, Double, Double), _ d: Double, _ l: Double) -> (Double, Double, Double) {
+                dark ? blend(c, white, d) : blend(c, black, l)
+            }
+            func swiftColor(_ c: (Double, Double, Double)) -> Color { Color(red: c.0 / 255, green: c.1 / 255, blue: c.2 / 255) }
+
+            let trackFill = blendDark(neutralBack, 0.10, 0.06)
+            let trackBorder = blendDark(trackFill, 0.18, 0.18)
+            let subtreeFill = dark ? blend(trackFill, color, 0.68) : blend(trackFill, color, 0.48)
+            let subtreeGlow = blend(subtreeFill, white, dark ? 0.18 : 0.30)
+            let absoluteFill = blendDark(color, 0.12, 0.10)
+            let absoluteGlow = blend(absoluteFill, white, dark ? 0.16 : 0.26)
+            let absoluteEdge = blend(absoluteFill, black, dark ? 0.18 : 0.12)
+
+            func roundRect(_ r: CGRect, fill: (Double, Double, Double), border: (Double, Double, Double)) {
+                let path = Path(roundedRect: r, cornerRadius: 1.5)
+                context.fill(path, with: .color(swiftColor(fill)))
+                context.stroke(path, with: .color(swiftColor(border)), lineWidth: 1)
+            }
+
+            roundRect(rc, fill: trackFill, border: trackBorder)
+            rc = rc.insetBy(dx: 1, dy: 1)
+            guard rc.width > 0, rc.height > 0 else { return }
+            func fractionX(_ f: Double) -> CGFloat { rc.minX + (rc.width * CGFloat(min(max(f, 0), 1))).rounded() }
+
+            let subtreeRight = fractionX(subtree)
+            if subtreeRight > rc.minX {
+                let r = CGRect(x: rc.minX, y: rc.minY, width: subtreeRight - rc.minX, height: rc.height)
+                roundRect(r, fill: subtreeFill, border: subtreeFill)
+                if r.height >= 3, r.width >= 2 {
+                    context.fill(Path(CGRect(x: r.minX + 1, y: r.minY, width: r.width - 2, height: 1)), with: .color(swiftColor(subtreeGlow)))
+                }
+                if subtreeRight < rc.maxX {
+                    context.fill(Path(CGRect(x: subtreeRight, y: rc.minY, width: 1, height: rc.height)), with: .color(swiftColor(trackBorder)))
+                }
+            }
+
+            var absoluteRect = CGRect(x: rc.minX, y: rc.minY, width: fractionX(min(subtree, absolute)) - rc.minX, height: rc.height)
+            absoluteRect = absoluteRect.insetBy(dx: 0, dy: 2)
+            if absoluteRect.width > 0, absoluteRect.height > 0 {
+                roundRect(absoluteRect, fill: absoluteFill, border: absoluteFill)
+                if absoluteRect.height >= 3, absoluteRect.width >= 2 {
+                    context.fill(Path(CGRect(x: absoluteRect.minX + 1, y: absoluteRect.minY, width: absoluteRect.width - 2, height: 1)),
+                                 with: .color(swiftColor(absoluteGlow)))
+                }
+                if absoluteRect.height >= 2 {
+                    context.fill(Path(CGRect(x: absoluteRect.maxX - 1, y: absoluteRect.minY + 1, width: 1, height: absoluteRect.height - 2)),
+                                 with: .color(swiftColor(absoluteEdge)))
+                }
+            }
+        }
+    }
+}
+
+private struct ItemMenu: View {
+    @ObservedObject var model: DiskXRayViewModel
+    let item: Int32
+    @Binding var pendingTrash: Int32?
+
+    var body: some View {
+        if item >= 0 {
+            Button("Open…") { model.open(item) }
+            Button("Select in Finder…") { model.selectInFinder(item) }
+            Button("Copy Path") { model.copyPath(item) }
+            Divider()
+            Button("Zoom In") {
+                model.select(item, reveal: false)
+                model.zoomIn()
+            }
+            Button("Zoom Out") { model.zoomOut() }.disabled(!model.isZoomed)
+            Button("Zoom Reset") { model.zoomReset() }.disabled(!model.isZoomed)
+            Divider()
+            Button("Delete (to Trash)") { pendingTrash = item }.disabled(!model.canTrash(item))
+        }
+    }
+}
+
+// MARK: - Largest Files
+
+private struct LargestFilesView: View {
+    @ObservedObject var model: DiskXRayViewModel
+    @Binding var pendingTrash: Int32?
+    @FocusState private var focused: Bool
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        GeometryReader { geometry in
+            ScrollView(.horizontal) {
+                content.frame(width: max(geometry.size.width, 500 + 90 + 90 + 120))
+                    .frame(maxHeight: .infinity)
             }
         }
     }
 
-    // MARK: - Detalhes
-
-    private func detailPanel(_ node: XRayNode) -> some View {
-        let hint = viewModel.hint(for: node)
-        let capacity = viewModel.overview?.capacity ?? 0
-        return HStack(alignment: .top, spacing: 16) {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 8) {
-                    Text(node === viewModel.root ? "Data volume" : node.name).font(.headline)
-                    if let hint { hintChip(hint) }
-                }
-                Text(node.displayPath)
-                    .font(.caption.monospaced())
-                    .foregroundStyle(.secondary)
-                    .textSelection(.enabled)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                Group {
-                    if node.kind == .unmeasured {
-                        Text(viewModel.unmeasuredExplanation)
-                    } else if let note = hint?.note {
-                        Text(note)
-                    } else if let hint, hint.tone == .cleanable, let category = hint.category {
-                        Text("The \(category.rawValue) card in the menu bar cleans this.")
-                    }
-                    if node.isPartial {
-                        Text("Some folders inside could not be read, so the real size may be larger.")
-                            .foregroundStyle(.orange)
-                    }
-                }
-                .font(.callout)
-                .fixedSize(horizontal: false, vertical: true)
+    private var content: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                HeaderCell(title: "Name", sorted: nil, alignLeft: true) {}.frame(minWidth: 500, maxWidth: .infinity)
+                HeaderCell(title: "Physical Size", sorted: false, alignLeft: false) {}.frame(width: 90)
+                HeaderCell(title: "Logical Size", sorted: nil, alignLeft: false) {}.frame(width: 90)
+                HeaderCell(title: "Last Change", sorted: nil, alignLeft: true) {}.frame(width: 120)
             }
-            Spacer()
-            VStack(alignment: .trailing, spacing: 8) {
-                Text(format(node.size)).font(.title3.monospacedDigit().weight(.semibold))
-                if capacity > 0 {
-                    Text(String(format: "%.1f%% of disk", Double(node.size) / Double(capacity) * 100))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                if node.kind == .directory || node.kind == .file {
-                    HStack {
-                        if node.kind == .file {
-                            Button("Quick Look") { viewModel.quickLook(node) }
-                                .keyboardShortcut(.space, modifiers: [])
-                        }
-                        Button("Reveal") { viewModel.revealInFinder(node) }
-                        if viewModel.canTrash(node) {
-                            Button("Move to Trash…", role: .destructive) { pendingTrash = node }
-                        }
+            Divider()
+            ScrollView(.vertical) {
+                LazyVStack(spacing: 0) {
+                    row(DiskXRayViewModel.largestFilesRoot, depth: 0)
+                    ForEach(model.largestFiles, id: \.self) { item in
+                        row(item, depth: 1)
+                            .contextMenu { ItemMenu(model: model, item: item, pendingTrash: $pendingTrash) }
                     }
-                } else if node.kind == .unmeasured, !viewModel.hasFullDiskAccess {
-                    Button("Grant Full Disk Access…") { viewModel.openFullDiskAccessSettings() }
                 }
             }
+            .focusable()
+            .focusEffectDisabled()
+            .focused($focused)
+            .onChange(of: focused) { if focused { model.focusedPane = .largestFiles } }
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 14)
-        .background(Color.secondary.opacity(0.06))
+    }
+
+    private func row(_ item: Int32, depth: Int) -> some View {
+        let isSelected = model.selected == item && item >= 0
+        return HStack(spacing: 0) {
+            HStack(spacing: 4) {
+                Spacer().frame(width: CGFloat(depth) * 16 + 4)
+                Image(systemName: "chevron.down").font(.system(size: 9, weight: .semibold))
+                    .frame(width: 12).opacity(depth == 0 ? 1 : 0)
+                ItemIcon(model: model, item: item)
+                // Filhos mostram o caminho completo como nome (ItemTop.cpp:40-53).
+                Text(item >= 0 ? model.path(item) : model.name(item)).lineLimit(1).truncationMode(.middle)
+            }
+            .frame(minWidth: 500, maxWidth: .infinity, alignment: .leading)
+            Text(item >= 0 ? model.text(.physicalSize, item) : "").padding(.horizontal, 5).frame(width: 90, alignment: .trailing)
+            Text(item >= 0 ? model.text(.logicalSize, item) : "").padding(.horizontal, 5).frame(width: 90, alignment: .trailing)
+            Text(item >= 0 ? model.text(.lastChange, item) : "").padding(.horizontal, 5).frame(width: 120, alignment: .leading)
+        }
+        .font(.system(size: 12).monospacedDigit())
+        .foregroundStyle(isSelected && focused ? Color.white : Color.primary)
+        .frame(height: Palette.rowHeight)
+        .background(isSelected ? Palette.selection(focused: focused, dark: colorScheme == .dark) : .clear)
+        .contentShape(Rectangle())
+        .onTapGesture(count: 2) { if item >= 0 { model.open(item) } }
+        .simultaneousGesture(TapGesture().onEnded {
+            guard item >= 0 else { return }
+            model.focusedPane = .largestFiles
+            model.select(item, reveal: false)
+        })
+    }
+}
+
+// MARK: - Extensões
+
+private struct ExtensionListView: View {
+    @ObservedObject var model: DiskXRayViewModel
+    @FocusState private var focused: Bool
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.displayScale) private var displayScale
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                ForEach(DiskXRayViewModel.ExtensionColumn.allCases) { column in
+                    HeaderCell(
+                        title: column.title,
+                        sorted: model.extensionSort == column ? model.extensionSortAscending : nil,
+                        alignLeft: column.alignLeft
+                    ) { model.sortExtensions(by: column) }
+                        .frame(width: column == .description ? nil : column.width)
+                        .frame(minWidth: column == .description ? column.width : nil,
+                               maxWidth: column == .description ? .infinity : nil)
+                }
+            }
+            .padding(.top, 25)
+            Divider()
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(model.extensionRows, id: \.self) { ext in
+                            row(ext).id(ext)
+                        }
+                    }
+                }
+                .onChange(of: model.selectedExtension) {
+                    if let ext = model.selectedExtension, model.focusedPane != .extensions { proxy.scrollTo(ext) }
+                }
+            }
+            .focusable()
+            .focusEffectDisabled()
+            .focused($focused)
+            .onChange(of: focused) { if focused { model.focusedPane = .extensions } }
+        }
+        .background(Color(nsColor: .controlBackgroundColor))
+    }
+
+    private func row(_ ext: Int32) -> some View {
+        let isSelected = model.selectedExtension == ext
+        let name = model.extensionName(ext)
+        return HStack(spacing: 0) {
+            HStack(spacing: 3) {
+                Image(nsImage: model.extensionIcon(ext)).resizable().frame(width: 16, height: 16)
+                Text(name).lineLimit(1)
+            }
+            .padding(.leading, 4)
+            .frame(width: DiskXRayViewModel.ExtensionColumn.extensionName.width, alignment: .leading)
+            // DrawColor: rc.Deflate(2, 3), cushion recortada com cantos de 3.
+            Group {
+                if let image = model.swatch(ext, width: Int(36 * displayScale), height: Int((Palette.rowHeight - 6) * displayScale)) {
+                    Image(decorative: image, scale: displayScale)
+                        .clipShape(RoundedRectangle(cornerRadius: 1.5))
+                }
+            }
+            .frame(width: 40, height: Palette.rowHeight)
+            Text(model.extensionDescription(ext))
+                .lineLimit(1)
+                .padding(.horizontal, 5)
+                .frame(minWidth: 170, maxWidth: .infinity, alignment: .leading)
+            Text(WinDirStatFormat.bytes(model.extensionBytes(ext))).lineLimit(1).padding(.horizontal, 5)
+                .frame(width: DiskXRayViewModel.ExtensionColumn.bytes.width, alignment: .trailing)
+            Text(model.extensionPercent(ext)).lineLimit(1).padding(.horizontal, 5)
+                .frame(width: DiskXRayViewModel.ExtensionColumn.percentBytes.width, alignment: .trailing)
+            Text(WinDirStatFormat.count(Int(model.extensionFiles(ext)))).lineLimit(1).padding(.horizontal, 5)
+                .frame(width: DiskXRayViewModel.ExtensionColumn.files.width, alignment: .trailing)
+        }
+        .font(.system(size: 12).monospacedDigit())
+        .foregroundStyle(isSelected && focused ? Color.white : Color.primary)
+        .frame(height: Palette.rowHeight)
+        .background(isSelected ? Palette.selection(focused: focused, dark: colorScheme == .dark) : .clear)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            focused = true
+            model.selectExtension(ext)
+        }
+    }
+}
+
+// MARK: - Treemap
+
+private struct TreeMapView: View {
+    @ObservedObject var model: DiskXRayViewModel
+    @ObservedObject var hover: HoverState
+    @Binding var pendingTrash: Int32?
+    @Environment(\.displayScale) private var displayScale
+
+    /// Zoom: moldura azul RGB(0,0,255) de 4 px e mapa recuado 4 px (TreeMapView.cpp:66-85).
+    private static let zoomFrame: CGFloat = 4
+
+    var body: some View {
+        GeometryReader { geometry in
+            let inset = model.isZoomed ? Self.zoomFrame : 0
+            let mapSize = CGSize(width: max(0, geometry.size.width - 2 * inset), height: max(0, geometry.size.height - 2 * inset))
+            ZStack(alignment: .topLeading) {
+                Color(nsColor: .windowBackgroundColor)
+                if model.isZoomed {
+                    Rectangle().fill(Color(red: 0, green: 0, blue: 1))
+                }
+                ZStack(alignment: .topLeading) {
+                    Color(nsColor: .windowBackgroundColor)
+                    if let rendering = model.rendering {
+                        Image(decorative: rendering.image, scale: displayScale)
+                            .resizable()
+                            .interpolation(.none)
+                            .frame(width: mapSize.width, height: mapSize.height)
+                        Canvas { context, _ in
+                            drawHighlights(context, rendering: rendering)
+                        }
+                        .frame(width: mapSize.width, height: mapSize.height)
+                        .allowsHitTesting(false)
+                    }
+                    TreeMapEventView(
+                        onClick: { point, clicks in
+                            let pixel = CGPoint(x: point.x * displayScale, y: point.y * displayScale)
+                            if clicks >= 2 { model.doubleClickTreemap(atPixel: pixel) } else { model.clickTreemap(atPixel: pixel) }
+                        },
+                        onMiddleClick: { model.zoomReset() },
+                        onScroll: { delta, control in
+                            if control {
+                                if delta > 0 { model.zoomIn() } else { model.zoomOut() }
+                            } else {
+                                if delta > 0 { model.selectParent() } else { model.reselectChild() }
+                            }
+                        },
+                        onHover: { point in
+                            hover.item = point.flatMap { model.item(atPixel: CGPoint(x: $0.x * displayScale, y: $0.y * displayScale)) }
+                        },
+                        menu: { point in
+                            let pixel = CGPoint(x: point.x * displayScale, y: point.y * displayScale)
+                            if let item = model.item(atPixel: pixel), model.selected != item { model.select(item) }
+                            return contextMenu()
+                        }
+                    )
+                }
+                .frame(width: mapSize.width, height: mapSize.height)
+                .offset(x: inset, y: inset)
+
+                // Painel escurecido enquanto lê (GraphView.cpp:300-323).
+                if model.isScanning || model.index == nil {
+                    Color.black.opacity(0.35)
+                }
+            }
+            .onAppear { report(mapSize) }
+            .onChange(of: mapSize) { report(mapSize) }
+            .onChange(of: model.index == nil) { report(mapSize) }
+        }
+    }
+
+    private func report(_ size: CGSize) {
+        model.treemapResized(width: Int(size.width * displayScale), height: Int(size.height * displayScale))
+    }
+
+    /// Destaque: anel externo de 1·escala na cor de contraste (preto para o
+    /// branco) e interno na cor de destaque (branco); lado ≤ 2·escala vira
+    /// retângulo cheio; seleção única cresce 1 px. Hover: moldura de 1 px na cor
+    /// do texto (TreeMapView.cpp:111-158, GraphView.cpp:221-240).
+    private func drawHighlights(_ context: GraphicsContext, rendering: CushionTreemap.Rendering) {
+        let scale = displayScale
+        let rects = model.highlightRects().map {
+            CGRect(x: $0.minX / scale, y: $0.minY / scale, width: $0.width / scale, height: $0.height / scale)
+        }
+        let single = rects.count == 1
+        for var rect in rects {
+            if single { rect = rect.insetBy(dx: -1, dy: -1) }
+            if min(rect.width, rect.height) <= 2 {
+                context.fill(Path(rect), with: .color(.white))
+                continue
+            }
+            context.stroke(Path(rect.insetBy(dx: 0.5, dy: 0.5)), with: .color(.black), lineWidth: 1)
+            context.stroke(Path(rect.insetBy(dx: 1.5, dy: 1.5)), with: .color(.white), lineWidth: 1)
+        }
+        if let hovered = hover.item, let raw = rendering.rects[hovered], raw.width > 0 {
+            let rect = CGRect(x: raw.minX / scale, y: raw.minY / scale, width: raw.width / scale, height: raw.height / scale)
+            context.stroke(Path(rect.insetBy(dx: 0.5, dy: 0.5)), with: .color(Color(nsColor: .textColor)), lineWidth: 1)
+        }
+    }
+
+    private func contextMenu() -> NSMenu {
+        let menu = NSMenu()
+        let selected = model.selected
+        func add(_ title: String, enabled: Bool = true, _ action: @escaping () -> Void) {
+            let item = ClosureMenuItem(title: title, action: action)
+            item.isEnabled = enabled
+            menu.addItem(item)
+        }
+        menu.autoenablesItems = false
+        add("Zoom In", enabled: model.canZoomIn) { model.zoomIn() }
+        add("Zoom Out", enabled: model.isZoomed) { model.zoomOut() }
+        add("Zoom Reset", enabled: model.isZoomed) { model.zoomReset() }
+        menu.addItem(.separator())
+        add("Select Parent") { model.selectParent() }
+        add("Reselect Child") { model.reselectChild() }
+        if let selected, selected >= 0 {
+            menu.addItem(.separator())
+            add("Open…") { model.open(selected) }
+            add("Select in Finder…") { model.selectInFinder(selected) }
+            add("Copy Path") { model.copyPath(selected) }
+            menu.addItem(.separator())
+            add("Delete (to Trash)", enabled: model.canTrash(selected)) { pendingTrash = selected }
+        }
+        return menu
+    }
+}
+
+/// NSMenuItem com closure.
+private final class ClosureMenuItem: NSMenuItem {
+    private let handler: () -> Void
+
+    init(title: String, action handler: @escaping () -> Void) {
+        self.handler = handler
+        super.init(title: title, action: #selector(run), keyEquivalent: "")
+        target = self
+    }
+
+    @available(*, unavailable)
+    required init(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    @objc private func run() { handler() }
+}
+
+/// Mouse do treemap no nível do AppKit: clique/duplo clique, botão do meio,
+/// roda (com Ctrl), hover e menu do botão direito.
+private struct TreeMapEventView: NSViewRepresentable {
+    let onClick: (CGPoint, Int) -> Void
+    let onMiddleClick: () -> Void
+    let onScroll: (CGFloat, Bool) -> Void
+    let onHover: (CGPoint?) -> Void
+    let menu: (CGPoint) -> NSMenu
+
+    func makeNSView(context _: Context) -> EventView {
+        let view = EventView()
+        update(view)
+        return view
+    }
+
+    func updateNSView(_ view: EventView, context _: Context) { update(view) }
+
+    private func update(_ view: EventView) {
+        view.onClick = onClick
+        view.onMiddleClick = onMiddleClick
+        view.onScroll = onScroll
+        view.onHover = onHover
+        view.menuProvider = menu
+    }
+
+    final class EventView: NSView {
+        var onClick: ((CGPoint, Int) -> Void)?
+        var onMiddleClick: (() -> Void)?
+        var onScroll: ((CGFloat, Bool) -> Void)?
+        var onHover: ((CGPoint?) -> Void)?
+        var menuProvider: ((CGPoint) -> NSMenu)?
+        private var trackingArea: NSTrackingArea?
+
+        override var isFlipped: Bool { true }
+
+        override func updateTrackingAreas() {
+            super.updateTrackingAreas()
+            if let trackingArea { removeTrackingArea(trackingArea) }
+            let area = NSTrackingArea(
+                rect: bounds, options: [.mouseMoved, .mouseEnteredAndExited, .activeInKeyWindow, .inVisibleRect],
+                owner: self, userInfo: nil
+            )
+            addTrackingArea(area)
+            trackingArea = area
+        }
+
+        private func point(_ event: NSEvent) -> CGPoint { convert(event.locationInWindow, from: nil) }
+
+        override func mouseDown(with event: NSEvent) { onClick?(point(event), event.clickCount) }
+        override func otherMouseDown(with event: NSEvent) { if event.buttonNumber == 2 { onMiddleClick?() } }
+        override func mouseMoved(with event: NSEvent) { onHover?(point(event)) }
+        override func mouseExited(with _: NSEvent) { onHover?(nil) }
+
+        /// Um passo da roda por gesto (o trackpad gera dezenas de eventos).
+        private var scrollAccumulator: CGFloat = 0
+
+        override func scrollWheel(with event: NSEvent) {
+            if event.phase == .began { scrollAccumulator = 0 }
+            scrollAccumulator += event.scrollingDeltaY
+            let threshold: CGFloat = event.hasPreciseScrollingDeltas ? 30 : 0.5
+            guard abs(scrollAccumulator) >= threshold else { return }
+            onScroll?(scrollAccumulator, event.modifierFlags.contains(.control))
+            scrollAccumulator = 0
+        }
+
+        override func menu(for event: NSEvent) -> NSMenu? { menuProvider?(point(event)) }
+    }
+}
+
+// MARK: - Barra de status
+
+private struct StatusBar: View {
+    @ObservedObject var model: DiskXRayViewModel
+    @ObservedObject var hover: HoverState
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Text(model.statusText(hovered: hover.item))
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Divider().frame(height: 14).padding(.horizontal, 8)
+            Text(model.statusSize(hovered: hover.item))
+                .monospacedDigit()
+                .frame(width: 220, alignment: .leading)
+        }
+        .font(.system(size: 11))
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
     }
 }

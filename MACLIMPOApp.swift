@@ -56,6 +56,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         popover.contentViewController = NSHostingController(rootView: MenuBarView(onOpenDiskXRay: { [weak self] in
             self?.openDiskXRayWindow()
         }))
+
+        // Desenvolvimento: abre o Disk X-Ray direto (sem clicar no menu bar) e,
+        // com MACLIMPO_SNAPSHOT=<arquivo.png>, salva um retrato da janela depois
+        // de MACLIMPO_SNAPSHOT_DELAY segundos (padrão 90) — sem precisar da
+        // permissão de Gravação de Tela.
+        let environment = ProcessInfo.processInfo.environment
+        if environment["MACLIMPO_OPEN_XRAY"] == "1" {
+            openDiskXRayWindow()
+            if let snapshotPath = environment["MACLIMPO_SNAPSHOT"] {
+                let delay = Double(environment["MACLIMPO_SNAPSHOT_DELAY"] ?? "") ?? 90
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                    self?.snapshotDiskXRay(to: snapshotPath)
+                }
+            }
+        }
     }
 
     @objc func togglePopover() {
@@ -68,6 +83,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 NSApp.activate(ignoringOtherApps: true)
             }
         }
+    }
+
+    private func snapshotDiskXRay(to path: String) {
+        guard let view = diskXRayWindow?.contentView,
+              let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return }
+        view.cacheDisplay(in: view.bounds, to: rep)
+        try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: path))
     }
 
     func openDiskXRayWindow() {
@@ -95,6 +117,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         })
 
         window.contentView = NSHostingView(rootView: xRayView)
+        // A varredura guarda milhões de itens; ao fechar, solta tudo.
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification, object: window, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.diskXRayWindow?.contentView = nil
+                self?.diskXRayWindow = nil
+            }
+        }
         window.makeKeyAndOrderFront(nil)
 
         // Ativa a aplicação
