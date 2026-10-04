@@ -4,6 +4,7 @@ import SwiftUI
 /// anel de destaque. Muda o tema globalmente via `ThemeManager.shared`.
 struct ThemePickerView: View {
     @ObservedObject var themeManager: ThemeManager
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let palette = themeManager.palette
@@ -26,23 +27,36 @@ struct ThemePickerView: View {
         let gradient = LinearGradient(colors: theme.swatch, startPoint: .topLeading, endPoint: .bottomTrailing)
         return VStack(spacing: 5) {
             ZStack {
-                RoundedRectangle(cornerRadius: 9)
-                    .fill(gradient)
-                    .frame(width: 46, height: 34)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 9)
-                            .stroke(Color.white.opacity(isSelected ? 0.9 : 0.15), lineWidth: isSelected ? 2 : 1)
-                    )
-                    .shadow(
-                        color: theme.swatch.first?.opacity(isSelected ? 0.7 : 0) ?? .clear,
-                        radius: isSelected ? 8 : 0
-                    )
-
-                if isSelected {
-                    Image(systemName: "checkmark")
+                if theme.palette.isGlass {
+                    // A amostra do Liquid Glass é vidro de verdade, não uma cor.
+                    Image(systemName: isSelected ? "checkmark" : "drop.halffull")
                         .font(.system(size: 13, weight: .bold))
-                        .foregroundColor(.white)
-                        .shadow(radius: 2)
+                        .foregroundStyle(isSelected ? Color.accentColor : .secondary)
+                        .frame(width: 46, height: 34)
+                        .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 9))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 9)
+                                .stroke(Color.accentColor.opacity(isSelected ? 0.9 : 0), lineWidth: 2)
+                        )
+                } else {
+                    RoundedRectangle(cornerRadius: 9)
+                        .fill(gradient)
+                        .frame(width: 46, height: 34)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 9)
+                                .stroke(Color.white.opacity(isSelected ? 0.9 : 0.15), lineWidth: isSelected ? 2 : 1)
+                        )
+                        .shadow(
+                            color: theme.swatch.first?.opacity(isSelected ? 0.7 : 0) ?? .clear,
+                            radius: isSelected ? 8 : 0
+                        )
+
+                    if isSelected {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(.white)
+                            .shadow(radius: 2)
+                    }
                 }
             }
             Text(theme.displayName)
@@ -51,9 +65,15 @@ struct ThemePickerView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+            withAnimation(reduceMotion ? nil : .spring(response: 0.35, dampingFraction: 0.7)) {
                 themeManager.theme = theme
             }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(theme.displayName) theme")
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+        .accessibilityAction {
+            themeManager.theme = theme
         }
     }
 }
@@ -63,7 +83,10 @@ extension View {
     /// o visual original; nos temas neon usa preenchimento translúcido, borda e glow.
     @ViewBuilder
     func themedSurface(_ palette: ThemePalette, cornerRadius: CGFloat = 16, hovered: Bool = false) -> some View {
-        if palette.glow {
+        if palette.isGlass {
+            // Conteúdo, não controle: sem vidro (o popover já é vidro), sem sombra.
+            modifier(GlassContentSurface(cornerRadius: cornerRadius))
+        } else if palette.glow {
             background(
                 RoundedRectangle(cornerRadius: cornerRadius)
                     .fill(palette.surface)

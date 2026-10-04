@@ -1,8 +1,22 @@
 import SwiftUI
 
+/// Como as superfícies de um tema são construídas. Não é só cor: o Liquid
+/// Glass troca o tipo de material e o estilo dos controles.
+enum SurfaceStyle {
+    /// Preenchimento opaco com sombra suave (Classic).
+    case solid
+    /// Preenchimento translúcido escuro, borda e brilho neon (Cyberpunk, Matrix).
+    case neon
+    /// Liquid Glass nativo: controles e navegação em vidro (`glassEffect`,
+    /// `.glass`/`.glassProminent`), conteúdo em preenchimentos semânticos.
+    case glass
+}
+
 /// Paleta e estilo de um tema. Descreve tudo que as views precisam para se
 /// pintar de forma coesa, sem espalhar cores mágicas pela UI.
 struct ThemePalette {
+    /// Tipo de superfície (material) do tema.
+    let surfaceStyle: SurfaceStyle
     /// Fundo da janela (gradiente atrás de tudo). Vazio = usa o material do popover.
     let backgroundColors: [Color]
     /// Preenchimento dos cards / superfícies.
@@ -37,8 +51,11 @@ struct ThemePalette {
     }
 }
 
-/// Temas disponíveis. `classic` é exatamente o visual original — nada se perde.
+/// Temas disponíveis. `liquidGlass` é o principal (padrão, todo nativo);
+/// `classic` é exatamente o visual original — nada se perde. A ordem dos casos
+/// é a ordem do seletor.
 enum AppTheme: String, CaseIterable, Identifiable {
+    case liquidGlass
     case classic
     case cyberpunk
     case matrix
@@ -52,6 +69,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
         case .classic: "Classic"
         case .cyberpunk: "Cyberpunk"
         case .matrix: "Matrix"
+        case .liquidGlass: "Liquid Glass"
         }
     }
 
@@ -64,6 +82,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
         switch self {
         case .classic:
             return ThemePalette(
+                surfaceStyle: .solid,
                 backgroundColors: [],
                 surface: Color(NSColor.controlBackgroundColor),
                 surfaceStroke: .clear,
@@ -81,6 +100,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
             let cyan = Color(hex: "00F0FF")
             let magenta = Color(hex: "FF2E97")
             return ThemePalette(
+                surfaceStyle: .neon,
                 backgroundColors: [Color(hex: "0B0F1A"), Color(hex: "13092B"), Color(hex: "05070D")],
                 surface: Color(hex: "0E1524").opacity(0.85),
                 surfaceStroke: cyan.opacity(0.55),
@@ -98,6 +118,7 @@ enum AppTheme: String, CaseIterable, Identifiable {
             let green = Color(hex: "00FF7F")
             let deepGreen = Color(hex: "00A86B")
             return ThemePalette(
+                surfaceStyle: .neon,
                 backgroundColors: [Color(hex: "020A06"), Color(hex: "04140C"), Color(hex: "010402")],
                 surface: Color(hex: "05140C").opacity(0.85),
                 surfaceStroke: green.opacity(0.5),
@@ -109,6 +130,25 @@ enum AppTheme: String, CaseIterable, Identifiable {
                 glowColor: green,
                 fontDesign: .monospaced,
                 usesCategoryColors: false
+            )
+
+        case .liquidGlass:
+            // Só cores semânticas: acompanham claro/escuro, contraste aumentado e
+            // a cor de destaque escolhida nos Ajustes do Sistema. Sem fundo
+            // próprio — o popover já é de vidro.
+            return ThemePalette(
+                surfaceStyle: .glass,
+                backgroundColors: [],
+                surface: Color(nsColor: .quaternarySystemFill),
+                surfaceStroke: .clear,
+                surfaceStrokeWidth: 0,
+                primaryText: .primary,
+                secondaryText: .secondary,
+                accent: [.accentColor, .accentColor],
+                glow: false,
+                glowColor: .clear,
+                fontDesign: .default,
+                usesCategoryColors: true
             )
         }
     }
@@ -129,7 +169,15 @@ final class ThemeManager: ObservableObject, @unchecked Sendable {
     }
 
     private init() {
+        // Desenvolvimento: MACLIMPO_THEME escolhe o tema sem gravar a preferência
+        // (o didSet não roda no init).
+        if let forced = ProcessInfo.processInfo.environment["MACLIMPO_THEME"].flatMap(AppTheme.init(rawValue:)) {
+            theme = forced
+            return
+        }
+        // Sem escolha gravada (a preferência só é salva quando o usuário escolhe),
+        // o padrão é o Liquid Glass.
         let stored = UserDefaults.standard.string(forKey: Self.storageKey)
-        theme = stored.flatMap(AppTheme.init(rawValue:)) ?? .classic
+        theme = stored.flatMap(AppTheme.init(rawValue:)) ?? .liquidGlass
     }
 }

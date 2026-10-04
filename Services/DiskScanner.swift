@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// MAC-LIMPO — Copyright (C) 2025-2026 Alex S S Fonseca and contributors.
+
 import Foundation
 
 /// Varre uma árvore e devolve um `DiskScanIndex` com cada pasta e arquivo.

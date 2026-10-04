@@ -85,30 +85,20 @@ final class DiskScannerTests: XCTestCase {
     }
 }
 
-final class WinDirStatFormatTests: XCTestCase {
-    private var sep: String { WinDirStatFormat.decimalSeparator }
-
-    func testBytesUsesBinaryUnitsAndThresholds() {
-        XCTAssertEqual(WinDirStatFormat.bytes(0), "0 bytes")
-        XCTAssertEqual(WinDirStatFormat.bytes(1023), "1023 bytes")
-        XCTAssertEqual(WinDirStatFormat.bytes(1024), "1\(sep)00 KiB")
-        XCTAssertEqual(WinDirStatFormat.bytes(1536), "1\(sep)50 KiB")
-        // Limiar do MiB é Mi − Ki/2: logo abaixo ainda é KiB.
-        XCTAssertEqual(WinDirStatFormat.bytes(1024 * 1024 - 513), "1023\(sep)50 KiB")
-        XCTAssertEqual(WinDirStatFormat.bytes(1024 * 1024 - 512), "1\(sep)00 MiB")
-        XCTAssertEqual(WinDirStatFormat.bytes(Int64(48.7 * 1024 * 1024 * 1024)), "48\(sep)70 GiB")
+final class SizeFormatTests: XCTestCase {
+    func testBytesFollowFinderDecimalUnits() {
+        XCTAssertEqual(SizeFormat.bytes(0), ByteCountFormatter.string(fromByteCount: 0, countStyle: .file))
+        XCTAssertEqual(SizeFormat.bytes(-5), SizeFormat.bytes(0), "negativo vira zero")
+        XCTAssertTrue(SizeFormat.bytes(1_500_000_000).contains("GB"))
     }
 
-    func testDoubleRoundsHalfAwayFromZeroWithTwoDigits() {
-        XCTAssertEqual(WinDirStatFormat.double(0), "0\(sep)00")
-        XCTAssertEqual(WinDirStatFormat.double(12.346), "12\(sep)35")
-        XCTAssertEqual(WinDirStatFormat.double(99.999), "100\(sep)00")
-        XCTAssertEqual(WinDirStatFormat.percent(0.5), "50\(sep)00%")
+    func testPercentShowsTinySharesAsLessThan() {
+        XCTAssertEqual(SizeFormat.percent(0.0004), "<0.1%")
+        XCTAssertTrue(SizeFormat.percent(0.5).hasPrefix("50"))
     }
 
-    func testFileTimeHasTwoSpacesBetweenDateAndTime() {
-        let text = WinDirStatFormat.fileTime(2_000_000_000)
-        XCTAssertTrue(text.contains("  "))
-        XCTAssertEqual(WinDirStatFormat.fileTime(0), "")
+    func testDateIsEmptyForUnknown() {
+        XCTAssertEqual(SizeFormat.date(0), "")
+        XCTAssertFalse(SizeFormat.date(2_000_000_000).isEmpty)
     }
 }

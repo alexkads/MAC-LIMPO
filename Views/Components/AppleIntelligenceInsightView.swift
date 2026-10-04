@@ -29,9 +29,10 @@ struct AppleIntelligenceInsightView: View {
                             .font(.system(size: 11, weight: .semibold))
                     }
                 }
-                .buttonStyle(.plain)
+                .themedSecondaryButton(themeManager.palette)
                 .foregroundStyle(themeManager.palette.accentGradient)
                 .disabled(isGenerating)
+                .accessibilityLabel(isGenerating ? "Generating recommendation" : "Generate storage recommendation")
             }
 
             if let insight {

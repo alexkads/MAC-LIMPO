@@ -29,7 +29,7 @@ APP="${APP:-build/app/${APP_NAME}.app}"
 # Fonte única de verdade da versão (SemVer). BUILD_NUMBER é o CFBundleVersion
 # monotônico; sobrescreva ao cortar um build: BUILD_NUMBER=3 ./Scripts/bundle-app.sh
 VERSION="$(tr -d ' \n' < VERSION 2>/dev/null || echo '1.3.7')"
-BUILD_NUMBER="${BUILD_NUMBER:-16}"
+BUILD_NUMBER="${BUILD_NUMBER:-19}"
 
 if [ "$(id -u)" -eq 0 ]; then
     echo "error: rode como seu usuário normal, não com sudo." >&2
@@ -128,7 +128,7 @@ cat > "$APP/Contents/Info.plist" << EOF
     <key>LSUIElement</key>
     <true/>
     <key>NSHumanReadableCopyright</key>
-    <string>Copyright © 2026 alexkads. All rights reserved.</string>
+    <string>Copyright © 2025-2026 Alex S S Fonseca. Free software under GPL-3.0-or-later.</string>
     <key>NSAppleEventsUsageDescription</key>
     <string>MAC-LIMPO needs permission to execute shell commands for cleaning operations.</string>
 </dict>

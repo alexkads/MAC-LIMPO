@@ -55,6 +55,7 @@ struct CleaningProgressView: View {
                     }
                     .buttonStyle(.plain)
                     .help("Cancel")
+                    .accessibilityLabel("Cancel")
                 }
 
                 // Barra de progresso

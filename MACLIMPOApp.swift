@@ -62,6 +62,32 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // de MACLIMPO_SNAPSHOT_DELAY segundos (padrão 90) — sem precisar da
         // permissão de Gravação de Tela.
         let environment = ProcessInfo.processInfo.environment
+        if let appearance = environment["MACLIMPO_APPEARANCE"] {
+            NSApp.appearance = NSAppearance(named: appearance == "light" ? .aqua : .darkAqua)
+        }
+        // MACLIMPO_SNAPSHOT_POPOVER=<arquivo.png>: retrato do popover (fora da tela)
+        // depois de MACLIMPO_SNAPSHOT_DELAY segundos.
+        if let popoverPath = environment["MACLIMPO_SNAPSHOT_POPOVER"] {
+            let delay = Double(environment["MACLIMPO_SNAPSHOT_DELAY"] ?? "") ?? 90
+            let window = NSWindow(
+                contentRect: NSRect(x: -4000, y: -4000, width: 420, height: 700),
+                styleMask: [.borderless], backing: .buffered, defer: false
+            )
+            // O cacheDisplay não desenha o fundo da janela (é do frame view);
+            // o fundo vai na própria hierarquia para o retrato não sair branco.
+            window.contentView = NSHostingView(rootView: MenuBarView().background(Color(nsColor: .windowBackgroundColor)))
+            window.appearance = NSApp.appearance
+            window.backgroundColor = .windowBackgroundColor
+            window.isOpaque = true
+            window.orderFront(nil)
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                guard let view = window.contentView,
+                      let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return }
+                view.cacheDisplay(in: view.bounds, to: rep)
+                try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: popoverPath))
+                window.orderOut(nil)
+            }
+        }
         if environment["MACLIMPO_OPEN_XRAY"] == "1" {
             openDiskXRayWindow()
             if let snapshotPath = environment["MACLIMPO_SNAPSHOT"] {
@@ -86,7 +112,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func snapshotDiskXRay(to path: String) {
-        guard let view = diskXRayWindow?.contentView,
+        // A moldura (superview do conteúdo) inclui a barra de título e a toolbar.
+        guard let content = diskXRayWindow?.contentView,
+              case let view = content.superview ?? content,
               let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return }
         view.cacheDisplay(in: view.bounds, to: rep)
         try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: path))
@@ -103,26 +131,33 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Cria nova janela
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 1040, height: 780),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            styleMask: [.titled, .closable, .miniaturizable, .resizable, .unifiedTitleAndToolbar],
             backing: .buffered,
             defer: false
         )
 
         window.title = "Disk X-Ray — MAC-LIMPO"
-        window.center()
         window.isReleasedWhenClosed = false
+        window.toolbarStyle = .unified
 
         let xRayView = DiskXRayWindowView(onClose: { [weak self] in
             self?.diskXRayWindow?.close()
         })
 
-        window.contentView = NSHostingView(rootView: xRayView)
+        // NSHostingController com a ponte de toolbar: o `.toolbar` do SwiftUI
+        // vira a NSToolbar desta janela (com o visual Liquid Glass do sistema),
+        // e o `.navigationTitle` vira o título.
+        let controller = NSHostingController(rootView: xRayView)
+        controller.sceneBridgingOptions = [.toolbars, .title]
+        window.contentViewController = controller
+        window.setContentSize(NSSize(width: 1040, height: 780))
+        window.center()
         // A varredura guarda milhões de itens; ao fechar, solta tudo.
         NotificationCenter.default.addObserver(
             forName: NSWindow.willCloseNotification, object: window, queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated {
-                self?.diskXRayWindow?.contentView = nil
+                self?.diskXRayWindow?.contentViewController = nil
                 self?.diskXRayWindow = nil
             }
         }

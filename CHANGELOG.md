@@ -8,6 +8,10 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 ## [Unreleased]
 
 ### ✨ Adicionado
+- **Liquid Glass é o tema principal e todo nativo**: padrão para quem nunca escolheu tema e primeiro no seletor. O popover usa só componentes do sistema — `List` com `Section`, `Gauge` circular, `LabeledContent`, `Picker`, `Toggle`, `ProgressView`, `NSSearchField` — e painéis de confirmação, progresso e resultado em vidro nativo. Classic, Cyberpunk e Matrix mantêm o visual próprio.
+- **Tema Liquid Glass**: tema com o vidro nativo da Apple (`glassEffect`, `GlassEffectContainer`, botões `.glass`/`.glassProminent`) nos controles e na navegação; conteúdo em preenchimentos semânticos, sem vidro sobre vidro. Respeita Reduzir Transparência, Aumentar Contraste e Reduzir Movimento.
+- **Disk X-Ray com cara nova**: cores por categoria de arquivo (Vídeo, Imagens, Código, Discos virtuais…), cabeçalho com a barra do disco e cartões por categoria, painel de tipos, mapa squarified com pastas agrupadas, ladrilhos arredondados e rótulos, trilha de navegação, tamanhos no padrão do Finder e toolbar nativa da janela.
+- **Instalação por script** (`docs/install.sh`): compila e instala na própria máquina, sem depender de certificado de desenvolvedor.
 - **Disk X-Ray = WinDirStat no Mac** (substitui o Disk Map): port fiel da janela principal do [WinDirStat](https://github.com/windirstat/windirstat) — árvore "All Files" / "Largest Files", lista de extensões e treemap cushion sincronizados, com o layout "Rows", o sombreamento, a paleta e os padrões do código original. O scanner segue o motor do WinDirStat: leitura em lote por pasta com `getattrlistbulk(2)` (o equivalente ao `NtQueryDirectoryFile`) e workers paralelos — ~2,9 milhões de itens em ~16 s, contra ~55 s com `fts` (espaço físico real, hardlinks uma vez, montagens virtuais fora); `<Free Space>` (F6) e `<Unknown>` (F7) fecham a conta com o disco inteiro.
 - **.NET SDKs**: nova categoria que remove patches superados de SDKs, runtimes e targeting packs em `/usr/local/share/dotnet` (uma senha de admin) e `~/.dotnet`. Mantém o mais novo de cada *feature band* (SDK) e de cada `major.minor` (runtime/pack); previews e packs de workload nunca são tocados.
 - **Cargo/Rust**: remove toolchains rustup fixadas em versão que já foram superadas (canais, `default_toolchain` e `[overrides]` ficam) e o lixo de `~/.rustup/{downloads,tmp}`.
@@ -16,6 +20,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - Novos caminhos: cache do Yarn Berry (`~/.yarn/berry/cache`), `DocumentationCache` do Xcode e índice do Continue (`~/.continue/index`).
 
 ### 🐛 Corrigido
+- **Disk X-Ray — espaço vazio entre os blocos do mapa**: o recuo das pastas se acumulava a cada nível e a folga/arredondamento valia até para blocos minúsculos, ilhando os arquivos pequenos. Agora o recuo é proporcional (só em pastas grandes e rasas) e folga e cantos só existem em blocos que os comportam.
 - **Disk X-Ray — navegação lenta**: a árvore virou um `NSOutlineView` nativo (virtualizado, como o list control do WinDirStat), com ícones de pasta carregados em segundo plano; o destaque por extensão no mapa deixou de varrer milhões de itens a cada movimento do mouse.
 - **Disk X-Ray — threads por máquina**: a quantidade de threads e o buffer do scan são decididos pelo hardware e pelo volume (SSD: um por núcleo, 4–16; HD mecânico: 2; rede: 4 com buffer de 64 KiB), em vez de 8 fixo.
 - **Versão visível**: o rodapé do popover mostra a versão e o build (`Version 1.3.10 (13)`), lidos do `Info.plist`.

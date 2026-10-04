@@ -1,9 +1,11 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// MAC-LIMPO — Copyright (C) 2025-2026 Alex S S Fonseca and contributors.
+
 import AppKit
 import Foundation
 import UniformTypeIdentifiers
 
-/// Estado da janela no modelo do WinDirStat (CWinDirStatModel + os controles
-/// FileTree, FileTop, ExtensionList e TreeMap). As regras citam a fonte.
+/// Estado do Disk X-Ray: varredura, árvore de pastas, tipos de arquivo e mapa.
 @MainActor
 final class DiskXRayViewModel: ObservableObject {
     // MARK: - Varredura
@@ -14,179 +16,127 @@ final class DiskXRayViewModel: ObservableObject {
     @Published private(set) var isScanning = false
     @Published private(set) var progress: DiskScanner.Progress?
     @Published private(set) var scanStarted: Date?
+    @Published private(set) var scanDuration: TimeInterval?
     @Published var errorMessage: String?
     private var scanCancel: CancelFlag?
     private let firmlinks = Firmlinks.system()
+    private var volumeName = "Macintosh HD"
 
-    /// O volume inteiro (o "drive"), não uma pasta: só ele tem <Free Space> e <Unknown>.
+    /// O volume inteiro, não uma pasta: só ele tem espaço livre e o "resto do sistema".
     var isDriveScan: Bool { scanRoot == DiskXRayService.dataRoot }
 
-    // MARK: - Opções (Options.h, padrões)
+    // MARK: - Opções
 
-    /// ShowFreeSpace (F6), padrão false.
     @Published var showFreeSpace = false { didSet { structureChanged() } }
-    /// ShowUnknown (F7), padrão false.
-    @Published var showUnknown = false { didSet { structureChanged() } }
-    /// TreeMapUseLogical (Ctrl+L), padrão false.
+    @Published var showUnaccounted = false { didSet { structureChanged() } }
+    /// Tamanho lógico (o que os arquivos dizem ter) em vez do espaço ocupado.
     @Published var useLogicalSize = false { didSet { structureChanged() } }
-    /// LargeFileCount, padrão 50.
-    static let largeFileCount = 50
+    static let largestFileCount = 100
 
     // MARK: - Itens sintéticos
 
-    static let unknownItem: Int32 = -2
+    static let unaccountedItem: Int32 = -2
     static let freeSpaceItem: Int32 = -3
-    static let largestFilesRoot: Int32 = -4
 
-    // MARK: - Árvore ("All Files")
+    // MARK: - Árvore de pastas
 
     enum TreeColumn: Int, CaseIterable, Identifiable {
-        case name, sizeProportion, percentage, physicalSize, logicalSize, items, files, folders, lastChange
+        case name, size, share, files, folders, logicalSize, modified
 
         var id: Int { rawValue }
 
-        /// IDS_COL_* (lang_en.txt)
         var title: String {
             switch self {
             case .name: "Name"
-            case .sizeProportion: "Size Proportion"
-            case .percentage: "Percentage"
-            case .physicalSize: "Physical Size"
-            case .logicalSize: "Logical Size"
-            case .items: "Items"
+            case .size: "Size"
+            case .share: "Share"
             case .files: "Files"
             case .folders: "Folders"
-            case .lastChange: "Last Change"
+            case .logicalSize: "Logical Size"
+            case .modified: "Modified"
             }
         }
 
-        /// FileTreeView.cpp:15-29
         var width: CGFloat {
             switch self {
-            case .name: 250
-            case .sizeProportion: 135
-            case .lastChange: 120
-            default: 90
+            case .name: 280
+            case .share: 140
+            case .modified: 150
+            case .size, .logicalSize: 84
+            case .files, .folders: 74
             }
         }
 
-        var alignLeft: Bool { self == .name || self == .lastChange }
-        /// Name e Size Proportion não podem ser ocultadas.
-        var isRequired: Bool { self == .name || self == .sizeProportion }
-        /// GetAscendingDefault: só Name e Last Change sobem por padrão.
-        var ascendingByDefault: Bool { self == .name || self == .lastChange }
+        var alignLeft: Bool { self == .name || self == .modified || self == .share }
+        var isRequired: Bool { self == .name || self == .size }
+        var ascendingByDefault: Bool { self == .name }
     }
 
-    /// Options.cpp:151 — {1,1,1,1,1,0,1,0,1,...}
-    @Published var visibleColumns: Set<TreeColumn> = [
-        .name, .sizeProportion, .percentage, .physicalSize, .logicalSize, .files, .lastChange
-    ]
-
-    @Published private(set) var sortColumn: TreeColumn = .sizeProportion
+    @Published var visibleColumns: Set<TreeColumn> = [.name, .size, .share, .files, .modified]
+    @Published private(set) var sortColumn: TreeColumn = .size
     @Published private(set) var sortAscending = false
-    private var secondaryColumn: TreeColumn = .name
-    private var secondaryAscending = true
 
     @Published private(set) var selected: Int32?
-    /// Incrementado quando a seleção deve aparecer na árvore (expandir o caminho
-    /// e rolar até ela) — ex.: clique no treemap.
+    /// Incrementado quando a seleção deve aparecer na árvore (expandir e rolar).
     @Published private(set) var revealToken = 0
-    /// Incrementado quando a estrutura ou a ordem da árvore muda (novo scan,
-    /// ordenação, F6/F7/Ctrl+L, Lixeira): a árvore nativa recarrega.
+    /// Incrementado quando a estrutura ou a ordem da árvore muda.
     @Published private(set) var treeVersion = 0
-    /// Nome do volume, lido uma vez por scan.
-    private var volumeName = "Macintosh HD"
     private var sortedChildren: [Int32: [Int32]] = [:]
 
-    enum Pane { case tree, largestFiles, extensions }
-
-    @Published var focusedPane: Pane = .tree
-
     enum Tab: String, CaseIterable, Identifiable {
-        case allFiles = "All Files"
+        case folders = "Folders"
         case largestFiles = "Largest Files"
         var id: String { rawValue }
     }
 
-    @Published var tab: Tab = .allFiles
-
-    // MARK: - Largest Files
-
-    /// Os LargeFileCount maiores pelo tamanho lógico (FileTopControl.h:30-33),
-    /// exibidos por Physical Size decrescente.
+    @Published var tab: Tab = .folders
     @Published private(set) var largestFiles: [Int32] = []
 
-    // MARK: - Extensões
+    // MARK: - Tipos de arquivo
 
-    enum ExtensionColumn: Int, CaseIterable, Identifiable {
-        case extensionName, color, description, bytes, percentBytes, files
-        var id: Int { rawValue }
-
-        var title: String {
-            switch self {
-            case .extensionName: "Extension"
-            case .color: "Color"
-            case .description: "Description"
-            case .bytes: "Bytes"
-            case .percentBytes: "% Bytes"
-            case .files: "Files"
-            }
-        }
-
-        /// Larguras de ExtensionListControl.cpp:158-171 alargadas para caber o
-        /// conteúdo, como AutomaticallyResizeColumns (padrão true) faz.
-        var width: CGFloat {
-            switch self {
-            case .extensionName: 78
-            case .color: 40
-            case .description: 170
-            case .bytes: 84
-            case .percentBytes: 66
-            case .files: 72
-            }
-        }
-
-        var alignLeft: Bool { self == .extensionName || self == .color || self == .description }
-        var ascendingByDefault: Bool { self == .extensionName || self == .percentBytes || self == .description }
+    struct CategoryStats: Identifiable {
+        let category: FileCategory
+        var bytes: Int64 = 0
+        var files: Int = 0
+        var extensions: [Int32] = []
+        var id: Int { category.rawValue }
     }
 
-    @Published private(set) var extensionRows: [Int32] = []
-    @Published private(set) var extensionSort: ExtensionColumn = .bytes
-    @Published private(set) var extensionSortAscending = false
-    @Published private(set) var selectedExtension: Int32?
-    private var extensionColors: [CushionTreemap.RGB] = []
-    private var descriptions: [String: String] = [:]
-    private var swatches: [Int32: CGImage] = [:]
-    private var fileIcons: [String: NSImage] = [:]
-    private var folderIcons: [Int32: NSImage] = [:]
+    enum TypeFilter: Equatable, Sendable {
+        case category(FileCategory)
+        case fileExtension(Int32)
+    }
 
-    // MARK: - Treemap
+    @Published private(set) var categories: [CategoryStats] = []
+    /// Tipo em destaque no mapa (o resto esmaece).
+    @Published private(set) var typeFilter: TypeFilter?
+    private var extensionCategory: [FileCategory] = []
+    private var descriptions: [String: String] = [:]
+    private var fileIcons: [String: NSImage] = [:]
+
+    // MARK: - Mapa
 
     @Published private(set) var zoomItem: Int32 = 0
-    @Published private(set) var rendering: CushionTreemap.Rendering?
+    @Published private(set) var rendering: TreemapRenderer.Rendering?
     @Published private(set) var isRendering = false
-    private struct HighlightKey: Equatable {
-        let image: ObjectIdentifier
-        let ext: Int32
-        let version: Int
-    }
-
-    private var highlightKey: HighlightKey?
-    private var highlightCache: [CGRect] = []
-
-    /// Pilha do "Reselect Child": os filhos de onde Select Parent saiu.
     private var reselectStack: [Int32] = []
-    private var treemapSize: (width: Int, height: Int) = (0, 0)
+    private var treemapSize: (width: Int, height: Int, scale: CGFloat) = (0, 0, 2)
     private var renderTask: Task<Void, Never>?
     private var renderCancel: CancelFlag?
-    var treemapBackground = CushionTreemap.RGB(r: 255, g: 255, b: 255)
-    var treemapShadow = CushionTreemap.RGB(r: 160, g: 160, b: 160)
+    var treemapBackground = TreemapRenderer.RGB(r: 0.12, g: 0.12, b: 0.13)
+    var treemapDark = true
 
     var isZoomed: Bool { index != nil && zoomItem != index?.root }
 
     // MARK: - Scan
 
-    func startScan(root: String = DiskXRayService.dataRoot) {
+    /// Raiz do primeiro scan: o volume de dados, ou MACLIMPO_XRAY_ROOT
+    /// (desenvolvimento: capturas de tela de uma pasta de demonstração).
+    static var initialRoot: String {
+        ProcessInfo.processInfo.environment["MACLIMPO_XRAY_ROOT"] ?? DiskXRayService.dataRoot
+    }
+
+    func startScan(root: String = DiskXRayViewModel.initialRoot) {
         scanCancel?.set()
         renderCancel?.set()
         let cancel = CancelFlag()
@@ -196,22 +146,22 @@ final class DiskXRayViewModel: ObservableObject {
         isScanning = true
         progress = nil
         scanStarted = Date()
+        scanDuration = nil
         errorMessage = nil
         index = nil
         rendering = nil
         selected = nil
-        selectedExtension = nil
+        typeFilter = nil
         largestFiles = []
-        extensionRows = []
+        categories = []
         sortedChildren = [:]
-        swatches = [:]
-        folderIcons = [:]
         reselectStack = []
 
         Task { [weak self] in
             let overview = await runBlocking { DiskXRayService.shared.overview() }
             guard let self, !cancel.isSet else { return }
             self.overview = overview
+            let started = Date()
             let scanned = await runBlocking {
                 DiskScanner.scan(root: root, isCancelled: { cancel.isSet }) { [weak self] progress in
                     Task { @MainActor in
@@ -226,20 +176,22 @@ final class DiskXRayViewModel: ObservableObject {
                 errorMessage = "Could not read \(firmlinks.displayPath(root))."
                 return
             }
+            scanDuration = Date().timeIntervalSince(started)
             volumeName = (try? URL(fileURLWithPath: "/").resourceValues(forKeys: [.volumeLocalizedNameKey]))?
                 .volumeLocalizedName ?? "Macintosh HD"
             index = scanned
             zoomItem = scanned.root
-            assignExtensionColors()
-            sortExtensions()
+            buildCategories()
             refreshLargestFiles()
             treeVersion += 1
             select(scanned.root, reveal: false)
             scheduleRender()
 
-            // Desenvolvimento: estado de demonstração para conferir o visual.
-            if ProcessInfo.processInfo.environment["MACLIMPO_XRAY_DEMO"] == "1" {
-                showUnknown = true
+            // Desenvolvimento: estado de demonstração para capturas de tela.
+            let environment = ProcessInfo.processInfo.environment
+            if environment["MACLIMPO_XRAY_LOGICAL"] == "1" { useLogicalSize = true }
+            if environment["MACLIMPO_XRAY_DEMO"] == "1" {
+                showUnaccounted = true
                 showFreeSpace = true
                 if let biggest = largestFiles.first { select(biggest) }
             }
@@ -265,6 +217,8 @@ final class DiskXRayViewModel: ObservableObject {
     private func structureChanged() {
         sortedChildren = [:]
         if let selected, selected < 0, !isPseudoVisible(selected) { self.selected = index?.root }
+        buildCategories()
+        refreshLargestFiles()
         treeVersion += 1
         scheduleRender()
     }
@@ -273,138 +227,91 @@ final class DiskXRayViewModel: ObservableObject {
 
     private func isPseudoVisible(_ item: Int32) -> Bool {
         switch item {
-        case Self.unknownItem: isDriveScan && showUnknown
+        case Self.unaccountedItem: isDriveScan && showUnaccounted
         case Self.freeSpaceItem: isDriveScan && showFreeSpace
         default: true
         }
     }
 
-    /// <Free Space>: espaço livre do volume.
     var freeSpaceBytes: Int64 { overview?.free ?? 0 }
 
-    /// <Unknown>: max(0, (total − free) − tallied), sem contar o livre
-    /// (Item.Extended.cpp:685-704).
-    var unknownBytes: Int64 {
+    /// O que o disco tem em uso e a leitura não alcançou: macOS (volume do
+    /// sistema), Preboot, swap e áreas protegidas.
+    var unaccountedBytes: Int64 {
         guard let overview, let index else { return 0 }
         return max(0, overview.used - index.physical[0])
     }
 
-    /// Tamanho na base atual (físico, ou lógico com Use Logical Size).
+    var scannedBytes: Int64 {
+        guard let index else { return 0 }
+        return useLogicalSize ? index.logical[0] : index.physical[0]
+    }
+
     func size(_ item: Int32) -> Int64 {
         switch item {
-        case Self.unknownItem: return unknownBytes
+        case Self.unaccountedItem: return unaccountedBytes
         case Self.freeSpaceItem: return freeSpaceBytes
-        case Self.largestFilesRoot: return 0
         default:
             guard let index else { return 0 }
             var value = useLogicalSize ? index.logical[Int(item)] : index.physical[Int(item)]
             if item == index.root, isDriveScan {
-                if showUnknown { value += unknownBytes }
+                if showUnaccounted { value += unaccountedBytes }
                 if showFreeSpace { value += freeSpaceBytes }
             }
             return value
-        }
-    }
-
-    func physicalSize(_ item: Int32) -> Int64? {
-        guard let index else { return nil }
-        switch item {
-        case Self.unknownItem: return unknownBytes
-        case Self.freeSpaceItem: return freeSpaceBytes
-        case Self.largestFilesRoot: return nil
-        default:
-            var value = index.physical[Int(item)]
-            if item == index.root, isDriveScan {
-                if showUnknown { value += unknownBytes }
-                if showFreeSpace { value += freeSpaceBytes }
-            }
-            return value
-        }
-    }
-
-    func logicalSize(_ item: Int32) -> Int64? {
-        guard let index else { return nil }
-        switch item {
-        case Self.unknownItem, Self.freeSpaceItem: return nil
-        case Self.largestFilesRoot: return nil
-        default: return index.logical[Int(item)]
         }
     }
 
     func parent(_ item: Int32) -> Int32? {
         guard let index else { return nil }
-        if item < 0 { return item == Self.largestFilesRoot ? nil : index.root }
+        if item < 0 { return index.root }
         return item == index.root ? nil : index.parent[Int(item)]
     }
 
-    /// GetFraction: fração do pai.
     func fractionOfParent(_ item: Int32) -> Double {
         guard let parent = parent(item) else { return 1 }
         let total = size(parent)
         return total > 0 ? Double(size(item)) / Double(total) : 0
     }
 
-    /// GetAbsoluteFraction: fração da raiz do scan.
-    func fractionOfRoot(_ item: Int32) -> Double {
-        guard let index else { return 0 }
-        let total = size(index.root)
-        return total > 0 ? Double(size(item)) / Double(total) : 0
-    }
-
-    // MARK: - Texto das colunas (Item.Extended.cpp:169-258)
+    // MARK: - Texto das colunas
 
     func name(_ item: Int32) -> String {
         switch item {
-        case Self.unknownItem: return "<Unknown>"
-        case Self.freeSpaceItem: return "<Free Space>"
-        case Self.largestFilesRoot: return "Largest Files"
+        case Self.unaccountedItem: return "System & Unaccounted"
+        case Self.freeSpaceItem: return "Free Space"
         default:
             guard let index else { return "" }
             guard item == index.root else { return index.name(item) }
-            guard isDriveScan, let overview else { return firmlinks.displayPath(index.rootPath) }
-            // "{vol} - {free} free of {total} ({pct}%)" (Item.Extended.cpp:637-640)
-            let volume = volumeName
-            let pct = overview.capacity == 0 ? 0 : 100.0 * Double(overview.free) / Double(overview.capacity)
-            return "\(volume) - \(WinDirStatFormat.bytes(overview.free)) free of " +
-                "\(WinDirStatFormat.bytes(overview.capacity)) (\(WinDirStatFormat.double(pct))%)"
+            return isDriveScan ? volumeName : firmlinks.displayPath(index.rootPath)
         }
     }
 
-    /// Caminho real (para abrir, revelar, copiar).
     func path(_ item: Int32) -> String {
         guard let index, item >= 0 else { return "" }
         return firmlinks.displayPath(index.path(item))
     }
 
     func text(_ column: TreeColumn, _ item: Int32) -> String {
+        guard let index else { return "" }
         let isPseudo = item < 0
         switch column {
         case .name: return name(item)
-        case .sizeProportion: return ""
-        case .percentage:
-            guard item != Self.largestFilesRoot else { return "" }
-            // UseAbsolutePercentages (padrão true): fração da raiz.
-            return WinDirStatFormat.percent(fractionOfRoot(item))
-        case .physicalSize: return physicalSize(item).map(WinDirStatFormat.bytes) ?? ""
-        case .logicalSize: return logicalSize(item).map(WinDirStatFormat.bytes) ?? ""
-        case .items:
-            guard let index, !isPseudo, index.isDirectory(item) else { return "" }
-            return WinDirStatFormat.count(Int(index.fileCount[Int(item)] + index.folderCount[Int(item)]))
+        case .size: return SizeFormat.bytes(size(item))
+        case .share: return SizeFormat.percent(fractionOfParent(item))
         case .files:
-            guard let index, !isPseudo, index.isDirectory(item) else { return "" }
-            return WinDirStatFormat.count(Int(index.fileCount[Int(item)]))
+            guard !isPseudo, index.isDirectory(item) else { return "" }
+            return SizeFormat.count(Int(index.fileCount[Int(item)]))
         case .folders:
-            guard let index, !isPseudo, index.isDirectory(item) else { return "" }
-            return WinDirStatFormat.count(Int(index.folderCount[Int(item)]))
-        case .lastChange:
-            guard let index, !isPseudo else { return "" }
-            return WinDirStatFormat.fileTime(index.modified[Int(item)])
+            guard !isPseudo, index.isDirectory(item) else { return "" }
+            return SizeFormat.count(Int(index.folderCount[Int(item)]))
+        case .logicalSize:
+            guard !isPseudo else { return "" }
+            return SizeFormat.bytes(index.logical[Int(item)])
+        case .modified:
+            guard !isPseudo else { return "" }
+            return SizeFormat.date(index.modified[Int(item)])
         }
-    }
-
-    func sizeProportionTooltip(_ item: Int32) -> String {
-        "Size proportion of total scan: \(WinDirStatFormat.double(fractionOfRoot(item) * 100))%\n" +
-            "Size proportion of parent folder: \(WinDirStatFormat.double(fractionOfParent(item) * 100))%"
     }
 
     func isDirectory(_ item: Int32) -> Bool {
@@ -412,44 +319,26 @@ final class DiskXRayViewModel: ObservableObject {
         return index.isDirectory(item)
     }
 
-    func isUnreadable(_ item: Int32) -> Bool {
-        guard let index, item >= 0 else { return false }
-        return index.isUnreadable(item)
-    }
-
     func icon(_ item: Int32) -> NSImage? {
-        guard let index, item >= 0 else { return nil }
-        if index.isDirectory(item) {
-            if let cached = folderIcons[item] { return cached }
-            let image = NSWorkspace.shared.icon(forFile: path(item))
-            folderIcons[item] = image
-            return image
-        }
-        let ext = index.extensionName(item) ?? ""
-        if let cached = fileIcons[ext] { return cached }
-        let type = ext.isEmpty ? UTType.data : (UTType(filenameExtension: String(ext.dropFirst())) ?? .data)
-        let image = NSWorkspace.shared.icon(for: type)
-        fileIcons[ext] = image
-        return image
+        guard let index, item >= 0, !index.isDirectory(item) else { return nil }
+        return extensionIcon(index.extensionIndex[Int(item)])
     }
 
-    // MARK: - Árvore: filhos, ordenação, linhas
+    // MARK: - Árvore: filhos e ordenação
 
     func hasChildren(_ item: Int32) -> Bool {
-        if item == Self.largestFilesRoot { return !largestFiles.isEmpty }
         guard let index, item >= 0 else { return false }
-        if item == index.root, isDriveScan, showUnknown || showFreeSpace { return true }
+        if item == index.root, isDriveScan, showUnaccounted || showFreeSpace { return true }
         return index.isDirectory(item) && index.hasChildren(item)
     }
 
-    /// Filhos ordenados pela coluna atual (ordenação hierárquica entre irmãos).
     func treeChildren(_ item: Int32) -> [Int32] {
         if let cached = sortedChildren[item] { return cached }
         guard let index, item >= 0 else { return [] }
         var kids = index.children(item)
         if item == index.root, isDriveScan {
             if showFreeSpace { kids.append(Self.freeSpaceItem) }
-            if showUnknown { kids.append(Self.unknownItem) }
+            if showUnaccounted { kids.append(Self.unaccountedItem) }
         }
         kids.sort { compare($0, $1) }
         sortedChildren[item] = kids
@@ -457,72 +346,27 @@ final class DiskXRayViewModel: ObservableObject {
     }
 
     private func compare(_ a: Int32, _ b: Int32) -> Bool {
-        let primary = compare(a, b, by: sortColumn)
-        if primary != 0 { return sortAscending ? primary < 0 : primary > 0 }
-        let secondary = compare(a, b, by: secondaryColumn)
-        return secondaryAscending ? secondary < 0 : secondary > 0
-    }
-
-    /// Comparação crescente de uma coluna (CompareSibling).
-    private func compare(_ a: Int32, _ b: Int32, by column: TreeColumn) -> Int {
-        func cmp<T: Comparable>(_ x: T, _ y: T) -> Int { x < y ? -1 : (x > y ? 1 : 0) }
-        switch column {
-        case .name:
-            // Tipo primeiro: dir(4) < file(8) < free(16) < unknown(32).
-            let byType = cmp(typeRank(a), typeRank(b))
-            if byType != 0 { return byType }
-            return name(a).localizedCaseInsensitiveCompare(name(b)).rawValue
-        case .sizeProportion, .percentage:
-            return cmp(size(a), size(b))
-        case .physicalSize:
-            return cmp(physicalSize(a) ?? 0, physicalSize(b) ?? 0)
-        case .logicalSize:
-            return cmp(logicalSize(a) ?? 0, logicalSize(b) ?? 0)
-        case .items, .files, .folders:
-            return cmp(countValue(a, column), countValue(b, column))
-        case .lastChange:
-            return cmp(a >= 0 ? index?.modified[Int(a)] ?? 0 : 0, b >= 0 ? index?.modified[Int(b)] ?? 0 : 0)
+        func ordered<T: Comparable>(_ x: T, _ y: T) -> Bool? {
+            x == y ? nil : (sortAscending ? x < y : x > y)
         }
-    }
-
-    private func typeRank(_ item: Int32) -> Int {
-        switch item {
-        case Self.freeSpaceItem: 16
-        case Self.unknownItem: 32
-        default: isDirectory(item) ? 4 : 8
+        let primary: Bool? = switch sortColumn {
+        case .name: ordered(name(a).lowercased(), name(b).lowercased())
+        case .size, .share: ordered(size(a), size(b))
+        case .files: ordered(countValue(a, files: true), countValue(b, files: true))
+        case .folders: ordered(countValue(a, files: false), countValue(b, files: false))
+        case .logicalSize: ordered(a >= 0 ? index?.logical[Int(a)] ?? 0 : 0, b >= 0 ? index?.logical[Int(b)] ?? 0 : 0)
+        case .modified: ordered(a >= 0 ? index?.modified[Int(a)] ?? 0 : 0, b >= 0 ? index?.modified[Int(b)] ?? 0 : 0)
         }
+        return primary ?? (size(a) > size(b))
     }
 
-    private func countValue(_ item: Int32, _ column: TreeColumn) -> Int32 {
+    private func countValue(_ item: Int32, files: Bool) -> Int32 {
         guard let index, item >= 0 else { return 0 }
-        switch column {
-        case .files: return index.fileCount[Int(item)]
-        case .folders: return index.folderCount[Int(item)]
-        default: return index.fileCount[Int(item)] + index.folderCount[Int(item)]
-        }
+        return files ? index.fileCount[Int(item)] : index.folderCount[Int(item)]
     }
 
-    /// Clique no cabeçalho (WdsListControl.cpp:1096-1111).
-    func sortTree(by column: TreeColumn) {
-        if column == sortColumn {
-            sortAscending.toggle()
-        } else {
-            secondaryColumn = sortColumn
-            secondaryAscending = sortAscending
-            sortColumn = column
-            sortAscending = column.ascendingByDefault
-        }
-        sortedChildren = [:]
-        treeVersion += 1
-    }
-
-    /// Ordenação vinda do cabeçalho nativo (coluna e direção já decididas).
     func setTreeSort(_ column: TreeColumn, ascending: Bool) {
         guard column != sortColumn || ascending != sortAscending else { return }
-        if column != sortColumn {
-            secondaryColumn = sortColumn
-            secondaryAscending = sortAscending
-        }
         sortColumn = column
         sortAscending = ascending
         sortedChildren = [:]
@@ -539,167 +383,171 @@ final class DiskXRayViewModel: ObservableObject {
     func select(_ item: Int32, reveal: Bool = true) {
         guard selected != item || reveal else { return }
         selected = item
-        // Seleção na árvore seleciona a extensão do arquivo (ExtensionView.cpp:105-126).
-        if let index, item >= 0, !index.isDirectory(item) {
-            selectedExtension = index.extensionIndex[Int(item)]
-        }
         if reveal { revealToken += 1 }
     }
 
-    /// Ancestrais a expandir para o item aparecer na árvore (raiz primeiro).
     func lineage(_ item: Int32) -> [Int32] {
         guard let index else { return [] }
         if item < 0 { return [index.root, item] }
         return index.lineage(item)
     }
 
-    // MARK: - Largest Files
+    // MARK: - Maiores arquivos
 
     private func refreshLargestFiles() {
         guard let index else { return }
-        largestFiles = index.largestFiles(in: index.root, limit: Self.largeFileCount, logicalSize: true)
-            .sorted { index.physical[Int($0)] > index.physical[Int($1)] }
+        largestFiles = index.largestFiles(in: index.root, limit: Self.largestFileCount, logicalSize: useLogicalSize)
     }
 
-    // MARK: - Extensões
+    func location(of item: Int32) -> String {
+        (path(item) as NSString).deletingLastPathComponent
+    }
 
-    /// Ranking por bytes decrescente; posição i recebe palette[min(i, 17)]
-    /// (WinDirStatModel.cpp:425-486).
-    private func assignExtensionColors() {
+    // MARK: - Tipos de arquivo
+
+    private func buildCategories() {
         guard let index else { return }
-        let order = index.extensions.indices.sorted { index.extensionLogical[$0] > index.extensionLogical[$1] }
-        var colors = [CushionTreemap.RGB](repeating: CushionTreemap.defaultPalette.last!, count: index.extensions.count)
-        let last = CushionTreemap.defaultPalette.count - 1
-        for (rank, ext) in order.enumerated() {
-            colors[ext] = CushionTreemap.defaultPalette[min(rank, last)]
+        extensionCategory = index.extensions.map(FileCategory.of(extensionKey:))
+        let logical = useLogicalSize
+        let bytes: (Int) -> Int64 = { logical ? index.extensionLogical[$0] : index.extensionPhysical[$0] }
+        var stats = Dictionary(uniqueKeysWithValues: FileCategory.allCases.map { ($0, CategoryStats(category: $0)) })
+        for ext in index.extensions.indices where index.extensionFiles[ext] > 0 {
+            let category = extensionCategory[ext]
+            stats[category]?.bytes += bytes(ext)
+            stats[category]?.files += Int(index.extensionFiles[ext])
+            stats[category]?.extensions.append(Int32(ext))
         }
-        extensionColors = colors
+        categories = stats.values
+            .filter { $0.files > 0 }
+            .map { stat in
+                var sorted = stat
+                sorted.extensions.sort { bytes(Int($0)) > bytes(Int($1)) }
+                return sorted
+            }
+            .sorted { $0.bytes > $1.bytes }
     }
 
-    func sortExtensions(by column: ExtensionColumn? = nil) {
-        if let column {
-            if column == extensionSort {
-                extensionSortAscending.toggle()
-            } else {
-                extensionSort = column
-                extensionSortAscending = column.ascendingByDefault
-            }
-        }
-        guard let index else { return }
-        let ascending = extensionSortAscending
-        let sort = extensionSort
-        extensionRows = index.extensions.indices
-            .filter { index.extensionFiles[$0] > 0 }
-            .map(Int32.init)
-            .sorted { a, b in
-                let order: ComparisonResult
-                switch sort {
-                case .extensionName, .color:
-                    order = index.extensions[Int(a)].localizedCaseInsensitiveCompare(index.extensions[Int(b)])
-                case .description:
-                    order = extensionDescription(a).localizedCaseInsensitiveCompare(extensionDescription(b))
-                case .bytes, .percentBytes:
-                    let x = index.extensionLogical[Int(a)], y = index.extensionLogical[Int(b)]
-                    order = x == y ? .orderedSame : (x < y ? .orderedAscending : .orderedDescending)
-                case .files:
-                    let x = index.extensionFiles[Int(a)], y = index.extensionFiles[Int(b)]
-                    order = x == y ? .orderedSame : (x < y ? .orderedAscending : .orderedDescending)
-                }
-                if order == .orderedSame { return index.extensionLogical[Int(a)] > index.extensionLogical[Int(b)] }
-                return ascending ? order == .orderedAscending : order == .orderedDescending
-            }
+    func category(ofExtension ext: Int32) -> FileCategory {
+        Int(ext) < extensionCategory.count && ext >= 0 ? extensionCategory[Int(ext)] : .other
     }
 
-    func extensionName(_ ext: Int32) -> String { index?.extensions[Int(ext)] ?? "" }
+    func extensionName(_ ext: Int32) -> String {
+        let key = index?.extensions[Int(ext)] ?? ""
+        return key.isEmpty ? "No extension" : key
+    }
 
-    /// Nome do tipo (SHGetFileInfo szTypeName → UTType), "No Extension" para "".
+    func extensionBytes(_ ext: Int32) -> Int64 {
+        guard let index else { return 0 }
+        return useLogicalSize ? index.extensionLogical[Int(ext)] : index.extensionPhysical[Int(ext)]
+    }
+
+    func extensionFiles(_ ext: Int32) -> Int { Int(index?.extensionFiles[Int(ext)] ?? 0) }
+
     func extensionDescription(_ ext: Int32) -> String {
-        let key = extensionName(ext)
-        guard !key.isEmpty else { return "No Extension" }
+        let key = index?.extensions[Int(ext)] ?? ""
+        guard !key.isEmpty else { return "Files without an extension" }
         if let cached = descriptions[key] { return cached }
         let bare = String(key.dropFirst())
-        let text = UTType(filenameExtension: bare)?.localizedDescription ?? "\(bare.uppercased()) File"
+        let text = UTType(filenameExtension: bare)?.localizedDescription ?? "\(bare.uppercased()) file"
         descriptions[key] = text
         return text
     }
 
-    func extensionBytes(_ ext: Int32) -> Int64 { index?.extensionLogical[Int(ext)] ?? 0 }
-    func extensionFiles(_ ext: Int32) -> Int32 { index?.extensionFiles[Int(ext)] ?? 0 }
-
-    /// % Bytes: bytes (lógicos) sobre o tamanho físico da raiz (WinDirStatModel.cpp:255-260).
-    func extensionPercent(_ ext: Int32) -> String {
-        guard let index, index.physical[0] > 0 else { return "" }
-        return WinDirStatFormat.percent(Double(extensionBytes(ext)) / Double(index.physical[0]))
-    }
-
     func extensionIcon(_ ext: Int32) -> NSImage {
-        let key = extensionName(ext)
+        let key = ext >= 0 ? index?.extensions[Int(ext)] ?? "" : ""
         if let cached = fileIcons[key] { return cached }
-        let type = key.isEmpty ? UTType.data : (UTType(filenameExtension: String(key.dropFirst())) ?? .data)
+        let type = key.count > 1 ? (UTType(filenameExtension: String(key.dropFirst())) ?? .data) : .data
         let image = NSWorkspace.shared.icon(for: type)
         fileIcons[key] = image
         return image
     }
 
-    func swatch(_ ext: Int32, width: Int, height: Int) -> CGImage? {
-        if let cached = swatches[ext] { return cached }
-        let image = CushionTreemap.colorPreview(
-            CushionTreemap.GraphColor(rgb: extensionColors[Int(ext)]), width: width, height: height
-        )
-        swatches[ext] = image
-        return image
+    func setTypeFilter(_ filter: TypeFilter?) {
+        typeFilter = filter == typeFilter ? nil : filter
+        scheduleRender()
     }
 
-    func selectExtension(_ ext: Int32) {
-        selectedExtension = ext
-        focusedPane = .extensions
-    }
+    // MARK: - Mapa
 
-    // MARK: - Treemap
-
-    /// Filhos para o layout: por tamanho decrescente, zeros no fim.
     private func treemapChildren(_ item: Int32) -> [Int32] {
         guard let index, item >= 0 else { return [] }
         var kids = index.children(item)
         if item == index.root, isDriveScan {
             if showFreeSpace { kids.append(Self.freeSpaceItem) }
-            if showUnknown { kids.append(Self.unknownItem) }
+            if showUnaccounted { kids.append(Self.unaccountedItem) }
         }
-        if useLogicalSize || item == index.root {
-            kids.sort { size($0) > size($1) }
-        }
+        if useLogicalSize || item == index.root { kids.sort { size($0) > size($1) } }
         return kids
     }
 
-    /// TmiIsLeaf: arquivos e pseudo-itens; pastas são folhas só sem filhos.
-    private func isLeaf(_ item: Int32) -> Bool {
-        guard let index, item >= 0 else { return true }
-        return !index.isDirectory(item) || !index.hasChildren(item)
+    /// Fonte para o renderizador, com tudo capturado por valor (roda fora do MainActor).
+    private func renderSource() -> TreemapRenderer.Source? {
+        guard let index else { return nil }
+        let logical = useLogicalSize
+        let pseudo: [Int32: Int64] = [Self.freeSpaceItem: freeSpaceBytes, Self.unaccountedItem: unaccountedBytes]
+        let rootChildren = treemapChildren(index.root)
+        let categories = extensionCategory
+        let filter = typeFilter
+        let names: [Int32: String] = [
+            Self.freeSpaceItem: name(Self.freeSpaceItem), Self.unaccountedItem: name(Self.unaccountedItem),
+            index.root: name(index.root)
+        ]
+        let categoryOf: @Sendable (Int32) -> FileCategory = { item in
+            let ext = index.extensionIndex[Int(item)]
+            return ext >= 0 && Int(ext) < categories.count ? categories[Int(ext)] : .other
+        }
+        let weight: @Sendable (Int32) -> UInt64 = { item in
+            if item < 0 { return UInt64(max(0, pseudo[item] ?? 0)) }
+            return UInt64(max(0, logical ? index.logical[Int(item)] : index.physical[Int(item)]))
+        }
+        return TreemapRenderer.Source(
+            weight: weight,
+            children: { item in
+                if item == index.root { return rootChildren }
+                guard item >= 0 else { return [] }
+                var kids = index.children(item)
+                if logical { kids.sort { index.logical[Int($0)] > index.logical[Int($1)] } }
+                return kids
+            },
+            isLeaf: { item in item < 0 || !index.isDirectory(item) || !index.hasChildren(item) },
+            color: { item in
+                switch item {
+                case Self.freeSpaceItem: return TreemapRenderer.RGB(r: 0.55, g: 0.78, b: 0.62)
+                case Self.unaccountedItem: return TreemapRenderer.RGB(r: 0.86, g: 0.64, b: 0.28)
+                default:
+                    guard !index.isDirectory(item) else { return TreemapRenderer.RGB(r: 0.5, g: 0.5, b: 0.55) }
+                    let rgb = categoryOf(item).rgb
+                    return TreemapRenderer.RGB(r: rgb.r, g: rgb.g, b: rgb.b)
+                }
+            },
+            name: { item in names[item] ?? index.name(item) },
+            sizeText: { item in SizeFormat.bytes(Int64(weight(item))) },
+            isEmphasized: { item in
+                guard let filter else { return true }
+                guard item >= 0, !index.isDirectory(item) else { return false }
+                switch filter {
+                case let .fileExtension(selected): return index.extensionIndex[Int(item)] == selected
+                case let .category(category): return categoryOf(item) == category
+                }
+            }
+        )
     }
 
-    func treemapResized(width: Int, height: Int) {
-        guard width != treemapSize.width || height != treemapSize.height else { return }
-        treemapSize = (width, height)
+    func treemapResized(width: Int, height: Int, scale: CGFloat) {
+        guard width != treemapSize.width || height != treemapSize.height || scale != treemapSize.scale else { return }
+        treemapSize = (width, height, scale)
         scheduleRender(debounce: true)
     }
 
     func scheduleRender(debounce: Bool = false) {
-        guard let index, treemapSize.width > 0, treemapSize.height > 0 else { return }
+        guard index != nil, treemapSize.width > 0, treemapSize.height > 0, let source = renderSource() else { return }
         renderCancel?.set()
         let cancel = CancelFlag()
         renderCancel = cancel
         let previous = renderTask
         let root = zoomItem
-        let (width, height) = treemapSize
-        let background = treemapBackground
-        let shadow = treemapShadow
-        // Snapshot do que o render consulta, para rodar fora do MainActor.
-        let logical = useLogicalSize
-        let colors = extensionColors
-        let pseudo: [Int32: Int64] = [
-            Self.freeSpaceItem: freeSpaceBytes, Self.unknownItem: unknownBytes
-        ]
-        let rootChildren = treemapChildren(index.root)
+        let (width, height, scale) = treemapSize
+        let style = TreemapRenderer.Style(scale: scale, dark: treemapDark, background: treemapBackground)
         isRendering = true
 
         renderTask = Task {
@@ -707,32 +555,8 @@ final class DiskXRayViewModel: ObservableObject {
             if debounce { try? await Task.sleep(for: .milliseconds(120)) }
             guard !cancel.isSet else { return }
             let result = await runBlocking {
-                func weight(_ item: Int32) -> UInt64 {
-                    if item < 0 { return UInt64(max(0, pseudo[item] ?? 0)) }
-                    return UInt64(max(0, logical ? index.logical[Int(item)] : index.physical[Int(item)]))
-                }
-                return CushionTreemap.render(
-                    index: index, root: root, width: width, height: height,
-                    background: background, shadow: shadow,
-                    color: { item in
-                        switch item {
-                        case DiskXRayViewModel.unknownItem: return .unknown
-                        case DiskXRayViewModel.freeSpaceItem: return .freeSpace
-                        default:
-                            guard !index.isDirectory(item) else { return .black }
-                            return CushionTreemap.GraphColor(rgb: colors[Int(index.extensionIndex[Int(item)])])
-                        }
-                    },
-                    isLeaf: { item in item < 0 || !index.isDirectory(item) || !index.hasChildren(item) },
-                    weight: weight,
-                    children: { item in
-                        if item == index.root { return rootChildren }
-                        var kids = index.children(item)
-                        if logical { kids.sort { index.logical[Int($0)] > index.logical[Int($1)] } }
-                        return kids
-                    },
-                    isCancelled: { cancel.isSet }
-                )
+                TreemapRenderer.render(root: root, width: width, height: height, style: style, source: source,
+                                       isCancelled: { cancel.isSet })
             }
             guard !cancel.isSet else { return }
             rendering = result
@@ -741,37 +565,36 @@ final class DiskXRayViewModel: ObservableObject {
     }
 
     func item(atPixel point: CGPoint) -> Int32? {
-        guard let rendering else { return nil }
-        return CushionTreemap.hitTest(point, in: rendering, isLeaf: isLeaf, children: treemapChildren)
+        guard let rendering, let source = renderSource() else { return nil }
+        return TreemapRenderer.hitTest(point, in: rendering, source: source)
     }
 
-    /// Clique: seleciona na árvore (expande o caminho).
     func clickTreemap(atPixel point: CGPoint) {
         guard let item = item(atPixel: point) else { return }
-        focusedPane = .tree
-        tab = .allFiles
+        tab = .folders
         reselectStack = []
         select(item)
     }
 
-    /// Duplo clique: seleciona e dá zoom (WinDirStatModel.Actions.cpp:417-428).
+    /// Duplo clique: entra na pasta (de um arquivo, entra na pasta dele).
     func doubleClickTreemap(atPixel point: CGPoint) {
         guard let item = item(atPixel: point) else { return }
         select(item)
-        zoomIn()
+        zoom(into: item)
     }
 
     var canZoomIn: Bool { selected != nil && index != nil }
 
-    /// Zoom In: arquivo → pasta pai; na raiz, reseta.
     func zoomIn() {
-        guard let index, let selected else { return }
-        var target = selected
+        guard let selected else { return }
+        zoom(into: selected)
+    }
+
+    func zoom(into item: Int32) {
+        guard let index else { return }
+        var target = item
         if target < 0 || !index.isDirectory(target) { target = parent(target) ?? index.root }
-        if target == index.root {
-            zoomReset()
-            return
-        }
+        guard target != zoomItem else { return }
         zoomItem = target
         scheduleRender()
     }
@@ -788,7 +611,9 @@ final class DiskXRayViewModel: ObservableObject {
         scheduleRender()
     }
 
-    /// Roda para cima: Select Parent; para baixo: Reselect Child.
+    /// Trilha da raiz até o item em zoom.
+    var breadcrumbs: [Int32] { lineage(zoomItem) }
+
     func selectParent() {
         guard let selected, let parent = parent(selected) else { return }
         reselectStack.append(selected)
@@ -800,55 +625,36 @@ final class DiskXRayViewModel: ObservableObject {
         select(child)
     }
 
-    /// Retângulos a destacar no treemap: seleção (foco na árvore/lista) ou
-    /// todos os arquivos da extensão selecionada (foco nas extensões).
-    func highlightRects() -> [CGRect] {
-        guard let rendering, let index else { return [] }
-        if focusedPane == .extensions {
-            guard let ext = selectedExtension, !extensionName(ext).isEmpty else { return [] }
-            // O hover redesenha o mapa a cada movimento do mouse; varrer a
-            // subárvore inteira (milhões de itens) a cada vez travava a janela.
-            let key = HighlightKey(image: ObjectIdentifier(rendering.image), ext: ext, version: treeVersion)
-            if key == highlightKey { return highlightCache }
-            let root = rendering.root
-            guard root >= 0 else { return [] }
-            var rects: [CGRect] = []
-            for item in Int(root) ... Int(index.subtreeEnd[Int(root)])
-                where index.extensionIndex[item] == ext && !index.isRemoved(Int32(item)) {
-                if let rect = rendering.rects[Int32(item)], rect.width > 0, rect.height > 0 { rects.append(rect) }
-            }
-            highlightKey = key
-            highlightCache = rects
-            return rects
-        }
-        guard let selected, let rect = rendering.rects[selected], rect.width > 0, rect.height > 0 else { return [] }
-        return [rect]
-    }
-
-    // MARK: - Barra de status (MainFrame.Commands.cpp:330-384)
+    // MARK: - Barra de status
 
     func statusText(hovered: Int32?) -> String {
-        if let hovered { return hovered >= 0 ? path(hovered) : name(hovered) }
-        if focusedPane == .extensions, let ext = selectedExtension { return "*" + extensionName(ext) }
-        if let selected { return selected >= 0 ? path(selected) : name(selected) }
-        return "Ready"
+        guard let item = hovered ?? selected else { return isScanning ? "Scanning…" : "Ready" }
+        return item >= 0 ? path(item) : name(item)
     }
 
     func statusSize(hovered: Int32?) -> String {
-        guard let item = hovered ?? selected, item != Self.largestFilesRoot else { return "" }
-        return (useLogicalSize ? "Logical Size: ∑ " : "Physical Size: ∑ ") + WinDirStatFormat.bytes(size(item))
+        guard let item = hovered ?? selected else { return "" }
+        return SizeFormat.bytes(size(item))
     }
 
-    // MARK: - Clean Up
+    // MARK: - Ações
 
     func open(_ item: Int32) {
         guard item >= 0 else { return }
         NSWorkspace.shared.open(URL(fileURLWithPath: path(item)))
     }
 
-    func selectInFinder(_ item: Int32) {
+    func revealInFinder(_ item: Int32) {
         guard item >= 0 else { return }
         NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path(item))])
+    }
+
+    func quickLook(_ item: Int32) {
+        guard item >= 0 else { return }
+        let target = path(item)
+        Task.detached {
+            _ = ShellExecutor.shared.run("/usr/bin/qlmanage", ["-p", target], timeout: 600)
+        }
     }
 
     func copyPath(_ item: Int32) {
@@ -857,8 +663,8 @@ final class DiskXRayViewModel: ObservableObject {
         NSPasteboard.general.setString(path(item), forType: .string)
     }
 
-    /// Delete (to Recycle Bin) → Lixeira. Nunca a raiz do scan nem a home e suas
-    /// pastas-base; o resto depende da permissão do usuário no arquivo.
+    /// Nunca a raiz do scan nem a home e suas pastas-base; o resto depende da
+    /// permissão do usuário no arquivo.
     func canTrash(_ item: Int32) -> Bool {
         guard let index, item >= 0, item != index.root else { return false }
         let target = path(item)
@@ -884,7 +690,6 @@ final class DiskXRayViewModel: ObservableObject {
                 errorMessage = "Could not move \(index.name(item)) to the Trash."
                 return
             }
-            // Nenhum render pode ler o índice enquanto ele muda.
             renderCancel?.set()
             await renderTask?.value
             index.remove(item)
@@ -893,11 +698,15 @@ final class DiskXRayViewModel: ObservableObject {
             }
             if zoomItem == item || index.isAncestor(item, of: zoomItem) { zoomItem = index.parent[Int(item)] }
             sortedChildren = [:]
-            sortExtensions()
+            buildCategories()
             refreshLargestFiles()
             treeVersion += 1
             scheduleRender()
         }
+    }
+
+    func openFullDiskAccessSettings() {
+        PermissionsHelper.openFullDiskAccessSettings()
     }
 }
 

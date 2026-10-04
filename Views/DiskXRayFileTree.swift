@@ -1,10 +1,13 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// MAC-LIMPO — Copyright (C) 2025-2026 Alex S S Fonseca and contributors.
+
 import AppKit
 import SwiftUI
 
-/// Árvore "All Files" num `NSOutlineView` — o controle nativo e virtualizado do
-/// macOS, como o WinDirStat usa o list control nativo do Windows. Só as linhas
-/// visíveis existem; expandir, rolar, setas e ordenação pelo cabeçalho são do
-/// próprio AppKit.
+/// Árvore de pastas num `NSOutlineView` — o controle nativo e virtualizado do
+/// macOS. Só as linhas visíveis existem; expandir, rolar, setas e ordenação
+/// pelo cabeçalho são do próprio AppKit, então a navegação é instantânea mesmo
+/// com milhões de itens.
 struct FileTreeOutline: NSViewRepresentable {
     @ObservedObject var model: DiskXRayViewModel
     @Binding var pendingTrash: Int32?
@@ -17,12 +20,12 @@ struct FileTreeOutline: NSViewRepresentable {
 
         let outline = TreeOutlineView()
         outline.headerView = NSTableHeaderView()
-        outline.rowHeight = 20
+        outline.rowHeight = 22
         outline.intercellSpacing = NSSize(width: 0, height: 0)
         outline.indentationPerLevel = 14
         outline.style = .plain
-        outline.usesAlternatingRowBackgroundColors = false // ListStripes = false
-        outline.gridStyleMask = [] // ListGrid = false
+        outline.usesAlternatingRowBackgroundColors = true
+        outline.gridStyleMask = []
         outline.allowsMultipleSelection = false
         outline.allowsColumnReordering = true
         outline.allowsColumnResizing = true
@@ -35,9 +38,12 @@ struct FileTreeOutline: NSViewRepresentable {
             tableColumn.width = column.width
             tableColumn.minWidth = 40
             tableColumn.headerCell.alignment = column.alignLeft ? .left : .right
-            tableColumn.sortDescriptorPrototype = NSSortDescriptor(
-                key: "\(column.rawValue)", ascending: column.ascendingByDefault
-            )
+            if column == .share { tableColumn.sortDescriptorPrototype = nil }
+            if column != .share {
+                tableColumn.sortDescriptorPrototype = NSSortDescriptor(
+                    key: "\(column.rawValue)", ascending: column.ascendingByDefault
+                )
+            }
             tableColumn.isHidden = !model.visibleColumns.contains(column)
             outline.addTableColumn(tableColumn)
             if column == .name { outline.outlineTableColumn = tableColumn }
@@ -47,7 +53,6 @@ struct FileTreeOutline: NSViewRepresentable {
         outline.delegate = coordinator
         outline.target = coordinator
         outline.doubleAction = #selector(Coordinator.doubleClicked(_:))
-        outline.onFocus = { [weak coordinator] in coordinator?.model.focusedPane = .tree }
         outline.onKey = { [weak coordinator] key in coordinator?.handleKey(key) ?? false }
 
         let rowMenu = NSMenu()
@@ -102,8 +107,8 @@ struct FileTreeOutline: NSViewRepresentable {
         private var loadingIcons = Set<Int32>()
         private let iconQueue = DispatchQueue(label: "maclimpo.xray.icons", qos: .utility)
         private static let genericFolder = NSWorkspace.shared.icon(for: .folder)
-        private static let freeSpaceIcon = glyph("▢", NSColor(srgbRed: 0x3A / 255, green: 0xCC / 255, blue: 0x3A / 255, alpha: 1))
-        private static let unknownIcon = glyph("?", NSColor(srgbRed: 0xCC / 255, green: 0xB8 / 255, blue: 0x66 / 255, alpha: 1))
+        private static let freeSpaceIcon = symbol("circle.dashed", NSColor(srgbRed: 0.55, green: 0.78, blue: 0.62, alpha: 1))
+        private static let unaccountedIcon = symbol("gearshape.fill", NSColor(srgbRed: 0.86, green: 0.64, blue: 0.28, alpha: 1))
 
         init(model: DiskXRayViewModel) {
             self.model = model
@@ -132,7 +137,7 @@ struct FileTreeOutline: NSViewRepresentable {
             }
 
             if indexID != lastIndex {
-                // Novo scan: estado zerado, raiz inserida e expandida (TreeListControl.cpp:267-278).
+                // Novo scan: estado zerado, raiz expandida.
                 lastIndex = indexID
                 nodes = [:]
                 folderIcons = [:]
@@ -228,14 +233,12 @@ struct FileTreeOutline: NSViewRepresentable {
                 cell.textField?.stringValue = model.name(id)
                 cell.imageView?.image = icon(for: id)
                 return cell
-            case .sizeProportion:
-                let bar = reuse(outlineView, "bar") { SizeProportionCell() }
-                bar.subtree = model.fractionOfParent(id)
-                bar.absolute = model.fractionOfRoot(id)
-                bar.indent = outlineView.level(forItem: item)
-                bar.toolTip = model.sizeProportionTooltip(id)
-                bar.needsDisplay = true
-                return bar
+            case .share:
+                let cell = reuse(outlineView, "share") { ShareCell() }
+                cell.fraction = model.fractionOfParent(id)
+                cell.label = model.text(.share, id)
+                cell.needsDisplay = true
+                return cell
             default:
                 let cell = reuse(outlineView, column.alignLeft ? "textLeft" : "textRight") {
                     TextCell(alignment: column.alignLeft ? .left : .right)
@@ -254,12 +257,11 @@ struct FileTreeOutline: NSViewRepresentable {
         }
 
         /// Ícones: arquivos pelo tipo (cache por extensão no modelo); pastas com
-        /// o ícone genérico na hora e o real carregado em segundo plano, como o
-        /// ícone de shell assíncrono do WinDirStat (Item.Extended.cpp:381-435).
+        /// o ícone genérico na hora e o real carregado em segundo plano.
         private func icon(for id: Int32) -> NSImage? {
             switch id {
             case DiskXRayViewModel.freeSpaceItem: return Self.freeSpaceIcon
-            case DiskXRayViewModel.unknownItem: return Self.unknownIcon
+            case DiskXRayViewModel.unaccountedItem: return Self.unaccountedIcon
             default: break
             }
             guard model.isDirectory(id) else { return model.icon(id) }
@@ -284,16 +286,11 @@ struct FileTreeOutline: NSViewRepresentable {
             return Self.genericFolder
         }
 
-        private static func glyph(_ text: String, _ color: NSColor) -> NSImage {
-            NSImage(size: NSSize(width: 16, height: 16), flipped: false) { rect in
-                let attributes: [NSAttributedString.Key: Any] = [
-                    .font: NSFont.boldSystemFont(ofSize: 13), .foregroundColor: color
-                ]
-                let string = NSAttributedString(string: text, attributes: attributes)
-                let size = string.size()
-                string.draw(at: NSPoint(x: (rect.width - size.width) / 2, y: (rect.height - size.height) / 2))
-                return true
-            }
+        private static func symbol(_ name: String, _ color: NSColor) -> NSImage {
+            let configuration = NSImage.SymbolConfiguration(pointSize: 13, weight: .semibold)
+                .applying(.init(paletteColors: [color]))
+            return NSImage(systemSymbolName: name, accessibilityDescription: nil)?
+                .withSymbolConfiguration(configuration) ?? NSImage()
         }
 
         // MARK: Seleção, ordenação, ações
@@ -301,7 +298,6 @@ struct FileTreeOutline: NSViewRepresentable {
         func outlineViewSelectionDidChange(_ notification: Notification) {
             guard !updatingFromModel, let outline = notification.object as? NSOutlineView,
                   let node = outline.item(atRow: outline.selectedRow) as? Node else { return }
-            model.focusedPane = .tree
             model.select(node.id, reveal: false)
         }
 
@@ -312,7 +308,7 @@ struct FileTreeOutline: NSViewRepresentable {
             model.setTreeSort(column, ascending: descriptor.ascending)
         }
 
-        /// Duplo clique: arquivo abre pelo sistema; pasta alterna (TreeListControl.cpp:324-342).
+        /// Duplo clique: arquivo abre no Quick Look; pasta alterna.
         @objc func doubleClicked(_ sender: NSOutlineView) {
             guard let node = sender.item(atRow: sender.clickedRow) as? Node else { return }
             toggleOrOpen(node)
@@ -323,7 +319,7 @@ struct FileTreeOutline: NSViewRepresentable {
             if model.hasChildren(node.id) {
                 if outline.isItemExpanded(node) { outline.collapseItem(node) } else { outline.expandItem(node) }
             } else {
-                model.open(node.id)
+                model.quickLook(node.id)
             }
         }
 
@@ -359,18 +355,14 @@ struct FileTreeOutline: NSViewRepresentable {
                 item.isEnabled = enabled
                 menu.addItem(item)
             }
-            add("Open…") { [weak self] in self?.model.open(id) }
-            add("Select in Finder…") { [weak self] in self?.model.selectInFinder(id) }
+            add("Quick Look") { [weak self] in self?.model.quickLook(id) }
+            add("Open") { [weak self] in self?.model.open(id) }
+            add("Show in Finder") { [weak self] in self?.model.revealInFinder(id) }
             add("Copy Path") { [weak self] in self?.model.copyPath(id) }
             menu.addItem(.separator())
-            add("Zoom In") { [weak self] in
-                self?.model.select(id, reveal: false)
-                self?.model.zoomIn()
-            }
-            add("Zoom Out", enabled: model.isZoomed) { [weak self] in self?.model.zoomOut() }
-            add("Zoom Reset", enabled: model.isZoomed) { [weak self] in self?.model.zoomReset() }
+            add("Zoom Map Here") { [weak self] in self?.model.zoom(into: id) }
             menu.addItem(.separator())
-            add("Delete (to Trash)", enabled: model.canTrash(id)) { [weak self] in self?.pendingTrash?.wrappedValue = id }
+            add("Move to Trash…", enabled: model.canTrash(id)) { [weak self] in self?.pendingTrash?.wrappedValue = id }
         }
     }
 }
@@ -450,85 +442,29 @@ private final class TextCell: NSTableCellView {
     required init?(coder _: NSCoder) { fatalError("init(coder:) has not been implemented") }
 }
 
-/// Barra "Size Proportion" (Item.Extended.cpp:49-167): trilho, barra do subtree
-/// (fração do pai) e barra absoluta (fração da raiz), cor por nível.
-private final class SizeProportionCell: NSView {
-    var subtree = 0.0
-    var absolute = 0.0
-    var indent = 0
+/// Coluna "Share": cápsula com a fração do pai e a porcentagem ao lado.
+private final class ShareCell: NSView {
+    var fraction = 0.0
+    var label = ""
 
     override var isFlipped: Bool { true }
 
-    /// Options.h:260-267, FileTreeColors.
-    private static let fileTreeColors: [(Double, Double, Double)] = [
-        (64, 64, 140), (140, 64, 64), (64, 140, 64), (140, 140, 64),
-        (0, 0, 255), (255, 0, 0), (0, 255, 0), (255, 255, 0)
-    ]
-
     override func draw(_: NSRect) {
-        typealias RGB = (Double, Double, Double)
-        let dark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        let track = NSRect(x: 4, y: bounds.midY - 3, width: max(0, bounds.width - 58), height: 6)
+        guard track.width > 4 else { return }
+        NSColor.quaternaryLabelColor.setFill()
+        NSBezierPath(roundedRect: track, xRadius: 3, yRadius: 3).fill()
+        let filled = NSRect(x: track.minX, y: track.minY, width: max(2, track.width * CGFloat(min(1, fraction))), height: track.height)
+        NSColor.controlAccentColor.setFill()
+        NSBezierPath(roundedRect: filled, xRadius: 3, yRadius: 3).fill()
 
-        // rc.Deflate(2, 4); rc.left += indent * SizeProportionIndent(16)
-        var rc = bounds.insetBy(dx: 2, dy: 4)
-        let indentWidth = CGFloat(indent) * 16
-        rc.origin.x += indentWidth
-        rc.size.width -= indentWidth
-        guard rc.width > 0, rc.height > 0 else { return }
-
-        let color = Self.fileTreeColors[indent % Self.fileTreeColors.count]
-        let neutralBack: RGB = dark ? (40, 40, 40) : (225, 225, 225)
-        let white: RGB = (255, 255, 255), black: RGB = (0, 0, 0)
-        func blend(_ a: RGB, _ b: RGB, _ t: Double) -> RGB {
-            let t = min(max(t, 0), 1)
-            return ((a.0 + (b.0 - a.0) * t).rounded(), (a.1 + (b.1 - a.1) * t).rounded(), (a.2 + (b.2 - a.2) * t).rounded())
-        }
-        func blendDark(_ c: RGB, _ d: Double, _ l: Double) -> RGB { dark ? blend(c, white, d) : blend(c, black, l) }
-        func ns(_ c: RGB) -> NSColor { NSColor(srgbRed: c.0 / 255, green: c.1 / 255, blue: c.2 / 255, alpha: 1) }
-        func roundRect(_ r: NSRect, fill: RGB, border: RGB) {
-            let path = NSBezierPath(roundedRect: r.insetBy(dx: 0.5, dy: 0.5), xRadius: 1.5, yRadius: 1.5)
-            ns(fill).setFill()
-            path.fill()
-            ns(border).setStroke()
-            path.stroke()
-        }
-        func fill(_ r: NSRect, _ c: RGB) {
-            ns(c).setFill()
-            r.fill()
-        }
-
-        let trackFill = blendDark(neutralBack, 0.10, 0.06)
-        let trackBorder = blendDark(trackFill, 0.18, 0.18)
-        let subtreeFill = dark ? blend(trackFill, color, 0.68) : blend(trackFill, color, 0.48)
-        let subtreeGlow = blend(subtreeFill, white, dark ? 0.18 : 0.30)
-        let absoluteFill = blendDark(color, 0.12, 0.10)
-        let absoluteGlow = blend(absoluteFill, white, dark ? 0.16 : 0.26)
-        let absoluteEdge = blend(absoluteFill, black, dark ? 0.18 : 0.12)
-
-        roundRect(rc, fill: trackFill, border: trackBorder)
-        rc = rc.insetBy(dx: 1, dy: 1)
-        guard rc.width > 0, rc.height > 0 else { return }
-        func fractionX(_ f: Double) -> CGFloat { rc.minX + (rc.width * CGFloat(min(max(f, 0), 1))).rounded() }
-
-        let subtreeRight = fractionX(subtree)
-        if subtreeRight > rc.minX {
-            let r = NSRect(x: rc.minX, y: rc.minY, width: subtreeRight - rc.minX, height: rc.height)
-            roundRect(r, fill: subtreeFill, border: subtreeFill)
-            if r.height >= 3, r.width >= 2 { fill(NSRect(x: r.minX + 1, y: r.minY, width: r.width - 2, height: 1), subtreeGlow) }
-            if subtreeRight < rc.maxX { fill(NSRect(x: subtreeRight, y: rc.minY, width: 1, height: rc.height), trackBorder) }
-        }
-
-        var absoluteRect = NSRect(x: rc.minX, y: rc.minY, width: fractionX(min(subtree, absolute)) - rc.minX, height: rc.height)
-        absoluteRect = absoluteRect.insetBy(dx: 0, dy: 2)
-        if absoluteRect.width > 0, absoluteRect.height > 0 {
-            roundRect(absoluteRect, fill: absoluteFill, border: absoluteFill)
-            if absoluteRect.height >= 3, absoluteRect.width >= 2 {
-                fill(NSRect(x: absoluteRect.minX + 1, y: absoluteRect.minY, width: absoluteRect.width - 2, height: 1), absoluteGlow)
-            }
-            if absoluteRect.height >= 2 {
-                fill(NSRect(x: absoluteRect.maxX - 1, y: absoluteRect.minY + 1, width: 1, height: absoluteRect.height - 2), absoluteEdge)
-            }
-        }
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .regular),
+            .foregroundColor: NSColor.secondaryLabelColor
+        ]
+        let text = NSAttributedString(string: label, attributes: attributes)
+        let size = text.size()
+        text.draw(at: NSPoint(x: bounds.maxX - size.width - 4, y: bounds.midY - size.height / 2))
     }
 }
 

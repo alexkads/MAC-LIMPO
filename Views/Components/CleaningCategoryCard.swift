@@ -12,6 +12,7 @@ struct CleaningCategoryCard: View {
 
     @ObservedObject private var themeManager = ThemeManager.shared
     @State private var isHovered = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     /// Cor/gradiente do ícone: por categoria, ou o accent do tema (ex.: Matrix).
     private var iconGradient: LinearGradient {
@@ -31,7 +32,8 @@ struct CleaningCategoryCard: View {
                         .fill(iconGradient)
                         .frame(width: 50, height: 50)
                         .shadow(
-                            color: palette.glow ? iconGlowColor.opacity(0.8) : .black.opacity(0.2),
+                            color: palette.isGlass ? .clear
+                                : (palette.glow ? iconGlowColor.opacity(0.8) : .black.opacity(0.2)),
                             radius: palette.glow ? (isHovered ? 14 : 9) : (isHovered ? 8 : 4),
                             y: palette.glow ? 0 : (isHovered ? 4 : 2)
                         )
@@ -40,7 +42,7 @@ struct CleaningCategoryCard: View {
                         .font(.system(size: 24, weight: .semibold))
                         .foregroundColor(.white)
                 }
-                .scaleEffect(isHovered ? 1.05 : 1.0)
+                .scaleEffect(isHovered && !reduceMotion ? 1.05 : 1.0)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(category.rawValue)
@@ -83,26 +85,41 @@ struct CleaningCategoryCard: View {
                         .foregroundColor(.white)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .background(Capsule().fill(iconGradient))
+                        .background {
+                            if palette.isGlass {
+                                Capsule().fill(palette.usesCategoryColors ? category.color : Color.accentColor)
+                            } else {
+                                Capsule().fill(iconGradient)
+                            }
+                        }
                 }
             }
             .padding(16)
             .themedSurface(palette, hovered: isHovered)
-            .overlay(
-                // Realce de borda no hover (accent/categoria).
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(
-                        iconGradient.opacity(isHovered ? (palette.glow ? 0.9 : 0.5) : 0),
-                        lineWidth: 2
-                    )
-            )
+            .overlay {
+                if palette.isGlass {
+                    // Hover sem borda colorida: um realce do próprio preenchimento.
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color.primary.opacity(isHovered ? 0.06 : 0))
+                } else {
+                    // Realce de borda no hover (accent/categoria).
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(
+                            iconGradient.opacity(isHovered ? (palette.glow ? 0.9 : 0.5) : 0),
+                            lineWidth: 2
+                        )
+                }
+            }
+            .contentShape(RoundedRectangle(cornerRadius: 16))
         }
         .buttonStyle(PlainButtonStyle())
         .disabled(isCleaning)
         .onHover { hovering in
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+            withAnimation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.7)) {
                 isHovered = hovering
             }
         }
+        .accessibilityLabel("\(category.rawValue), \(isCleaning ? "cleaning" : isScanning ? "scanning" : estimatedSize)")
+        .accessibilityHint("Cleans \(category.rawValue)")
     }
 }

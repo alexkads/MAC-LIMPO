@@ -83,7 +83,7 @@ struct ResultsView: View {
                 Button("Done") {
                     isShowing = false
                 }
-                .buttonStyle(.borderedProminent)
+                .themedDialogButton(themeManager.palette)
                 .controlSize(.large)
             }
             .padding(32)

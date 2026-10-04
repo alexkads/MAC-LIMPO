@@ -393,290 +393,347 @@ struct MenuBarView: View {
         self.onOpenDiskXRay = onOpenDiskXRay
     }
 
+    /// Ícone dos botões do cabeçalho: gradiente do tema, ou a cor do texto no
+    /// Liquid Glass (o vidro já dá o destaque; gradiente sobre vidro conflita).
+    @ViewBuilder
+    private func headerIcon(_ name: String) -> some View {
+        let image = Image(systemName: name).font(.system(size: 16, weight: .semibold))
+        if themeManager.palette.isGlass {
+            image.foregroundStyle(.primary)
+        } else {
+            image.foregroundStyle(themeManager.palette.accentGradient)
+        }
+    }
+
     var body: some View {
         ZStack {
             // Fundo temático (Classic = transparente; neon = gradiente escuro)
             themeManager.palette.backgroundView
 
-            VStack(spacing: 0) {
-                // FIXED HEADER SECTION
-                VStack(spacing: 16) {
-                    // Header Title & Buttons
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("MAC-LIMPO")
-                                .font(.system(size: 24, weight: .bold))
-                                .foregroundStyle(themeManager.palette.accentGradient)
-                                .shadow(
-                                    color: themeManager.palette.glow
-                                        ? themeManager.palette.glowColor.opacity(0.7) : .clear,
-                                    radius: themeManager.palette.glow ? 8 : 0
-                                )
+            if themeManager.palette.isGlass {
+                // Liquid Glass: tudo nativo (List, Gauge, Picker, NSSearchField, vidro).
+                NativeMenuBarContent(
+                    viewModel: viewModel,
+                    launchAtLogin: launchAtLoginService,
+                    cleaningOptions: cleaningOptions,
+                    themeManager: themeManager,
+                    searchText: $searchText,
+                    insight: intelligenceInsight,
+                    insightStatus: intelligenceStatus,
+                    isGeneratingInsight: isGeneratingInsight,
+                    generateInsight: generateStorageInsight,
+                    onOpenDiskXRay: onOpenDiskXRay,
+                    version: Self.appVersion
+                )
+            } else {
+                VStack(spacing: 0) {
+                    // FIXED HEADER SECTION
+                    VStack(spacing: 16) {
+                        // Header Title & Buttons
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("MAC-LIMPO")
+                                    .font(.system(size: 24, weight: .bold))
+                                    .foregroundStyle(themeManager.palette.accentGradient)
+                                    .shadow(
+                                        color: themeManager.palette.glow
+                                            ? themeManager.palette.glowColor.opacity(0.7) : .clear,
+                                        radius: themeManager.palette.glow ? 8 : 0
+                                    )
 
-                            Text("System Cleaner")
-                                .font(.system(size: 12))
-                                .foregroundColor(themeManager.palette.secondaryText)
-                        }
-
-                        Spacer()
-
-                        Button(action: {
-                            onOpenDiskXRay()
-                        }) {
-                            Image(systemName: "rays")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(themeManager.palette.accentGradient)
-                        }
-                        .buttonStyle(.plain)
-                        .help("Disk X-Ray")
-
-                        Button(action: {
-                            viewModel.refreshDiskStats()
-                            viewModel.scanAllCategories()
-                        }) {
-                            Image(systemName: "arrow.clockwise")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(themeManager.palette.accentGradient)
-                        }
-                        .buttonStyle(.plain)
-                        .help("Refresh scan")
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-
-                    // Storage Stats
-                    StorageStatsView(
-                        usedSpace: viewModel.usedDiskSpace,
-                        totalSpace: viewModel.totalDiskSpace
-                    )
-                    .padding(.horizontal, 20)
-
-                    HStack(spacing: 10) {
-                        Image(systemName: "magnifyingglass")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(themeManager.palette.secondaryText)
-
-                        TextField("Search cleaning categories", text: $searchText)
-                            .textFieldStyle(.plain)
-                            .font(.system(size: 13))
-                            .foregroundColor(themeManager.palette.primaryText)
-
-                        if !searchText.isEmpty {
-                            Button {
-                                searchText = ""
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.system(size: 13))
+                                Text("System Cleaner")
+                                    .font(.system(size: 12))
                                     .foregroundColor(themeManager.palette.secondaryText)
                             }
-                            .buttonStyle(.plain)
-                            .help("Clear search")
+
+                            Spacer()
+
+                            HStack(spacing: themeManager.palette.isGlass ? 6 : 12) {
+                                Button(action: {
+                                    onOpenDiskXRay()
+                                }) {
+                                    headerIcon("rays")
+                                }
+                                .themedSecondaryButton(themeManager.palette)
+                                .help("Disk X-Ray")
+                                .accessibilityLabel("Open Disk X-Ray")
+
+                                Button(action: {
+                                    viewModel.refreshDiskStats()
+                                    viewModel.scanAllCategories()
+                                }) {
+                                    headerIcon("arrow.clockwise")
+                                }
+                                .themedSecondaryButton(themeManager.palette)
+                                .help("Refresh scan")
+                                .accessibilityLabel("Refresh scan")
+                            }
+                            .themedGlassGroup(themeManager.palette)
                         }
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
-                    .themedSurface(themeManager.palette, cornerRadius: 12)
-                    .padding(.horizontal, 20)
-                }
-                .padding(.bottom, 10)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 20)
 
-                // SCROLLABLE LIST SECTION
-                ScrollView {
-                    VStack(spacing: 20) {
-                        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-
-                        AppleIntelligenceInsightView(
-                            insight: intelligenceInsight,
-                            status: intelligenceStatus,
-                            isGenerating: isGeneratingInsight,
-                            generateInsight: generateStorageInsight
+                        // Storage Stats
+                        StorageStatsView(
+                            usedSpace: viewModel.usedDiskSpace,
+                            totalSpace: viewModel.totalDiskSpace
                         )
                         .padding(.horizontal, 20)
-                        .padding(.top, 10)
 
-                        // Cleaning Categories (apenas as implementadas)
-                        // Cleaning Categories by Group
+                        HStack(spacing: 10) {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(themeManager.palette.secondaryText)
+
+                            TextField("Search cleaning categories", text: $searchText)
+                                .textFieldStyle(.plain)
+                                .font(.system(size: 13))
+                                .foregroundColor(themeManager.palette.primaryText)
+
+                            if !searchText.isEmpty {
+                                Button {
+                                    searchText = ""
+                                } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .font(.system(size: 13))
+                                        .foregroundColor(themeManager.palette.secondaryText)
+                                }
+                                .buttonStyle(.plain)
+                                .help("Clear search")
+                            }
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .themedControlSurface(themeManager.palette, cornerRadius: 12)
+                        .padding(.horizontal, 20)
+                    }
+                    .padding(.bottom, 10)
+
+                    // SCROLLABLE LIST SECTION
+                    ScrollView {
                         VStack(spacing: 20) {
-                            ForEach(CleaningGroup.allCases) { group in
-                                let categoriesInGroup = viewModel.services.keys
-                                    .filter {
-                                        guard $0.group == group else { return false }
-                                        guard !query.isEmpty else { return true }
-                                        return $0.rawValue.localizedCaseInsensitiveContains(query)
-                                            || $0.description.localizedCaseInsensitiveContains(query)
-                                    }
-                                    .sorted { $0.rawValue < $1.rawValue }
+                            let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
 
-                                if !categoriesInGroup.isEmpty {
-                                    VStack(alignment: .leading, spacing: 12) {
-                                        // Group Header
-                                        HStack {
-                                            Image(systemName: group.icon)
-                                                .font(.system(size: 14))
-                                                .foregroundColor(themeManager.palette.secondaryText)
-                                            Text(group.rawValue)
-                                                .font(.system(size: 13, weight: .semibold))
-                                                .foregroundColor(themeManager.palette.secondaryText)
+                            AppleIntelligenceInsightView(
+                                insight: intelligenceInsight,
+                                status: intelligenceStatus,
+                                isGenerating: isGeneratingInsight,
+                                generateInsight: generateStorageInsight
+                            )
+                            .padding(.horizontal, 20)
+                            .padding(.top, 10)
 
-                                            Text("\(categoriesInGroup.count)")
-                                                .font(.system(size: 10, weight: .bold, design: .rounded))
-                                                .foregroundColor(themeManager.palette.secondaryText)
-                                                .padding(.horizontal, 7)
-                                                .padding(.vertical, 3)
-                                                .background(
-                                                    Capsule()
-                                                        .fill(themeManager.palette.secondaryText.opacity(0.12))
-                                                )
-                                            Spacer()
+                            // Cleaning Categories (apenas as implementadas)
+                            // Cleaning Categories by Group
+                            VStack(spacing: 20) {
+                                ForEach(CleaningGroup.allCases) { group in
+                                    let categoriesInGroup = viewModel.services.keys
+                                        .filter {
+                                            guard $0.group == group else { return false }
+                                            guard !query.isEmpty else { return true }
+                                            return $0.rawValue.localizedCaseInsensitiveContains(query)
+                                                || $0.description.localizedCaseInsensitiveContains(query)
                                         }
-                                        .padding(.horizontal, 4)
+                                        .sorted { $0.rawValue < $1.rawValue }
 
-                                        // Categories Grid
-                                        VStack(spacing: 12) {
-                                            ForEach(categoriesInGroup) { category in
-                                                CleaningCategoryCard(
-                                                    category: category,
-                                                    estimatedSize: viewModel.scanResults[category]?
-                                                        .formattedSize ?? "...",
-                                                    isScanning: viewModel.isScanning[category] ?? false,
-                                                    scanningStatus: viewModel.scanningStatus[category],
-                                                    isCleaning: viewModel.cleaningCategories.contains(category),
-                                                    action: {
-                                                        viewModel.cleanCategory(category)
-                                                    }
-                                                )
+                                    if !categoriesInGroup.isEmpty {
+                                        VStack(alignment: .leading, spacing: 12) {
+                                            // Group Header
+                                            HStack {
+                                                Image(systemName: group.icon)
+                                                    .font(.system(size: 14))
+                                                    .foregroundColor(themeManager.palette.secondaryText)
+                                                Text(group.rawValue)
+                                                    .font(.system(size: 13, weight: .semibold))
+                                                    .foregroundColor(themeManager.palette.secondaryText)
+
+                                                Text("\(categoriesInGroup.count)")
+                                                    .font(.system(size: 10, weight: .bold, design: .rounded))
+                                                    .foregroundColor(themeManager.palette.secondaryText)
+                                                    .padding(.horizontal, 7)
+                                                    .padding(.vertical, 3)
+                                                    .background(
+                                                        Capsule()
+                                                            .fill(themeManager.palette.secondaryText.opacity(0.12))
+                                                    )
+                                                Spacer()
+                                            }
+                                            .padding(.horizontal, 4)
+
+                                            // Categories Grid
+                                            VStack(spacing: 12) {
+                                                ForEach(categoriesInGroup) { category in
+                                                    CleaningCategoryCard(
+                                                        category: category,
+                                                        estimatedSize: viewModel.scanResults[category]?
+                                                            .formattedSize ?? "...",
+                                                        isScanning: viewModel.isScanning[category] ?? false,
+                                                        scanningStatus: viewModel.scanningStatus[category],
+                                                        isCleaning: viewModel.cleaningCategories.contains(category),
+                                                        action: {
+                                                            viewModel.cleanCategory(category)
+                                                        }
+                                                    )
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 10)
-
-                        if !query.isEmpty && !viewModel.services.keys.contains(where: {
-                            $0.rawValue.localizedCaseInsensitiveContains(query)
-                                || $0.description.localizedCaseInsensitiveContains(query)
-                        }) {
-                            VStack(spacing: 10) {
-                                Image(systemName: "magnifyingglass")
-                                    .font(.system(size: 24, weight: .semibold))
-                                    .foregroundColor(themeManager.palette.secondaryText)
-                                Text("No categories found")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(themeManager.palette.primaryText)
-                                Text("Try another search term")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(themeManager.palette.secondaryText)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 28)
-                        }
-
-                        // Clean All Button
-                        Button(action: {
-                            viewModel.cleanAll()
-                        }) {
-                            HStack {
-                                Image(systemName: "sparkles")
-                                    .font(.system(size: 16, weight: .semibold))
-                                Text("Clean All")
-                                    .font(.system(size: 16, weight: .semibold))
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(themeManager.palette.accentGradient)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
-                            .shadow(
-                                color: themeManager.palette.glow
-                                    ? themeManager.palette.glowColor.opacity(0.6) : .clear,
-                                radius: themeManager.palette.glow ? 14 : 0
-                            )
-                        }
-                        .buttonStyle(.plain)
-                        .padding(.horizontal, 20)
-
-                        // Settings
-                        VStack(spacing: 12) {
-                            // Theme picker
-                            ThemePickerView(themeManager: themeManager)
-
-                            Toggle(isOn: $launchAtLoginService.isEnabled) {
-                                Text("Launch at Login")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(themeManager.palette.primaryText)
-                            }
-                            .toggleStyle(.switch)
                             .padding(.horizontal, 20)
+                            .padding(.top, 10)
 
-                            Toggle(isOn: $cleaningOptions.aggressiveMode) {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Aggressive cleaning")
-                                        .font(.system(size: 14))
+                            if !query.isEmpty && !viewModel.services.keys.contains(where: {
+                                $0.rawValue.localizedCaseInsensitiveContains(query)
+                                    || $0.description.localizedCaseInsensitiveContains(query)
+                            }) {
+                                VStack(spacing: 10) {
+                                    Image(systemName: "magnifyingglass")
+                                        .font(.system(size: 24, weight: .semibold))
+                                        .foregroundColor(themeManager.palette.secondaryText)
+                                    Text("No categories found")
+                                        .font(.system(size: 14, weight: .semibold))
                                         .foregroundColor(themeManager.palette.primaryText)
-                                    Text(
-                                        "Also clears large regenerable caches (Chrome AI models, all unused Docker images)"
+                                    Text("Try another search term")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(themeManager.palette.secondaryText)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 28)
+                            }
+
+                            // Clean All Button
+                            Button(action: {
+                                viewModel.cleanAll()
+                            }) {
+                                if themeManager.palette.isGlass {
+                                    // O estilo .glassProminent desenha fundo, forma e
+                                    // estados (pressionado, desabilitado) sozinho.
+                                    Label("Clean All", systemImage: "sparkles")
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 6)
+                                } else {
+                                    HStack {
+                                        Image(systemName: "sparkles")
+                                            .font(.system(size: 16, weight: .semibold))
+                                        Text("Clean All")
+                                            .font(.system(size: 16, weight: .semibold))
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                                    .background(themeManager.palette.accentGradient)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(12)
+                                    .shadow(
+                                        color: themeManager.palette.glow
+                                            ? themeManager.palette.glowColor.opacity(0.6) : .clear,
+                                        radius: themeManager.palette.glow ? 14 : 0
                                     )
-                                    .font(.system(size: 11))
-                                    .foregroundColor(themeManager.palette.secondaryText)
-                                    .fixedSize(horizontal: false, vertical: true)
                                 }
                             }
-                            .toggleStyle(.switch)
+                            .themedProminentButton(themeManager.palette)
+                            .controlSize(themeManager.palette.isGlass ? .large : .regular)
                             .padding(.horizontal, 20)
-                        }
 
-                        // Quit Button + versão
-                        VStack(spacing: 4) {
-                            Button("Quit MAC-LIMPO") {
-                                NSApplication.shared.terminate(nil)
-                            }
-                            .buttonStyle(.plain)
-                            .foregroundColor(themeManager.palette.secondaryText)
-                            .font(.system(size: 12))
+                            // Settings
+                            VStack(spacing: 12) {
+                                // Theme picker
+                                ThemePickerView(themeManager: themeManager)
 
-                            if let version = Self.appVersion {
-                                Text(version)
-                                    .font(.system(size: 10))
-                                    .foregroundColor(themeManager.palette.secondaryText.opacity(0.6))
-                                    .textSelection(.enabled)
+                                Toggle(isOn: $launchAtLoginService.isEnabled) {
+                                    Text("Launch at Login")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(themeManager.palette.primaryText)
+                                }
+                                .toggleStyle(.switch)
+                                .padding(.horizontal, 20)
+
+                                Toggle(isOn: $cleaningOptions.aggressiveMode) {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Aggressive cleaning")
+                                            .font(.system(size: 14))
+                                            .foregroundColor(themeManager.palette.primaryText)
+                                        Text(
+                                            "Also clears large regenerable caches (Chrome AI models, all unused Docker images)"
+                                        )
+                                        .font(.system(size: 11))
+                                        .foregroundColor(themeManager.palette.secondaryText)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    }
+                                }
+                                .toggleStyle(.switch)
+                                .padding(.horizontal, 20)
                             }
+
+                            // Quit Button + versão
+                            VStack(spacing: 4) {
+                                Button("Quit MAC-LIMPO") {
+                                    NSApplication.shared.terminate(nil)
+                                }
+                                .themedSecondaryButton(themeManager.palette)
+                                .foregroundColor(themeManager.palette.secondaryText)
+                                .font(.system(size: 12))
+
+                                if let version = Self.appVersion {
+                                    Text(version)
+                                        .font(.system(size: 10))
+                                        .foregroundColor(themeManager.palette.secondaryText.opacity(0.6))
+                                        .textSelection(.enabled)
+                                }
+                            }
+                            .padding(.bottom, 20)
                         }
-                        .padding(.bottom, 20)
                     }
+                }
+
+            }
+
+            // Painéis inline (não fecham o popover): nativos no Liquid Glass.
+            if viewModel.showProgress, let category = viewModel.currentCleaningCategory {
+                if themeManager.palette.isGlass {
+                    NativeProgressPanel(
+                        category: category,
+                        isShowing: $viewModel.showProgress,
+                        progress: viewModel.cleaningProgress,
+                        currentOperation: viewModel.currentOperation
+                    )
+                } else {
+                    CleaningProgressView(
+                        category: category,
+                        isShowing: $viewModel.showProgress,
+                        progress: viewModel.cleaningProgress,
+                        currentOperation: viewModel.currentOperation
+                    )
                 }
             }
 
-            // Progress Overlay
-            if viewModel.showProgress, let category = viewModel.currentCleaningCategory {
-                CleaningProgressView(
-                    category: category,
-                    isShowing: $viewModel.showProgress,
-                    progress: viewModel.cleaningProgress,
-                    currentOperation: viewModel.currentOperation
-                )
-            }
-
-            // Results Overlay
             if viewModel.showResults, let result = viewModel.lastResult {
-                ResultsView(
-                    result: result,
-                    isShowing: $viewModel.showResults
-                )
+                if themeManager.palette.isGlass {
+                    NativeResultsPanel(result: result, isShowing: $viewModel.showResults)
+                } else {
+                    ResultsView(result: result, isShowing: $viewModel.showResults)
+                }
             }
 
-            // Confirmation Overlay (inline — não fecha o popover)
             if let request = viewModel.confirmationRequest {
-                CleaningConfirmationView(
-                    request: request,
-                    onConfirm: { dontAskAgain in
-                        viewModel.confirmPendingClean(dontAskAgain: dontAskAgain)
-                    },
-                    onCancel: {
-                        viewModel.cancelPendingClean()
-                    }
-                )
+                if themeManager.palette.isGlass {
+                    NativeConfirmationPanel(
+                        request: request,
+                        onConfirm: { dontAskAgain in viewModel.confirmPendingClean(dontAskAgain: dontAskAgain) },
+                        onCancel: { viewModel.cancelPendingClean() }
+                    )
+                } else {
+                    CleaningConfirmationView(
+                        request: request,
+                        onConfirm: { dontAskAgain in
+                            viewModel.confirmPendingClean(dontAskAgain: dontAskAgain)
+                        },
+                        onCancel: {
+                            viewModel.cancelPendingClean()
+                        }
+                    )
+                }
             }
         }
         .frame(width: 420, height: 700)

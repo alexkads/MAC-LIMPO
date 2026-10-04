@@ -64,6 +64,7 @@ let package = Package(
                 "Models/Theme.swift",
                 "Models/DiskXRay.swift",
                 "Models/DiskScanIndex.swift",
+                "Models/FileCategory.swift",
                 "Services/CleaningService.swift",
                 "Services/CleaningServiceRegistry.swift",
                 "Services/AppleIntelligenceService.swift",
@@ -126,6 +127,7 @@ let package = Package(
                 "ViewModels/DiskXRayViewModel.swift",
                 // Views
                 "Views/MenuBarView.swift",
+                "Views/NativeMenuBarView.swift",
                 "Views/DiskXRayWindowView.swift",
                 "Views/DiskXRayFileTree.swift",
                 "Views/Components/CleaningCategoryCard.swift",
@@ -134,6 +136,7 @@ let package = Package(
                 "Views/Components/CleaningConfirmationView.swift",
                 "Views/Components/ResultsView.swift",
                 "Views/Components/ThemePickerView.swift",
+                "Views/Components/ThemeStyles.swift",
                 // Utilities
                 "Utilities/FileSystemHelper.swift",
                 "Utilities/ShellExecutor.swift",
@@ -141,8 +144,8 @@ let package = Package(
                 "Utilities/NSAlert+MenuBar.swift",
                 "Utilities/AsyncSemaphore.swift",
                 "Utilities/Deadline.swift",
-                "Utilities/CushionTreemap.swift",
-                "Utilities/WinDirStatFormat.swift",
+                "Utilities/TreemapRenderer.swift",
+                "Utilities/SizeFormat.swift",
                 "Utilities/ScanTuning.swift",
                 "Views/Components/AppleIntelligenceInsightView.swift",
                 "Intents/MACLIMPOIntents.swift"

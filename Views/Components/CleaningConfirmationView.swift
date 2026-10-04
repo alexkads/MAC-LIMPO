@@ -51,6 +51,8 @@ struct CleaningConfirmationView: View {
                         Text("Cancelar")
                             .frame(maxWidth: .infinity)
                     }
+                    .keyboardShortcut(.cancelAction)
+                    .themedDialogSecondaryButton(palette)
                     .controlSize(.large)
 
                     Button(action: { onConfirm(dontAskAgain) }) {
@@ -58,7 +60,7 @@ struct CleaningConfirmationView: View {
                             .frame(maxWidth: .infinity)
                     }
                     .keyboardShortcut(.defaultAction)
-                    .buttonStyle(.borderedProminent)
+                    .themedDialogButton(palette)
                     .controlSize(.large)
                 }
             }
