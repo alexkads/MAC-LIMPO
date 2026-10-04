@@ -8,6 +8,8 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 ## [Unreleased]
 
 ### ✨ Adicionado
+- **Docker — limpeza total (opcional)**: novo ajuste "Docker full cleanup" para máquinas de desenvolvimento. Para todos os contêineres e remove contêineres (com os logs), todas as imagens, **todos os volumes — bancos de dados incluídos**, build cache e redes. Desligado por padrão, não fica salvo entre aberturas do app e sempre pede confirmação. O card lista cada volume que será apagado.
+- **Docker — caches em uso visíveis**: o card mostra os volumes de cache de build presos a um contêiner (ex.: `cargo-target` 10 GB em `recordarfotos-dev-api-1`), e volumes `*-cargo` (CARGO_HOME) passam a contar como cache.
 - **Liquid Glass é o tema principal e todo nativo**: padrão para quem nunca escolheu tema e primeiro no seletor. O popover usa só componentes do sistema — `List` com `Section`, `Gauge` circular, `LabeledContent`, `Picker`, `Toggle`, `ProgressView`, `NSSearchField` — e painéis de confirmação, progresso e resultado em vidro nativo. Classic, Cyberpunk e Matrix mantêm o visual próprio.
 - **Tema Liquid Glass**: tema com o vidro nativo da Apple (`glassEffect`, `GlassEffectContainer`, botões `.glass`/`.glassProminent`) nos controles e na navegação; conteúdo em preenchimentos semânticos, sem vidro sobre vidro. Respeita Reduzir Transparência, Aumentar Contraste e Reduzir Movimento.
 - **Disk X-Ray com cara nova**: cores por categoria de arquivo (Vídeo, Imagens, Código, Discos virtuais…), cabeçalho com a barra do disco e cartões por categoria, painel de tipos, mapa squarified com pastas agrupadas, ladrilhos arredondados e rótulos, trilha de navegação, tamanhos no padrão do Finder e toolbar nativa da janela.

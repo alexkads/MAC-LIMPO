@@ -75,7 +75,7 @@ class DockerCleaningService: BaseCleaningService, CleaningService, @unchecked Se
     /// Nada genérico como "cache" ou "data": "redis-cache", "pgdata" e "uploads"
     /// guardam estado de aplicação e continuam preservados.
     static let regenerableVolumeSuffixes: [String] = [
-        "target", "cargo-registry", "cargo-git", "sccache",
+        "target", "cargo", "cargo-registry", "cargo-git", "sccache",
         "node-modules", "next-cache", "nuxt-cache", "turbo-cache", "vite-cache",
         "npm-cache", "yarn-cache", "pnpm-store", "bun-cache",
         "gradle-cache", "maven-cache", "m2-cache", "nuget-cache", "nuget-packages",
@@ -116,7 +116,12 @@ class DockerCleaningService: BaseCleaningService, CleaningService, @unchecked Se
     /// Espaço recuperável por tipo ("Images", "Containers", "Local Volumes",
     /// "Build Cache"), em bytes.
     private func reclaimableByType() -> [String: Int64] {
-        let result = shell.execute("docker system df --format '{{.Type}}|{{.Reclaimable}}'", timeout: 60)
+        systemDF(field: "Reclaimable")
+    }
+
+    /// Uma coluna do `docker system df` (`Size` ou `Reclaimable`) por tipo, em bytes.
+    private func systemDF(field: String) -> [String: Int64] {
+        let result = shell.execute("docker system df --format '{{.Type}}|{{.\(field)}}'", timeout: 60)
         guard result.exitCode == 0 else { return [:] }
 
         var totals: [String: Int64] = [:]
@@ -137,6 +142,20 @@ class DockerCleaningService: BaseCleaningService, CleaningService, @unchecked Se
         return result.output
             .components(separatedBy: "\n")
             .reduce(Int64(0)) { $0 + Self.parseDockerSize($1) }
+    }
+
+    /// Linhas não vazias da saída de um comando (ids, nomes).
+    private func lines(_ command: String, timeout: TimeInterval = 30) -> [String] {
+        let result = shell.execute(command, timeout: timeout)
+        guard result.exitCode == 0 else { return [] }
+        return result.output.split(whereSeparator: \.isNewline)
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+    }
+
+    /// Contêineres (ligados ou não) que montam o volume.
+    private func containers(using volume: String) -> [String] {
+        lines("docker ps -a --filter volume=\(volume) --format '{{.Names}}'")
     }
 
     /// Redes sem nenhum container anexado, fora as três embutidas (bridge/host/none),
@@ -247,6 +266,10 @@ class DockerCleaningService: BaseCleaningService, CleaningService, @unchecked Se
             return offlineScan(items + ["Docker not running"], size: estimatedSize)
         }
 
+        if CleaningOptions.shared.dockerFullCleanup {
+            return fullCleanupScan(items: items, estimatedSize: estimatedSize, progress: progress)
+        }
+
         progress?("Inspecting Docker...")
 
         let reclaimable = reclaimableByType()
@@ -312,6 +335,22 @@ class DockerCleaningService: BaseCleaningService, CleaningService, @unchecked Se
             estimatedSize += cacheBytes
         }
 
+        // Caches de build ligados a um contêiner ficam de fora (o contêiner está
+        // usando), mas costumam ser o grosso do Docker.raw — mostra quem segura
+        // cada um, para a decisão de parar o projeto ou ligar a limpeza total.
+        let busyCaches = volumes.filter { $0.inUse && !$0.isAnonymous && $0.isRegenerable }
+            .sorted { $0.size > $1.size }
+        if !busyCaches.isEmpty {
+            let busyBytes = busyCaches.reduce(Int64(0)) { $0 + $1.size }
+            items.append("ℹ︎ \(busyCaches.count) build-cache volumes in use (\(fileHelper.formatBytes(busyBytes))) " +
+                "— stop their containers, or turn on Docker full cleanup:")
+            for volume in busyCaches {
+                let owners = containers(using: volume.name)
+                let suffix = owners.isEmpty ? "" : " — \(owners.joined(separator: ", "))"
+                items.append("    \(volume.name)  (\(fileHelper.formatBytes(volume.size)))\(suffix)")
+            }
+        }
+
         // Os demais nomeados NUNCA entram na limpeza automática nem no total
         // estimado: um volume "não usado" é só um volume sem container anexado
         // agora, e um compose parado deixa o banco de dados exatamente nesse
@@ -352,6 +391,57 @@ class DockerCleaningService: BaseCleaningService, CleaningService, @unchecked Se
         )
     }
 
+    /// Limpeza total: tudo o que o Docker guarda entra na estimativa, e os
+    /// volumes são listados um a um — é ali que estão os bancos de dados.
+    private func fullCleanupScan(
+        items: [String], estimatedSize: Int64, progress: (@Sendable (String) -> Void)?
+    ) -> ScanResult {
+        var items = items
+        var estimatedSize = estimatedSize
+        progress?("Measuring everything in Docker...")
+
+        let sizes = systemDF(field: "Size")
+        let running = lines("docker ps -q").count
+        let containers = lines("docker ps -aq").count
+        let images = Set(lines("docker images -aq")).count
+        let volumes = localVolumes().sorted { $0.size > $1.size }
+
+        items.append("⚠ Docker full cleanup is on — everything below is deleted (not moved to the Trash):")
+        if containers > 0 {
+            let note = running > 0 ? " — \(running) running, will be stopped" : ""
+            items.append("\(containers) containers and their logs\(note)")
+            estimatedSize += sizes["Containers"] ?? 0
+        }
+        if images > 0 {
+            items.append("\(images) images: \(fileHelper.formatBytes(sizes["Images"] ?? 0))")
+            estimatedSize += sizes["Images"] ?? 0
+        }
+        if !volumes.isEmpty {
+            let volumeBytes = volumes.reduce(Int64(0)) { $0 + $1.size }
+            items.append("\(volumes.count) volumes, databases included: \(fileHelper.formatBytes(volumeBytes))")
+            for volume in volumes {
+                items.append("    \(volume.name)  (\(fileHelper.formatBytes(volume.size)))")
+            }
+            estimatedSize += volumeBytes
+        }
+        if let buildCache = sizes["Build Cache"], buildCache > 0 {
+            items.append("Build cache: \(fileHelper.formatBytes(buildCache))")
+            estimatedSize += buildCache
+        }
+        let networks = unusedNetworkCount()
+        if networks > 0 {
+            items.append("\(networks) networks")
+        }
+        let scout = scoutCacheSize()
+        if scout > 0 {
+            items.append("Docker Scout cache: \(fileHelper.formatBytes(scout))")
+            estimatedSize += scout
+        }
+
+        logger.log("Docker (limpeza total): \(fileHelper.formatBytes(estimatedSize)) a remover", level: .info)
+        return ScanResult(category: category, estimatedSize: estimatedSize, itemCount: items.count, items: items)
+    }
+
     // MARK: - Clean
 
     func clean() async -> CleaningResult {
@@ -379,6 +469,19 @@ class DockerCleaningService: BaseCleaningService, CleaningService, @unchecked Se
         }
 
         let beforeSize = totalDockerSize()
+        let fullCleanup = CleaningOptions.shared.dockerFullCleanup
+
+        // 0b. Limpeza total: para tudo antes, para que os prunes abaixo alcancem
+        //     todos os contêineres, imagens e volumes. Ids são hex — seguros no shell.
+        if fullCleanup {
+            let running = lines("docker ps -q")
+            if !running.isEmpty {
+                let stop = shell.execute("docker stop " + running.joined(separator: " "), timeout: 300)
+                if stop.exitCode != 0 {
+                    errors.append("Failed to stop containers: \(stop.error)")
+                }
+            }
+        }
 
         // 1. Containers parados (sem forçar os que estão de pé).
         let containers = shell.execute("docker container prune -f", timeout: 60)
@@ -390,7 +493,8 @@ class DockerCleaningService: BaseCleaningService, CleaningService, @unchecked Se
 
         // 2. Imagens. No modo agressivo, TODAS as não usadas (-a); senão, só as
         //    dangling (sem tag). `-a` recupera muito mais, mas exige repull/rebuild.
-        let imagePrune = CleaningOptions.shared.aggressiveMode ? "docker image prune -a -f" : "docker image prune -f"
+        let allImages = fullCleanup || CleaningOptions.shared.aggressiveMode
+        let imagePrune = allImages ? "docker image prune -a -f" : "docker image prune -f"
         let images = shell.execute(imagePrune, timeout: 300)
         if images.exitCode != 0 {
             errors.append("Failed to clean images: \(images.error)")
@@ -413,10 +517,17 @@ class DockerCleaningService: BaseCleaningService, CleaningService, @unchecked Se
                 .filter { !$0.isEmpty && !$0.hasSuffix(":") }.count
         }
 
-        // 5. Volumes: SÓ os não usados que são anônimos ou cache de build, um a um.
-        //    Nunca `docker volume prune`, que varre também os nomeados — um banco
-        //    de um compose parado conta como "não usado" e seria apagado junto.
-        for volume in localVolumes() where volume.isRemovable {
+        // 5. Volumes. Na limpeza total, todos (`-a` inclui os nomeados; sem ele o
+        //    prune só pega anônimos). Fora dela, SÓ os não usados que são anônimos
+        //    ou cache de build, um a um — um banco de um compose parado conta como
+        //    "não usado" e seria apagado junto por um prune.
+        if fullCleanup {
+            let prune = shell.execute("docker volume prune -a -f", timeout: 300)
+            if prune.exitCode != 0 {
+                errors.append("Failed to remove volumes: \(prune.error)")
+            }
+        }
+        for volume in localVolumes() where !fullCleanup && volume.isRemovable {
             let removal = shell.execute("docker volume rm \(volume.name)", timeout: 60)
             if removal.exitCode == 0 {
                 filesRemoved += 1
@@ -435,15 +546,9 @@ class DockerCleaningService: BaseCleaningService, CleaningService, @unchecked Se
         bytesRemoved += scout.bytes
         filesRemoved += scout.removed
 
-        // Nota importante: o prune libera espaço DENTRO da VM do Docker, mas o
-        // arquivo de disco (Docker.raw, em ~/Library/Containers/com.docker.docker)
-        // não encolhe sozinho. Para devolver o espaço ao macOS é preciso usar o
-        // "reclaim" do Docker Desktop (Settings > Resources) ou recriar o disco.
-        logger.log(
-            "Docker: espaço liberado dentro da VM. O Docker.raw não encolhe automaticamente — " +
-                "use o reclaim do Docker Desktop se precisar devolver o espaço ao sistema.",
-            level: .info
-        )
+        // O Docker Desktop monta o disco da VM com `discard`: o que o prune apaga
+        // vira buraco no Docker.raw (arquivo esparso) e volta ao macOS sozinho.
+        logger.log("Docker: \(fileHelper.formatBytes(bytesRemoved)) liberados", level: .info)
 
         return CleaningResult(
             category: category,

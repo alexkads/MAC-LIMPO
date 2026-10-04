@@ -193,7 +193,9 @@ class MenuBarViewModel: ObservableObject {
     /// publica um `ConfirmationRequest` que a UI mostra dentro do próprio popover —
     /// assim ele não fecha e o progresso segue visível ali mesmo.
     private func requestConfirmation(_ categories: [CleaningCategory], onConfirm: @escaping () -> Void) {
-        if skipCleaningConfirmation {
+        // A limpeza total do Docker apaga bancos de dados: pergunta sempre.
+        let dockerWipe = CleaningOptions.shared.dockerFullCleanup && categories.contains(.docker)
+        if skipCleaningConfirmation, !dockerWipe {
             onConfirm()
             return
         }
@@ -210,6 +212,11 @@ class MenuBarViewModel: ObservableObject {
         if CleaningOptions.shared.aggressiveMode {
             body += "\n\n⚡️ Modo agressivo ligado: também remove caches grandes regeneráveis " +
                 "(modelos de IA do Chrome, imagens Docker não usadas)."
+        }
+        if dockerWipe {
+            body += "\n\n⚠️ Limpeza total do Docker ligada: todos os contêineres são parados e " +
+                "removidos, junto com TODAS as imagens e volumes — bancos de dados incluídos. " +
+                "Isso não vai para a Lixeira."
         }
         confirmationRequest = ConfirmationRequest(title: title, message: body, onConfirm: onConfirm)
     }
@@ -664,6 +671,22 @@ struct MenuBarView: View {
                                 }
                                 .toggleStyle(.switch)
                                 .padding(.horizontal, 20)
+
+                                Toggle(isOn: $cleaningOptions.dockerFullCleanup) {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Docker full cleanup")
+                                            .font(.system(size: 14))
+                                            .foregroundColor(themeManager.palette.primaryText)
+                                        Text(
+                                            "Stops all containers and deletes every container, image and volume — databases included"
+                                        )
+                                        .font(.system(size: 11))
+                                        .foregroundColor(themeManager.palette.secondaryText)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    }
+                                }
+                                .toggleStyle(.switch)
+                                .padding(.horizontal, 20)
                             }
 
                             // Quit Button + versão
@@ -744,6 +767,9 @@ struct MenuBarView: View {
         .onChange(of: cleaningOptions.aggressiveMode) { _, _ in
             // As estimativas mudam com o modo agressivo; re-escaneia para refletir.
             viewModel.scanAllCategories()
+        }
+        .onChange(of: cleaningOptions.dockerFullCleanup) { _, _ in
+            viewModel.scanCategory(.docker)
         }
     }
 

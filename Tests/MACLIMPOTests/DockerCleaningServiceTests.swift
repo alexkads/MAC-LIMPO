@@ -67,6 +67,8 @@ final class DockerCleaningServiceTests: XCTestCase {
         XCTAssertTrue(DockerCleaningService.isRegenerableVolumeName("myapp_node_modules"))
         XCTAssertTrue(DockerCleaningService.isRegenerableVolumeName("MyApp_Cargo_Target"))
         XCTAssertTrue(DockerCleaningService.isRegenerableVolumeName("target"))
+        // CARGO_HOME montado como volume (registry + git + binários instaláveis).
+        XCTAssertTrue(DockerCleaningService.isRegenerableVolumeName("vlb-tauri-cargo"))
     }
 
     func testPreservesApplicationDataVolumes() {

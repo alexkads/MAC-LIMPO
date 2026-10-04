@@ -223,6 +223,10 @@ struct NativeMenuBarContent: View {
                 Text("Aggressive cleaning")
                 Text("Also clears large regenerable caches (Chrome AI models, all unused Docker images)")
             }
+            Toggle(isOn: $cleaningOptions.dockerFullCleanup) {
+                Text("Docker full cleanup")
+                Text("Stops all containers and deletes every container, image and volume — databases included")
+            }
             HStack {
                 Button("Quit MAC-LIMPO", role: .destructive) {
                     NSApplication.shared.terminate(nil)

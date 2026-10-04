@@ -12,5 +12,13 @@ final class CleaningOptions: ObservableObject, @unchecked Sendable {
 
     @Published var aggressiveMode = false
 
+    /// **Limpeza total do Docker**: para todos os contêineres e remove tudo —
+    /// contêineres (e seus logs), imagens, volumes (bancos de dados inclusive),
+    /// build cache e redes. Para máquinas de desenvolvimento em que tudo se
+    /// recria com `docker compose up`; a decisão é do usuário. Desligada por
+    /// padrão e sem persistência: volta a desligar a cada abertura do app, e a
+    /// confirmação aparece mesmo com "não perguntar de novo".
+    @Published var dockerFullCleanup = false
+
     private init() {}
 }
