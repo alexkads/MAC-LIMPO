@@ -1,0 +1,1750 @@
+
+<!doctype html>
+<html lang="pt" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Limpador de disco gratuito e de código aberto para macOS, feito para desenvolvedores. Limpe DerivedData do Xcode, Docker, simuladores, node_modules, targets do Rust e mais de 40 caches pela barra de menus, e veja para onde vai cada gigabyte com o Disk X-Ray.">
+      
+      
+        <meta name="author" content="Alex S S Fonseca">
+      
+      
+        <link rel="canonical" href="https://alexkads.github.io/MAC-LIMPO/pt/changelog/">
+      
+      
+        <link rel="prev" href="../development/">
+      
+      
+      
+        
+          <link rel="alternate" href="../../changelog/" hreflang="en">
+        
+          <link rel="alternate" href="./" hreflang="pt">
+        
+      
+      
+      <link rel="icon" href="../../assets/images/logo.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Novidades - MAC-LIMPO</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  
+  
+  
+  
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="MAC-LIMPO">
+  <meta property="og:title" content="Novidades — MAC-LIMPO">
+  <meta property="og:description" content="Limpador de disco gratuito e de código aberto para macOS, feito para desenvolvedores. Limpe DerivedData do Xcode, Docker, simuladores, node_modules, targets do Rust e mais de 40 caches pela barra de menus, e veja para onde vai cada gigabyte com o Disk X-Ray.">
+  <meta property="og:url" content="https://alexkads.github.io/MAC-LIMPO/pt/changelog/">
+  <meta property="og:image" content="https://alexkads.github.io/MAC-LIMPO/assets/images/social-card.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Novidades — MAC-LIMPO">
+  <meta name="twitter:description" content="Limpador de disco gratuito e de código aberto para macOS, feito para desenvolvedores. Limpe DerivedData do Xcode, Docker, simuladores, node_modules, targets do Rust e mais de 40 caches pela barra de menus, e veja para onde vai cada gigabyte com o Disk X-Ray.">
+  <meta name="twitter:image" content="https://alexkads.github.io/MAC-LIMPO/assets/images/social-card.png">
+  <meta name="keywords" content="macOS disk cleaner, free up disk space Mac, clean Xcode DerivedData, Docker cleanup, node_modules, disk usage treemap, WinDirStat for Mac, open source Mac cleaner, menu bar app">
+  
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#changelog" class="md-skip">
+          Ir para o conteúdo
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabeçalho">
+    <a href="../" title="MAC-LIMPO" class="md-header__button md-logo" aria-label="MAC-LIMPO" data-md-component="logo">
+      
+  <img src="../../assets/images/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            MAC-LIMPO
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Novidades
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="purple"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Selecione o idioma">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="../../changelog/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="pt" class="md-select__link">
+              Português
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Buscar" placeholder="Buscar" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Pesquisar">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpar" aria-label="Limpar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando a pesquisa
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/alexkads/MAC-LIMPO" title="Ir ao repositório" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    alexkads/MAC-LIMPO
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navegação" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../" title="MAC-LIMPO" class="md-nav__button md-logo" aria-label="MAC-LIMPO" data-md-component="logo">
+      
+  <img src="../../assets/images/logo.svg" alt="logo">
+
+    </a>
+    MAC-LIMPO
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/alexkads/MAC-LIMPO" title="Ir ao repositório" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    alexkads/MAC-LIMPO
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Início
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Instalar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recursos
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Recursos
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cleaning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Categorias de limpeza
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../disk-xray/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Disk X-Ray
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../safety/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Segurança
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FAQ
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Desenvolvimento
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Novidades
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Novidades
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#unreleased" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [Unreleased]
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[Unreleased]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adicionado" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✨ Adicionado
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corrigido" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🐛 Corrigido
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#desempenho" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚡️ Desempenho
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#planejado" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Planejado
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#110-2026-07-04" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [1.1.0] - 2026-07-04
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[1.1.0] - 2026-07-04">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adicionado_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✨ Adicionado
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#seguranca" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔒 Segurança
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚡ Performance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refatoracao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧹 Refatoração
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📦 Build
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#100-2025-12-17" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [1.0.0] - 2025-12-17
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[1.0.0] - 2025-12-17">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adicionado_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✨ Adicionado
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="✨ Adicionado">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#interface-principal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interface Principal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modulos-de-limpeza-11-categorias" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Módulos de Limpeza (11 categorias)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#disk-map-visualizacao-treemap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Disk Map - Visualização Treemap
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#funcionalidades-do-sistema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Funcionalidades do Sistema
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#documentacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Documentação
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tecnico" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔧 Técnico
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔧 Técnico">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arquitetura" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arquitetura
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#utilitarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Utilitários
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corrigido_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🐛 Corrigido
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#seguranca_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔒 Segurança
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#010-2025-12-01-versao-inicial" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.0] - 2025-12-01 (Versão Inicial)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.0] - 2025-12-01 (Versão Inicial)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adicionado_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adicionado
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tipos-de-mudancas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tipos de Mudanças
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#como-manter-o-changelog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como Manter o Changelog
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Como Manter o Changelog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#para-contribuidores" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Para Contribuidores
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#para-mantenedores" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Para Mantenedores
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Índice">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Índice
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#unreleased" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [Unreleased]
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[Unreleased]">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adicionado" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✨ Adicionado
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corrigido" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🐛 Corrigido
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#desempenho" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚡️ Desempenho
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#planejado" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Planejado
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#110-2026-07-04" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [1.1.0] - 2026-07-04
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[1.1.0] - 2026-07-04">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adicionado_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✨ Adicionado
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#seguranca" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔒 Segurança
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⚡ Performance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refatoracao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🧹 Refatoração
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#build" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📦 Build
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#100-2025-12-17" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [1.0.0] - 2025-12-17
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[1.0.0] - 2025-12-17">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adicionado_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ✨ Adicionado
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="✨ Adicionado">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#interface-principal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interface Principal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modulos-de-limpeza-11-categorias" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Módulos de Limpeza (11 categorias)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#disk-map-visualizacao-treemap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Disk Map - Visualização Treemap
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#funcionalidades-do-sistema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Funcionalidades do Sistema
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#documentacao" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Documentação
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tecnico" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔧 Técnico
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="🔧 Técnico">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arquitetura" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arquitetura
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#utilitarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Utilitários
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#corrigido_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🐛 Corrigido
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#seguranca_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔒 Segurança
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#010-2025-12-01-versao-inicial" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        [0.1.0] - 2025-12-01 (Versão Inicial)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="[0.1.0] - 2025-12-01 (Versão Inicial)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#adicionado_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adicionado
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tipos-de-mudancas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tipos de Mudanças
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#como-manter-o-changelog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Como Manter o Changelog
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Como Manter o Changelog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#para-contribuidores" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Para Contribuidores
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#para-mantenedores" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Para Mantenedores
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/alexkads/MAC-LIMPO/edit/main/docs/changelog.md" title="Editar esta página" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">&para;</a></h1>
+<p>Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.</p>
+<p>O formato é baseado em <a href="https://keepachangelog.com/pt-BR/1.0.0/">Keep a Changelog</a>,
+e este projeto adere ao <a href="https://semver.org/lang/pt-BR/">Semantic Versioning</a>.</p>
+<h2 id="unreleased">[Unreleased]<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
+<h3 id="adicionado">✨ Adicionado<a class="headerlink" href="#adicionado" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Liquid Glass é o tema principal e todo nativo</strong>: padrão para quem nunca escolheu tema e primeiro no seletor. O popover usa só componentes do sistema — <code>List</code> com <code>Section</code>, <code>Gauge</code> circular, <code>LabeledContent</code>, <code>Picker</code>, <code>Toggle</code>, <code>ProgressView</code>, <code>NSSearchField</code> — e painéis de confirmação, progresso e resultado em vidro nativo. Classic, Cyberpunk e Matrix mantêm o visual próprio.</li>
+<li><strong>Tema Liquid Glass</strong>: tema com o vidro nativo da Apple (<code>glassEffect</code>, <code>GlassEffectContainer</code>, botões <code>.glass</code>/<code>.glassProminent</code>) nos controles e na navegação; conteúdo em preenchimentos semânticos, sem vidro sobre vidro. Respeita Reduzir Transparência, Aumentar Contraste e Reduzir Movimento.</li>
+<li><strong>Disk X-Ray com cara nova</strong>: cores por categoria de arquivo (Vídeo, Imagens, Código, Discos virtuais…), cabeçalho com a barra do disco e cartões por categoria, painel de tipos, mapa squarified com pastas agrupadas, ladrilhos arredondados e rótulos, trilha de navegação, tamanhos no padrão do Finder e toolbar nativa da janela.</li>
+<li><strong>Instalação por script</strong> (<code>docs/install.sh</code>): compila e instala na própria máquina, sem depender de certificado de desenvolvedor.</li>
+<li><strong>Disk X-Ray = WinDirStat no Mac</strong> (substitui o Disk Map): port fiel da janela principal do <a href="https://github.com/windirstat/windirstat">WinDirStat</a> — árvore "All Files" / "Largest Files", lista de extensões e treemap cushion sincronizados, com o layout "Rows", o sombreamento, a paleta e os padrões do código original. O scanner segue o motor do WinDirStat: leitura em lote por pasta com <code>getattrlistbulk(2)</code> (o equivalente ao <code>NtQueryDirectoryFile</code>) e workers paralelos — ~2,9 milhões de itens em ~16 s, contra ~55 s com <code>fts</code> (espaço físico real, hardlinks uma vez, montagens virtuais fora); <code>&lt;Free Space&gt;</code> (F6) e <code>&lt;Unknown&gt;</code> (F7) fecham a conta com o disco inteiro.</li>
+<li><strong>.NET SDKs</strong>: nova categoria que remove patches superados de SDKs, runtimes e targeting packs em <code>/usr/local/share/dotnet</code> (uma senha de admin) e <code>~/.dotnet</code>. Mantém o mais novo de cada <em>feature band</em> (SDK) e de cada <code>major.minor</code> (runtime/pack); previews e packs de workload nunca são tocados.</li>
+<li><strong>Cargo/Rust</strong>: remove toolchains rustup fixadas em versão que já foram superadas (canais, <code>default_toolchain</code> e <code>[overrides]</code> ficam) e o lixo de <code>~/.rustup/{downloads,tmp}</code>.</li>
+<li><strong>IDE Cache</strong>: apaga extensões que o próprio editor marcou em <code>extensions/.obsolete</code> (VS Code, Cursor, Trae, Antigravity, Windsurf, Kiro) e entradas do histórico local (<code>User/History</code>) sem toque há mais de 90 dias.</li>
+<li><strong>Docker</strong>: remove a cópia em <code>com.docker.install/in_progress</code> só quando a versão em staging não é mais nova que a instalada — uma atualização pendente é preservada.</li>
+<li>Novos caminhos: cache do Yarn Berry (<code>~/.yarn/berry/cache</code>), <code>DocumentationCache</code> do Xcode e índice do Continue (<code>~/.continue/index</code>).</li>
+</ul>
+<h3 id="corrigido">🐛 Corrigido<a class="headerlink" href="#corrigido" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Disk X-Ray — espaço vazio entre os blocos do mapa</strong>: o recuo das pastas se acumulava a cada nível e a folga/arredondamento valia até para blocos minúsculos, ilhando os arquivos pequenos. Agora o recuo é proporcional (só em pastas grandes e rasas) e folga e cantos só existem em blocos que os comportam.</li>
+<li><strong>Disk X-Ray — navegação lenta</strong>: a árvore virou um <code>NSOutlineView</code> nativo (virtualizado, como o list control do WinDirStat), com ícones de pasta carregados em segundo plano; o destaque por extensão no mapa deixou de varrer milhões de itens a cada movimento do mouse.</li>
+<li><strong>Disk X-Ray — threads por máquina</strong>: a quantidade de threads e o buffer do scan são decididos pelo hardware e pelo volume (SSD: um por núcleo, 4–16; HD mecânico: 2; rede: 4 com buffer de 64 KiB), em vez de 8 fixo.</li>
+<li><strong>Versão visível</strong>: o rodapé do popover mostra a versão e o build (<code>Version 1.3.10 (13)</code>), lidos do <code>Info.plist</code>.</li>
+<li><strong>Cards girando sem fim (era preciso reabrir o app)</strong>: scans <code>async</code> que mediam tamanho com <code>du</code> síncrono (Logs, Project Builds, Rust Targets) prendiam as threads do pool cooperativo e travavam os demais. Agora medem fora do pool, atrás do limite global de <code>du</code>. Cada categoria também tem prazo (420s): um scan preso libera o card e não bloqueia mais o refresh. Um <code>du</code> que estoura o timeout não cai mais numa varredura lenta e sem limite, e um processo que ignora SIGTERM recebe SIGKILL.</li>
+<li><strong>Rust Targets — "Cleaning Failed" com projeto em Docker</strong>: um <code>target/</code> que é ponto de montagem de um volume (<code>./backend:/app</code> + volume em <code>/app/target</code>) não pode ser removido enquanto o contêiner roda, e a limpeza saía como falha mesmo com o conteúdo apagado — que também ficava fora do total liberado. Agora o <code>target/</code> é esvaziado (a pasta fica), os itens vão para a Lixeira, o espaço é medido antes/depois, e o scan indica quando o diretório está montado num contêiner.</li>
+<li><strong>iOS Simulators — card com GB que não limpava</strong>: o scan somava a pasta inteira de dispositivos, e a limpeza (<code>simctl erase all</code>) falhava com qualquer simulador ligado (CoreSimulator 405), sem liberar nada. Agora cada dispositivo tem um destino: indisponível é apagado, desligado é zerado (<code>erase &lt;udid&gt;</code>), ligado fica de fora do total e aparece como "in use". O espaço liberado é medido pelo próprio <code>simctl</code> antes/depois.</li>
+<li><strong>Re-scan após limpeza</strong>: limpar uma categoria durante o scan completo reescaneia só aquela categoria, não todas.</li>
+<li><strong>Docker — volumes de cache de build</strong>: desde a 1.3.5 todo volume nomeado não usado era preservado, inclusive caches reconstruíveis como <code>cargo-target</code>, <code>node-modules</code> e <code>next-cache</code> de projetos compose (um único <code>cargo-target</code> chegava a 53 GB, invisível ao Rust Targets por viver dentro do <code>Docker.raw</code>). Volumes não usados com esses nomes voltam a ser limpos; bancos, uploads e demais volumes de dados continuam preservados.</li>
+<li><strong>Pedidos de permissão em loop</strong>: sem Full Disk Access, os scans de System Data, Logs e dos apps em containers (WhatsApp, Teams, Podcasts, apps criativos) abriam um diálogo do macOS por container em <code>~/Library/Containers</code> e <code>~/Library/Group Containers</code> — centenas deles — e os cards ficavam girando para sempre. Essas áreas agora são puladas sem a permissão, e o System Data informa quantas ficaram de fora.</li>
+<li><strong>Detecção de Full Disk Access</strong>: passa a sondar o <code>TCC.db</code> do usuário; o probe antigo (<code>Safari/History.db</code>) não existe em quem nunca abriu o Safari, e o app se achava sem permissão para sempre.</li>
+</ul>
+<h3 id="desempenho">⚡️ Desempenho<a class="headerlink" href="#desempenho" title="Permanent link">&para;</a></h3>
+<ul>
+<li>System Data mede os caminhos com <code>du</code> em lotes, em vez de um processo por caminho (antes eram mais de mil só nos containers).</li>
+</ul>
+<h3 id="planejado">Planejado<a class="headerlink" href="#planejado" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Agendamento automático de limpeza</li>
+<li>Notificações quando espaço está baixo</li>
+<li>Exportação de relatórios de limpeza</li>
+<li>Atalhos de teclado</li>
+<li>Preferências avançadas</li>
+</ul>
+<h2 id="110-2026-07-04">[1.1.0] - 2026-07-04<a class="headerlink" href="#110-2026-07-04" title="Permanent link">&para;</a></h2>
+<h3 id="adicionado_1">✨ Adicionado<a class="headerlink" href="#adicionado_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Temas</strong>: seletor com <strong>Classic</strong> (visual original), <strong>Cyberpunk</strong> (neon ciano/magenta) e <strong>Matrix</strong> (verde), com glow, tipografia monoespaçada e persistência da escolha.</li>
+<li><strong>Modo de limpeza agressiva</strong> (opt-in): remove caches grandes porém regeneráveis — modelos de IA on-device do Chrome (~4 GB) e <code>docker image prune -a</code>.</li>
+<li><strong>Diálogo de confirmação</strong> antes de qualquer limpeza, mostrando o espaço estimado.</li>
+<li>Novas coberturas: <strong>Chrome/Chromium multi-profile</strong> (Chrome, Edge, Brave, Arc) incluindo <code>Service Worker</code>; categoria <strong>TikTok LIVE Studio</strong>; cache do <strong>antigravity-updater</strong>; leftover do <strong>Wondershare Dr.Fone</strong>.</li>
+<li>Rede de testes unitários (target <code>MACLIMPOTests</code>).</li>
+</ul>
+<h3 id="seguranca">🔒 Segurança<a class="headerlink" href="#seguranca" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Deleções vão para a <strong>Lixeira</strong> (reversível), com fallback para remoção definitiva só quando a Lixeira recusa o caminho.</li>
+<li><code>du</code>/<code>rm</code> passam o caminho por <strong>argumento</strong> (sem interpolação em shell): paths com aspas/espaços deixam de quebrar.</li>
+</ul>
+<h3 id="performance">⚡ Performance<a class="headerlink" href="#performance" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Scan paralelo</strong> das categorias usando os núcleos do Mac (medição de tamanho no pool do GCD, sem travar o pool cooperativo).</li>
+<li><strong>Clean All paralelo</strong> (concorrência limitada), com progresso agregado e resultado somado.</li>
+<li>Correção da medição via <code>du</code> que zerava pastas grandes (subcontagem silenciosa).</li>
+</ul>
+<h3 id="refatoracao">🧹 Refatoração<a class="headerlink" href="#refatoracao" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>PathBasedCleaningService</code>: base testada que unificou ~12 serviços baseados em path, com estratégias (item/conteúdo), filtro de idade e alvos "agressivos".</li>
+<li>Remoção de código morto; falhas antes silenciosas passam a registrar log.</li>
+</ul>
+<h3 id="build">📦 Build<a class="headerlink" href="#build" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>create_installer.sh</code> mais robusto (<code>set -euo pipefail</code>, verificação de codesign/DMG) e versionado a partir do arquivo <code>VERSION</code>.</li>
+</ul>
+<h2 id="100-2025-12-17">[1.0.0] - 2025-12-17<a class="headerlink" href="#100-2025-12-17" title="Permanent link">&para;</a></h2>
+<h3 id="adicionado_2">✨ Adicionado<a class="headerlink" href="#adicionado_2" title="Permanent link">&para;</a></h3>
+<h4 id="interface-principal">Interface Principal<a class="headerlink" href="#interface-principal" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Interface moderna no menu bar com design vibrante</li>
+<li>Cards interativos com gradientes coloridos e hover effects</li>
+<li>Visualização de espaço em disco (usado/total)</li>
+<li>Tema adaptável (dark/light mode)</li>
+<li>Animações suaves e micro-interações</li>
+<li>Glassmorphism e efeitos modernos</li>
+</ul>
+<h4 id="modulos-de-limpeza-11-categorias">Módulos de Limpeza (11 categorias)<a class="headerlink" href="#modulos-de-limpeza-11-categorias" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Docker</strong>: Limpeza de containers, imagens, volumes e build cache</li>
+<li><strong>Xcode Cache</strong>: Remoção de DerivedData, Archives e DeviceSupport</li>
+<li><strong>Node Modules</strong>: Limpeza de node_modules de projetos antigos</li>
+<li><strong>Homebrew Cache</strong>: Remoção de cache do Homebrew</li>
+<li><strong>IDE Cache</strong>: Limpeza de cache de IDEs JetBrains (Rider, IntelliJ, etc.)</li>
+<li><strong>Temp Files</strong>: Remoção de arquivos temporários e cache de apps</li>
+<li><strong>Terminal Logs</strong>: Limpeza de logs de terminal (zsh, bash)</li>
+<li><strong>Messaging Apps</strong>: Remoção de cache de WhatsApp, Telegram, Slack</li>
+<li><strong>Trash</strong>: Esvaziamento da lixeira</li>
+<li><strong>Large Files</strong>: Identificação e remoção de arquivos grandes (&gt;100MB)</li>
+<li><strong>Duplicate Files</strong>: Detecção e remoção de arquivos duplicados</li>
+</ul>
+<h4 id="disk-map-visualizacao-treemap">Disk Map - Visualização Treemap<a class="headerlink" href="#disk-map-visualizacao-treemap" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Treemap interativo estilo WinDirStat</li>
+<li>Cores por tipo de arquivo (código, documentos, vídeos, imagens, arquivos compactados)</li>
+<li>Navegação hierárquica (zoom in/out)</li>
+<li>Breadcrumb navigation</li>
+<li>Botão "Back" para voltar ao diretório pai</li>
+<li>Janela separada e independente (900x700, redimensionável)</li>
+<li>Scan paralelo com TaskGroup (3-5x mais rápido)</li>
+<li>Progresso em tempo real com contador de diretórios</li>
+<li>Info panel com detalhes ao passar o mouse</li>
+<li>Seleção de diretórios com cards bonitos e gradientes</li>
+<li>Algoritmo squarified para melhor visualização</li>
+</ul>
+<h4 id="funcionalidades-do-sistema">Funcionalidades do Sistema<a class="headerlink" href="#funcionalidades-do-sistema" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Execução discreta no menu bar</li>
+<li>Scan de todas as categorias simultaneamente</li>
+<li>Resultados detalhados pós-limpeza</li>
+<li>Tempo de execução das operações</li>
+<li>Estimativa de espaço recuperável por categoria</li>
+<li>Logging estruturado com níveis (info, warning, error)</li>
+</ul>
+<h4 id="documentacao">Documentação<a class="headerlink" href="#documentacao" title="Permanent link">&para;</a></h4>
+<ul>
+<li>README.md completo com screenshots e roadmap</li>
+<li>CONTRIBUTING.md com guia detalhado para contribuidores</li>
+<li>CHANGELOG.md para rastreamento de versões</li>
+<li>Comentários em código para funções complexas</li>
+<li>Templates de issues para bugs e features</li>
+</ul>
+<h3 id="tecnico">🔧 Técnico<a class="headerlink" href="#tecnico" title="Permanent link">&para;</a></h3>
+<h4 id="arquitetura">Arquitetura<a class="headerlink" href="#arquitetura" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Arquitetura MVVM (Model-View-ViewModel)</li>
+<li>Protocolo <code>CleaningService</code> para extensibilidade</li>
+<li>Componentes SwiftUI reutilizáveis</li>
+<li>Separação clara de responsabilidades</li>
+</ul>
+<h4 id="performance_1">Performance<a class="headerlink" href="#performance_1" title="Permanent link">&para;</a></h4>
+<ul>
+<li>Scan paralelo de diretórios usando Swift Concurrency (TaskGroup)</li>
+<li>Uso eficiente de <code>du</code> para cálculo de tamanho de diretórios</li>
+<li>Renderização otimizada do treemap com Canvas</li>
+<li>Actor para gerenciamento thread-safe de progresso</li>
+</ul>
+<h4 id="utilitarios">Utilitários<a class="headerlink" href="#utilitarios" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>FileSystemHelper</code>: Operações de arquivo e sistema</li>
+<li><code>ShellExecutor</code>: Execução segura de comandos shell</li>
+<li><code>TreemapLayout</code>: Algoritmo squarified para layout do treemap</li>
+<li><code>Logger</code>: Sistema de logging estruturado</li>
+</ul>
+<h3 id="corrigido_1">🐛 Corrigido<a class="headerlink" href="#corrigido_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Tratamento de erros em operações de arquivo</li>
+<li>Validação de permissões antes de operações destrutivas</li>
+<li>Proteção contra remoção acidental de arquivos do sistema</li>
+<li>Handling de diretórios vazios no scan</li>
+</ul>
+<h3 id="seguranca_1">🔒 Segurança<a class="headerlink" href="#seguranca_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Validação de caminhos antes de remoção</li>
+<li>Proteção contra path traversal</li>
+<li>Confirmação antes de operações destrutivas</li>
+<li>Logging de todas as operações de limpeza</li>
+</ul>
+<h2 id="010-2025-12-01-versao-inicial">[0.1.0] - 2025-12-01 (Versão Inicial)<a class="headerlink" href="#010-2025-12-01-versao-inicial" title="Permanent link">&para;</a></h2>
+<h3 id="adicionado_3">Adicionado<a class="headerlink" href="#adicionado_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Estrutura básica do projeto</li>
+<li>Integração com menu bar</li>
+<li>Primeiros serviços de limpeza (Docker, Xcode)</li>
+<li>Interface básica com SwiftUI</li>
+</ul>
+<hr />
+<h2 id="tipos-de-mudancas">Tipos de Mudanças<a class="headerlink" href="#tipos-de-mudancas" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>Adicionado</code> para novas funcionalidades</li>
+<li><code>Modificado</code> para mudanças em funcionalidades existentes</li>
+<li><code>Descontinuado</code> para funcionalidades que serão removidas</li>
+<li><code>Removido</code> para funcionalidades removidas</li>
+<li><code>Corrigido</code> para correções de bugs</li>
+<li><code>Segurança</code> para vulnerabilidades corrigidas</li>
+</ul>
+<h2 id="como-manter-o-changelog">Como Manter o Changelog<a class="headerlink" href="#como-manter-o-changelog" title="Permanent link">&para;</a></h2>
+<h3 id="para-contribuidores">Para Contribuidores<a class="headerlink" href="#para-contribuidores" title="Permanent link">&para;</a></h3>
+<p>Ao criar um Pull Request que adiciona novas funcionalidades ou corrige bugs:</p>
+<ol>
+<li>Adicione uma entrada na seção <code>[Unreleased]</code></li>
+<li>Use o tipo de mudança apropriado</li>
+<li>Descreva a mudança de forma clara e concisa</li>
+<li>Referencie issues relacionadas quando aplicável</li>
+</ol>
+<p>Exemplo:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gu">## [Unreleased]</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gu">### Adicionado</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">-</span><span class="w"> </span>Nova categoria de limpeza para cache do VS Code (#123)
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="gu">### Corrigido</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">-</span><span class="w"> </span>Crash ao escanear diretórios sem permissão (#124)
+</code></pre></div></p>
+<h3 id="para-mantenedores">Para Mantenedores<a class="headerlink" href="#para-mantenedores" title="Permanent link">&para;</a></h3>
+<p>Ao criar uma nova release:</p>
+<ol>
+<li>Mova as entradas de <code>[Unreleased]</code> para uma nova seção de versão</li>
+<li>Adicione a data da release</li>
+<li>Atualize o link de comparação no final do arquivo</li>
+<li>Crie uma tag Git com a versão</li>
+</ol>
+<p>Exemplo:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Atualizar CHANGELOG.md</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="c1"># Commit das mudanças</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>git<span class="w"> </span>add<span class="w"> </span>CHANGELOG.md
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"chore: release v1.1.0"</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1"># Criar tag</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>git<span class="w"> </span>tag<span class="w"> </span>-a<span class="w"> </span>v1.1.0<span class="w"> </span>-m<span class="w"> </span><span class="s2">"Release v1.1.0"</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>v1.1.0
+</code></pre></div></p>
+<hr />
+<p><strong>Formato baseado em <a href="https://keepachangelog.com/pt-BR/1.0.0/">Keep a Changelog</a></strong></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Voltar ao topo
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Rodapé" >
+        
+          
+          <a href="../development/" class="md-footer__link md-footer__link--prev" aria-label="Anterior: Desenvolvimento">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Anterior
+              </span>
+              <div class="md-ellipsis">
+                Desenvolvimento
+              </div>
+            </div>
+          </a>
+        
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2025-2026 Alex S S Fonseca and contributors — GPL-3.0-or-later
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/alexkads/MAC-LIMPO" target="_blank" rel="noopener" title="MAC-LIMPO on GitHub" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "navigation.footer", "content.code.copy", "content.action.edit", "search.suggest", "search.highlight", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado para \u00e1rea de transfer\u00eancia", "clipboard.copy": "Copiar para \u00e1rea de transfer\u00eancia", "search.result.more.one": "Mais 1 nesta p\u00e1gina", "search.result.more.other": "Mais # nesta p\u00e1gina", "search.result.none": "Nenhum resultado encontrado", "search.result.one": "1 resultado encontrado", "search.result.other": "# resultados encontrados", "search.result.placeholder": "Digite para iniciar a busca", "search.result.term.missing": "Ausente", "select.version": "Selecione a vers\u00e3o"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
