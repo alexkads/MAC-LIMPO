@@ -20,6 +20,9 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - Novos caminhos: cache do Yarn Berry (`~/.yarn/berry/cache`), `DocumentationCache` do Xcode e índice do Continue (`~/.continue/index`).
 
 ### 🐛 Corrigido
+- **Disk X-Ray — rótulos embolados no mapa**: pastas com um filho só ou dominante (≥ 90%) viram um cabeçalho com o caminho (`Users › alexkads`), no máximo três níveis de título, tamanho alinhado à direita (sai antes de cortar o nome) e caminhos longos cortados no começo para manter a pasta final.
+- **Disk X-Ray — contorno da seleção cortado**: o contorno azul era desenhado para fora do bloco e sumia nos blocos colados na borda do mapa; agora fica inteiro por dentro do bloco e da área visível.
+- **Avisos no Xcode**: `Invalid Exclude` de `MAC-LIMPO.dmg`/`dmg_staging` (o `.dmg`, sua montagem e o site do MkDocs agora são gerados em `build/`, que existe em todo clone) e captura `weak`/forte de `self` no scan do Disk X-Ray.
 - **Disk X-Ray — espaço vazio entre os blocos do mapa**: o recuo das pastas se acumulava a cada nível e a folga/arredondamento valia até para blocos minúsculos, ilhando os arquivos pequenos. Agora o recuo é proporcional (só em pastas grandes e rasas) e folga e cantos só existem em blocos que os comportam.
 - **Disk X-Ray — navegação lenta**: a árvore virou um `NSOutlineView` nativo (virtualizado, como o list control do WinDirStat), com ícones de pasta carregados em segundo plano; o destaque por extensão no mapa deixou de varrer milhões de itens a cada movimento do mouse.
 - **Disk X-Ray — threads por máquina**: a quantidade de threads e o buffer do scan são decididos pelo hardware e pelo volume (SSD: um por núcleo, 4–16; HD mecânico: 2; rede: 4 com buffer de 64 KiB), em vez de 8 fixo.

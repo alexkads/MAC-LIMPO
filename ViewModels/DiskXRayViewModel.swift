@@ -157,18 +157,22 @@ final class DiskXRayViewModel: ObservableObject {
         sortedChildren = [:]
         reselectStack = []
 
+        // Fora da Task: dentro dela `self` já foi desembrulhado por `guard let self`,
+        // e um `[weak self]` aninhado ali diverge da captura forte implícita.
+        let onProgress: @Sendable (DiskScanner.Progress) -> Void = { [weak self] progress in
+            Task { @MainActor in
+                guard !cancel.isSet else { return }
+                self?.progress = progress
+            }
+        }
+
         Task { [weak self] in
             let overview = await runBlocking { DiskXRayService.shared.overview() }
             guard let self, !cancel.isSet else { return }
             self.overview = overview
             let started = Date()
             let scanned = await runBlocking {
-                DiskScanner.scan(root: root, isCancelled: { cancel.isSet }) { [weak self] progress in
-                    Task { @MainActor in
-                        guard !cancel.isSet else { return }
-                        self?.progress = progress
-                    }
-                }
+                DiskScanner.scan(root: root, isCancelled: { cancel.isSet }, progress: onProgress)
             }
             guard !cancel.isSet else { return }
             isScanning = false

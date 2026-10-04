@@ -10,7 +10,11 @@ xcuserdata/
 *.xccheckout
 
 ## compatibility with Xcode 3 and earlier (ignoring not required starting Xcode 4)
-build/
+# build/ guarda tudo que é gerado (.app, .pkg, .dmg, site). O .gitkeep faz a pasta
+# existir em todo clone: o Package.swift a exclui, e um exclude de caminho
+# inexistente vira aviso "Invalid Exclude" no Xcode.
+build/*
+!build/.gitkeep
 DerivedData/
 *.moved-aside
 *.pbxuser
@@ -136,6 +140,6 @@ dmg_staging/
 .vscode/
 .idea/
 
-# Site de documentação (mkdocs build) e ambiente Python local
+# Site de documentação (mkdocs build vai para build/site) e ambiente Python local
 site/
 .venv/

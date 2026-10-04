@@ -79,7 +79,7 @@ enum TreemapRenderer {
         context.fill(CGRect(x: 0, y: 0, width: width, height: height))
 
         var painter = Painter(context: context, style: style, source: source, isCancelled: isCancelled)
-        painter.draw(root, in: CGRect(x: 0, y: 0, width: width, height: height), depth: 0, prefix: "")
+        painter.draw(root, in: CGRect(x: 0, y: 0, width: width, height: height), depth: 0, path: [])
         guard !painter.cancelled, let image = context.makeImage() else { return nil }
         return Rendering(image: image, pixelSize: CGSize(width: width, height: height), scale: style.scale,
                          root: root, rects: painter.rects)
@@ -165,18 +165,38 @@ enum TreemapRenderer {
         var cancelled = false
         private var visits = 0
 
+        private let headerFont: CTFont
+        private let pathFont: CTFont
+        private let headerSizeFont: CTFont
+        private let tileFont: CTFont
+        private let tileSizeFont: CTFont
+
+        /// Uma pasta cujo maior filho tem ao menos esta fração do tamanho não ganha
+        /// cabeçalho próprio: ela entra no caminho do filho ("Users › alexkads").
+        private static let dominance = 0.9
+        /// Níveis de pasta (a partir da raiz do zoom) que ganham cabeçalho. Mais
+        /// fundo que isso os títulos viram uma escada de texto; o caminho completo
+        /// está na barra de status e na árvore.
+        private static let headerDepth = 3
+
         init(context: CGContext, style: Style, source: Source, isCancelled: @escaping () -> Bool) {
             self.context = context
             self.style = style
             self.source = source
             self.isCancelled = isCancelled
+            let s = style.scale
+            headerFont = .system(size: 10.5 * s, weight: .semibold)
+            pathFont = .system(size: 10.5 * s, weight: .regular)
+            headerSizeFont = .system(size: 10 * s, weight: .regular, monospacedDigits: true)
+            tileFont = .system(size: 11 * s, weight: .semibold)
+            tileSizeFont = .system(size: 10 * s, weight: .regular, monospacedDigits: true)
         }
 
         private var s: CGFloat { style.scale }
 
-        /// `prefix`: nomes das pastas acima que tinham um único filho — a cadeia
-        /// vira um cabeçalho só ("Library / Containers / com.docker.docker").
-        mutating func draw(_ item: Int32, in rect: CGRect, depth: Int, prefix: String) {
+        /// `path`: pastas acima que não ganharam cabeçalho por terem um filho só
+        /// ou dominante — a cadeia vira um cabeçalho ("Library › Containers › Data").
+        mutating func draw(_ item: Int32, in rect: CGRect, depth: Int, path: [String]) {
             guard !cancelled, rect.width >= 0.5, rect.height >= 0.5 else { return }
             visits += 1
             if visits % 20000 == 0, isCancelled() {
@@ -195,8 +215,21 @@ enum TreemapRenderer {
 
             let children = source.children(item)
             let weights = children.map { Double(source.weight($0)) }
-            if depth > 0, weights.filter({ $0 > 0 }).count == 1, let only = children.first {
-                draw(only, in: rect, depth: depth, prefix: prefix + source.name(item) + " / ")
+            let total = weights.reduce(0, +)
+            if depth > 0, let largest = weights.first, total > 0, largest / total >= Self.dominance {
+                // Filho único ou dominante: sem moldura nem título aqui; o maior
+                // filho herda a posição e o caminho. Os irmãos pequenos ficam ao
+                // lado dele, como em qualquer outra pasta.
+                let chain = path + [source.name(item)]
+                let layout = TreemapRenderer.squarify(weights: weights, in: rect)
+                for (offset, (child, childRect)) in zip(children, layout).enumerated() {
+                    if offset == 0 {
+                        draw(child, in: childRect, depth: depth, path: chain)
+                    } else {
+                        draw(child, in: childRect, depth: depth + 1, path: [])
+                    }
+                    if cancelled { return }
+                }
                 return
             }
 
@@ -206,10 +239,10 @@ enum TreemapRenderer {
                 // rasas. Em pastas pequenas ou profundas o recuo se acumula nível
                 // a nível e deixa os blocos ilhados — ali os filhos ocupam tudo.
                 let padding = folderPadding(rect, depth: depth)
-                let header = rect.width >= 90 * s && rect.height >= 60 * s ? 15 * s : 0
+                let header = depth <= Self.headerDepth && rect.width >= 90 * s && rect.height >= 60 * s ? 15 * s : 0
                 if padding > 0 || header > 0 {
                     folderBackground(rect)
-                    if header > 0 { folderHeader(item, prefix: prefix, rect: rect, height: header) }
+                    if header > 0 { folderHeader(item, path: path, rect: rect, height: header) }
                     content = rect.insetBy(dx: padding, dy: padding)
                     content.origin.y += header
                     content.size.height -= header
@@ -219,7 +252,7 @@ enum TreemapRenderer {
 
             let layout = TreemapRenderer.squarify(weights: weights, in: content)
             for (child, childRect) in zip(children, layout) {
-                draw(child, in: childRect, depth: depth + 1, prefix: "")
+                draw(child, in: childRect, depth: depth + 1, path: [])
                 if cancelled { return }
             }
         }
@@ -253,11 +286,34 @@ enum TreemapRenderer {
             context.fillPath()
         }
 
-        private func folderHeader(_ item: Int32, prefix: String, rect: CGRect, height: CGFloat) {
-            let color = style.dark ? CGColor(gray: 1, alpha: 0.75) : CGColor(gray: 0, alpha: 0.7)
-            text("\(prefix)\(source.name(item))  \(source.sizeText(item))", in: CGRect(x: rect.minX + 6 * s, y: rect.minY + 2 * s,
-                                                                             width: rect.width - 12 * s, height: height - 2 * s),
-                 size: 10.5 * s, weight: .semibold, color: color, shadow: false)
+        /// Nome à esquerda (as pastas do caminho em cinza, a pasta em destaque) e
+        /// tamanho alinhado à direita. Sem espaço, o tamanho sai antes de o nome
+        /// ser cortado; num caminho o corte é no começo, para manter a pasta final.
+        private func folderHeader(_ item: Int32, path: [String], rect: CGRect, height: CGFloat) {
+            let primary = style.dark ? CGColor(gray: 1, alpha: 0.88) : CGColor(gray: 0, alpha: 0.82)
+            let secondary = style.dark ? CGColor(gray: 1, alpha: 0.5) : CGColor(gray: 0, alpha: 0.45)
+            let area = CGRect(x: rect.minX + 6 * s, y: rect.minY + 1.5 * s, width: rect.width - 12 * s, height: height - 1.5 * s)
+
+            let title = NSMutableAttributedString()
+            for folder in path {
+                title.append(attributed(folder + " › ", font: pathFont, color: secondary))
+            }
+            title.append(attributed(source.name(item), font: headerFont, color: primary))
+            let titleLine = CTLineCreateWithAttributedString(title)
+            let sizeLine = CTLineCreateWithAttributedString(attributed(source.sizeText(item), font: headerSizeFont, color: secondary))
+            let titleWidth = width(of: titleLine)
+            let sizeWidth = width(of: sizeLine)
+
+            var titleSpace = area.width
+            let spacing = 8 * s
+            if area.width - sizeWidth - spacing >= min(titleWidth, 56 * s) {
+                titleSpace -= sizeWidth + spacing
+                draw(sizeLine, at: area.maxX - sizeWidth, in: area, font: headerFont, shadow: false)
+            }
+            let token = CTLineCreateWithAttributedString(attributed("…", font: headerFont, color: path.isEmpty ? primary : secondary))
+            guard let fitted = CTLineCreateTruncatedLine(titleLine, Double(titleSpace), path.isEmpty ? .end : .start, token)
+            else { return }
+            draw(fitted, at: area.minX, in: area, font: headerFont, shadow: false)
         }
 
         private func tile(_ item: Int32, rect: CGRect, colorItem: Int32, labeled: Bool) {
@@ -299,34 +355,45 @@ enum TreemapRenderer {
             if labeled, box.width >= 64 * s, box.height >= 30 * s {
                 let inset = box.insetBy(dx: 6 * s, dy: 5 * s)
                 text(source.name(item), in: CGRect(x: inset.minX, y: inset.minY, width: inset.width, height: 14 * s),
-                     size: 11 * s, weight: .semibold, color: CGColor(gray: 1, alpha: 0.95), shadow: true)
+                     font: tileFont, color: CGColor(gray: 1, alpha: 0.96))
                 if box.height >= 44 * s {
-                    text(source.sizeText(item), in: CGRect(x: inset.minX, y: inset.minY + 14 * s, width: inset.width, height: 13 * s),
-                         size: 10 * s, weight: .regular, color: CGColor(gray: 1, alpha: 0.8), shadow: true)
+                    text(source.sizeText(item), in: CGRect(x: inset.minX, y: inset.minY + 14.5 * s, width: inset.width, height: 13 * s),
+                         font: tileSizeFont, color: CGColor(gray: 1, alpha: 0.82))
                 }
             }
         }
 
-        private func text(_ string: String, in rect: CGRect, size: CGFloat, weight: CTFontWeight, color: CGColor, shadow: Bool) {
+        /// Rótulo sobre um bloco colorido: uma linha, cortada no fim, com uma
+        /// sombra curta só para destacar do fundo (sombra larga borra a letra).
+        private func text(_ string: String, in rect: CGRect, font: CTFont, color: CGColor) {
             guard rect.width > 8, rect.height > 4 else { return }
-            let font = CTFont.system(size: size, weight: weight)
-            let attributes: [NSAttributedString.Key: Any] = [
+            let line = CTLineCreateWithAttributedString(attributed(string, font: font, color: color))
+            let token = CTLineCreateWithAttributedString(attributed("…", font: font, color: color))
+            guard let fitted = CTLineCreateTruncatedLine(line, Double(rect.width), .end, token) else { return }
+            draw(fitted, at: rect.minX, in: rect, font: font, shadow: true)
+        }
+
+        private func draw(_ line: CTLine, at x: CGFloat, in clip: CGRect, font: CTFont, shadow: Bool) {
+            context.saveGState()
+            context.clip(to: clip)
+            if shadow {
+                context.setShadow(offset: CGSize(width: 0, height: 0.5 * s), blur: 1 * s,
+                                  color: CGColor(gray: 0, alpha: 0.45))
+            }
+            context.textPosition = CGPoint(x: x, y: clip.minY + CTFontGetAscent(font))
+            CTLineDraw(line, context)
+            context.restoreGState()
+        }
+
+        private func width(of line: CTLine) -> CGFloat {
+            CGFloat(CTLineGetTypographicBounds(line, nil, nil, nil))
+        }
+
+        private func attributed(_ string: String, font: CTFont, color: CGColor) -> NSAttributedString {
+            NSAttributedString(string: string, attributes: [
                 NSAttributedString.Key(kCTFontAttributeName as String): font,
                 NSAttributedString.Key(kCTForegroundColorAttributeName as String): color
-            ]
-            let line = CTLineCreateWithAttributedString(NSAttributedString(string: string, attributes: attributes))
-            let token = CTLineCreateWithAttributedString(NSAttributedString(string: "…", attributes: attributes))
-            guard let fitted = CTLineCreateTruncatedLine(line, Double(rect.width), .end, token) else { return }
-
-            context.saveGState()
-            context.clip(to: rect)
-            if shadow {
-                context.setShadow(offset: CGSize(width: 0, height: 0.5 * s), blur: 2 * s,
-                                  color: CGColor(gray: 0, alpha: 0.55))
-            }
-            context.textPosition = CGPoint(x: rect.minX, y: rect.minY + CTFontGetAscent(font))
-            CTLineDraw(fitted, context)
-            context.restoreGState()
+            ])
         }
     }
 }
@@ -336,7 +403,11 @@ private enum CTFontWeight {
 }
 
 private extension CTFont {
-    static func system(size: CGFloat, weight: CTFontWeight) -> CTFont {
-        NSFont.systemFont(ofSize: size, weight: weight == .semibold ? .semibold : .regular) as CTFont
+    static func system(size: CGFloat, weight: CTFontWeight, monospacedDigits: Bool = false) -> CTFont {
+        let weight: NSFont.Weight = weight == .semibold ? .semibold : .regular
+        let font = monospacedDigits
+            ? NSFont.monospacedDigitSystemFont(ofSize: size, weight: weight)
+            : NSFont.systemFont(ofSize: size, weight: weight)
+        return font as CTFont
     }
 }

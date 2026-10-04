@@ -22,6 +22,16 @@ let package = Package(
                 "XCODE_SETUP.md",
                 "CHANGELOG.md",
                 "CONTRIBUTING.md",
+                "README.pt-BR.md",
+                "CODE_OF_CONDUCT.md",
+                "SECURITY.md",
+                "LICENSE",
+                "NOTICE",
+                "notes",
+                // Site (MkDocs): configuração, tema e dependências Python.
+                "mkdocs.yml",
+                "overrides",
+                "requirements-docs.txt",
                 "VERSION",
                 "docs",
                 "Tests",
@@ -31,19 +41,14 @@ let package = Package(
                 "Makefile",
                 "Installer",
                 "Scripts",
-                // Saída de Scripts/bundle-app.sh e Installer/build-installer.sh:
-                // o .app montado e o .pkg. Sem isto o SPM avisa de arquivos
-                // "unhandled" a cada build depois de gerar um instalador.
+                // Saída de Scripts/bundle-app.sh, Installer/build-installer.sh e
+                // create_installer.sh: o .app, o .pkg, o .dmg e a staging do .dmg
+                // (que tem um symlink para /Applications — sem este exclude o SPM
+                // seguiria o link e varreria /Applications inteiro), e o site do
+                // MkDocs. Existe em todo clone por causa do build/.gitkeep.
                 "build",
                 "Assets.xcassets",
                 "Design",
-                "MAC-LIMPO.app",
-                "MAC-LIMPO.dmg",
-                // Área de montagem do create_installer.sh. Contém o symlink
-                // Applications -> /Applications; sem este exclude o SwiftPM
-                // segue o link e varre /Applications inteiro (Xcode.app junto),
-                // e o build gira em getattrlist sem nunca compilar nada.
-                "dmg_staging",
                 "Services/COMO_VER_LOGS.md",
                 "Services/CORRECAO_APLICADA.md",
                 "Services/CORRECAO_TEMPFILES.md",

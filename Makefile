@@ -12,14 +12,14 @@ help:
 	@echo "  make run         Compila e abre o app (ícone de lixeira na barra de menus)"
 	@echo "  make app         Monta e assina build/app/MAC-LIMPO.app"
 	@echo "  make installer   Gera build/MAC-LIMPO-$(VERSION).pkg"
-	@echo "  make docs        Gera o site (MkDocs) em site/"
+	@echo "  make docs        Gera o site (MkDocs) em build/site/"
 	@echo "  make docs-serve  Pré-visualiza o site em http://127.0.0.1:8000"
 	@echo "  make docs-deploy Publica o site no GitHub Pages (branch gh-pages)"
-	@echo "  make dmg         Gera MAC-LIMPO.dmg (distribuição por arrastar-e-soltar)"
+	@echo "  make dmg         Gera build/MAC-LIMPO-$(VERSION).dmg (arrastar-e-soltar)"
 	@echo "  make install     Gera e abre o .pkg (pede senha de administrador)"
 	@echo "  make uninstall   Remove o que o instalador colocou (precisa de sudo)"
 	@echo "  make format      swiftformat + swiftlint"
-	@echo "  make clean       Remove .build/ e build/"
+	@echo "  make clean       Limpa .build/ e build/ (mantém build/.gitkeep)"
 
 build:
 	swift build
@@ -52,7 +52,8 @@ format:
 	swiftformat . && swiftlint
 
 clean:
-	rm -rf .build build
+	rm -rf .build
+	find build -mindepth 1 ! -name .gitkeep -delete
 
 # ---------------------------------------------------------------- site (MkDocs)
 DOCS_VENV ?= .venv

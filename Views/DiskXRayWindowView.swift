@@ -450,7 +450,7 @@ private struct MapPane: View {
                         // tela, um novo render chega em seguida (report abaixo).
                         Image(decorative: rendering.image, scale: rendering.scale)
                             .interpolation(.medium)
-                        Canvas { context, _ in highlight(context, rendering: rendering) }
+                        Canvas { context, canvasSize in highlight(context, size: canvasSize, rendering: rendering) }
                             .frame(width: size.width, height: size.height)
                             .allowsHitTesting(false)
                     }
@@ -520,19 +520,29 @@ private struct MapPane: View {
         model.treemapResized(width: Int(size.width * displayScale), height: Int(size.height * displayScale), scale: displayScale)
     }
 
-    private func highlight(_ context: GraphicsContext, rendering: TreemapRenderer.Rendering) {
+    /// Contornos de hover e seleção. Ficam inteiros por dentro do bloco e da área
+    /// visível: desenhados para fora, os blocos colados na borda do mapa tinham o
+    /// contorno cortado pelo recorte arredondado (e os vizinhos cobriam o resto).
+    private func highlight(_ context: GraphicsContext, size: CGSize, rendering: TreemapRenderer.Rendering) {
         let scale = rendering.scale
-        func viewRect(_ raw: CGRect) -> CGRect {
-            CGRect(x: raw.minX / scale, y: raw.minY / scale, width: raw.width / scale, height: raw.height / scale)
+        // Folga das bordas do mapa, que tem cantos arredondados de 10 pt.
+        let visible = CGRect(origin: .zero, size: size).insetBy(dx: 1, dy: 1)
+        func outline(_ raw: CGRect, lineWidth: CGFloat) -> CGRect? {
+            let item = CGRect(x: raw.minX / scale, y: raw.minY / scale, width: raw.width / scale, height: raw.height / scale)
+            let rect = item.intersection(visible).insetBy(dx: lineWidth / 2, dy: lineWidth / 2)
+            return rect.isNull || rect.width < 1 || rect.height < 1 ? nil : rect
         }
-        if let hovered = hover.item, let raw = rendering.rects[hovered], raw.width > 0 {
-            let rect = viewRect(raw).insetBy(dx: 0.5, dy: 0.5)
-            context.fill(Path(roundedRect: rect, cornerRadius: 4), with: .color(.white.opacity(0.12)))
-            context.stroke(Path(roundedRect: rect, cornerRadius: 4), with: .color(.white.opacity(0.7)), lineWidth: 1)
+        func radius(_ rect: CGRect) -> CGFloat { min(5, min(rect.width, rect.height) / 4) }
+
+        if let hovered = hover.item, let raw = rendering.rects[hovered], let rect = outline(raw, lineWidth: 1) {
+            let path = Path(roundedRect: rect, cornerRadius: radius(rect))
+            context.fill(path, with: .color(.white.opacity(0.12)))
+            context.stroke(path, with: .color(.white.opacity(0.7)), lineWidth: 1)
         }
-        if let selected = model.selected, let raw = rendering.rects[selected], raw.width > 0 {
-            let rect = viewRect(raw).insetBy(dx: -1, dy: -1)
-            let path = Path(roundedRect: rect, cornerRadius: 5)
+        if let selected = model.selected, let raw = rendering.rects[selected], let rect = outline(raw, lineWidth: 4) {
+            // Halo escuro de 4 pt com o traço de destaque de 2,5 pt no meio: lê
+            // sobre qualquer cor de bloco.
+            let path = Path(roundedRect: rect, cornerRadius: radius(rect))
             context.stroke(path, with: .color(.black.opacity(0.45)), lineWidth: 4)
             context.stroke(path, with: .color(.accentColor), lineWidth: 2.5)
         }

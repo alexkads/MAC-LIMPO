@@ -16,8 +16,14 @@ cd "$(dirname "$0")"
 
 APP_NAME="MAC-LIMPO"
 APP_BUNDLE="build/app/$APP_NAME.app"
-DMG_NAME="$APP_NAME.dmg"
 VERSION="$(tr -d ' \n' < VERSION 2>/dev/null || echo '1.1.0')"
+# Tudo que este script gera fica em build/ — já excluído no Package.swift, então
+# o SPM não varre o symlink /Applications da staging nem avisa de excludes
+# inexistentes quando o .dmg ainda não foi gerado.
+OUT_DIR="build"
+DMG_NAME="$OUT_DIR/$APP_NAME-$VERSION.dmg"
+STAGING="$OUT_DIR/dmg_staging"
+TEMP_DMG="$OUT_DIR/pack.temp.dmg"
 
 echo "🚀 Criando DMG do $APP_NAME v$VERSION..."
 
@@ -31,29 +37,30 @@ fi
 
 # 2. Prepara a staging area
 echo "💿 Criando DMG customizado..."
-rm -f "$DMG_NAME" "pack.temp.dmg"
-rm -rf "dmg_staging"
-mkdir -p "dmg_staging/.background"
+mkdir -p "$OUT_DIR"
+rm -f "$DMG_NAME" "$TEMP_DMG"
+rm -rf "$STAGING"
+mkdir -p "$STAGING/.background"
 
-cp -R "$APP_BUNDLE" "dmg_staging/"
+cp -R "$APP_BUNDLE" "$STAGING/"
 
 BACKGROUND_FILE="Design/Installer/dmg-background.png"
 if [ -f "$BACKGROUND_FILE" ]; then
     echo "🖼️  Adicionando imagem de fundo..."
-    cp "$BACKGROUND_FILE" "dmg_staging/.background/background.png"
+    cp "$BACKGROUND_FILE" "$STAGING/.background/background.png"
 else
     echo "⚠️ Fundo não encontrado em $BACKGROUND_FILE (o DMG usará o padrão)."
 fi
 
-ln -s /Applications "dmg_staging/Applications"
+ln -s /Applications "$STAGING/Applications"
 
 # 3. DMG temporário gravável
 echo "📀 Criando DMG temporário..."
-hdiutil create -srcfolder "dmg_staging" -volname "$APP_NAME" \
-    -fs HFS+ -fsargs "-c c=64,a=16,e=16" -format UDRW -size 200m pack.temp.dmg
+hdiutil create -srcfolder "$STAGING" -volname "$APP_NAME" \
+    -fs HFS+ -fsargs "-c c=64,a=16,e=16" -format UDRW -size 200m "$TEMP_DMG"
 
 echo "🔗 Montando DMG..."
-device=$(hdiutil attach -readwrite -noverify -noautoopen "pack.temp.dmg" | grep -E '^/dev/' | sed 1q | awk '{print $1}')
+device=$(hdiutil attach -readwrite -noverify -noautoopen "$TEMP_DMG" | grep -E '^/dev/' | sed 1q | awk '{print $1}')
 if [ -z "$device" ]; then
     echo "❌ Falha ao montar o DMG temporário"
     exit 1
@@ -92,9 +99,9 @@ sync
 hdiutil detach "$device" || hdiutil detach "$device" -force
 
 echo "📦 Comprimindo DMG..."
-hdiutil convert "pack.temp.dmg" -format UDZO -imagekey zlib-level=9 -o "$DMG_NAME"
+hdiutil convert "$TEMP_DMG" -format UDZO -imagekey zlib-level=9 -o "$DMG_NAME"
 
-rm -f "pack.temp.dmg"
-rm -rf "dmg_staging"
+rm -f "$TEMP_DMG"
+rm -rf "$STAGING"
 
 echo "✅ DMG criado: $DMG_NAME (v$VERSION)"

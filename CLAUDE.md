@@ -16,7 +16,7 @@ swift run                   # build and launch the app (look for the trash icon 
 swift test                  # run unit tests (Tests/MACLIMPOTests)
 make app                    # assemble + sign build/app/MAC-LIMPO.app  (Scripts/bundle-app.sh)
 make installer              # → build/MAC-LIMPO-<version>.pkg          (Installer/build-installer.sh)
-make dmg                    # → MAC-LIMPO.dmg                          (./create_installer.sh)
+make dmg                    # → build/MAC-LIMPO-<version>.dmg          (./create_installer.sh)
 ./create_xcode_project.sh   # generate an Xcode project if you need the IDE
 swiftformat . && swiftlint  # format + lint (configs: .swiftformat, .swiftlint.yml)
 ```
