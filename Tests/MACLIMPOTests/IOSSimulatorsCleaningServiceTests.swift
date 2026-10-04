@@ -64,4 +64,32 @@ final class IOSSimulatorsCleaningServiceTests: XCTestCase {
         XCTAssertTrue(Service.devices(fromJSON: "not json").isEmpty)
         XCTAssertTrue(Service.devices(fromJSON: "{}").isEmpty)
     }
+
+    // MARK: - Runtimes órfãos (AssetsV2)
+
+    func testOrphanAssetIsTheOneNoRuntimeUses() {
+        let root = "/System/Library/AssetsV2/com_apple_MobileAsset_iOSSimulatorRuntime"
+        let used = "\(root)/26c9174130fa5962f3e60f2a49963194dadbae4c.asset"
+        let orphan = "\(root)/fb8de9a3438213a1dda310a6ab5eac9ddf8db858.asset"
+        let result = IOSSimulatorsCleaningService.orphanAssetPaths(
+            [used, orphan], registeredImagePaths: ["\(used)/AssetData"]
+        )
+        XCTAssertEqual(result, [orphan])
+    }
+
+    func testAssetPrefixMustMatchWholeFolderName() {
+        // "abc.asset" não pode ser considerado usado por "abc.asset2/AssetData".
+        let result = IOSSimulatorsCleaningService.orphanAssetPaths(
+            ["/a/abc.asset"], registeredImagePaths: ["/a/abc.asset2/AssetData"]
+        )
+        XCTAssertEqual(result, ["/a/abc.asset"])
+    }
+
+    func testRegisteredImagePathsRejectsUnexpectedJSON() {
+        XCTAssertNil(IOSSimulatorsCleaningService.registeredImagePaths(fromJSON: "not json"))
+        XCTAssertEqual(
+            IOSSimulatorsCleaningService.registeredImagePaths(fromJSON: #"{"X": {"path": "/p/AssetData"}}"#),
+            ["/p/AssetData"]
+        )
+    }
 }

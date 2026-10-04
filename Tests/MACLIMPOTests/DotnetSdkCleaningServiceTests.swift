@@ -76,4 +76,45 @@ final class DotnetSdkCleaningServiceTests: XCTestCase {
         )
         XCTAssertTrue(removed.isEmpty)
     }
+
+    // MARK: - Modo agressivo
+
+    private let october2026 = ISO8601DateFormatter().date(from: "2026-10-04T12:00:00Z")!
+
+    func testAggressiveRemovesOutOfSupportAndSupersededBands() {
+        let installed = ["6.0.421", "7.0.315", "8.0.204", "9.0.102", "9.0.306", "10.0.401"]
+        let removed = DotnetSdkCleaningService.aggressiveSDKRemovals(among: installed, pinnedBands: [], now: october2026)
+        XCTAssertEqual(removed, ["6.0.421", "7.0.315", "9.0.102"])
+    }
+
+    func testAggressiveKeepsPinnedBandAndNewestOverall() {
+        let installed = ["6.0.421", "9.0.102", "9.0.306"]
+        let removed = DotnetSdkCleaningService.aggressiveSDKRemovals(
+            among: installed, pinnedBands: ["6.0.4", "9.0.1"], now: october2026
+        )
+        XCTAssertEqual(removed, [])
+        // Mesmo todos fora de suporte, o mais novo instalado fica.
+        let old = DotnetSdkCleaningService.aggressiveSDKRemovals(among: ["6.0.100", "7.0.100"], pinnedBands: [], now: october2026)
+        XCTAssertEqual(old, ["6.0.100"])
+    }
+
+    func testProjectUsageDetectsMobileAndLegacyAspire() {
+        var usage = DotnetSdkCleaningService.ProjectUsage()
+        DotnetSdkCleaningService.absorb(projectFile: "<TargetFramework>net9.0</TargetFramework>", into: &usage)
+        XCTAssertFalse(usage.usesMobile)
+        DotnetSdkCleaningService.absorb(projectFile: "<Project Sdk=\"Aspire.AppHost.Sdk/9.1.0\"><IsAspireHost>true</IsAspireHost>", into: &usage)
+        XCTAssertFalse(usage.usesAspireWorkload)
+        DotnetSdkCleaningService.absorb(projectFile: "<TargetFrameworks>net9.0-ios;net9.0-android</TargetFrameworks>", into: &usage)
+        XCTAssertTrue(usage.usesMobile)
+        DotnetSdkCleaningService.absorb(globalJSON: #"{"sdk":{"version":"10.0.301","rollForward":"latestFeature"}}"#, into: &usage)
+        XCTAssertEqual(usage.pinnedBands, ["10.0.3"])
+    }
+
+    func testUnusedWorkloadsKeepUnknownOnes() {
+        let none = DotnetSdkCleaningService.ProjectUsage()
+        XCTAssertEqual(DotnetSdkCleaningService.unusedWorkloads(["maui", "aspire", "wasm-tools"], usage: none), ["aspire", "maui"])
+        var mobile = none
+        mobile.usesMobile = true
+        XCTAssertEqual(DotnetSdkCleaningService.unusedWorkloads(["maui", "ios"], usage: mobile), [])
+    }
 }

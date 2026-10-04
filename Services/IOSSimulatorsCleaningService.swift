@@ -43,6 +43,19 @@ class IOSSimulatorsCleaningService: BaseCleaningService, CleaningService, @unche
         var cleanableSize: Int64 { (delete + erase).reduce(0) { $0 + $1.dataSize } }
     }
 
+    /// Runtime baixado pelo MobileAsset que o CoreSimulator não conhece mais
+    /// (sobra de um `simctl runtime delete`, que só desregistra). Fica em
+    /// /System/Library/AssetsV2, protegido pelo SIP: nem `sudo rm` apaga —
+    /// só o `mobileassetd` ou o Terminal da Recuperação.
+    struct OrphanRuntimeAsset: Equatable {
+        let path: String
+        let size: Int64
+        /// "iOS 18.3.1 (22D8075)", do Info.plist do asset.
+        let label: String
+    }
+
+    static let mobileAssetRoot = "/System/Library/AssetsV2"
+
     func scan(progress _: (@Sendable (String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
@@ -73,6 +86,18 @@ class IOSSimulatorsCleaningService: BaseCleaningService, CleaningService, @unche
                 items.append("Old runtimes (\(names)): \(fileHelper.formatBytes(size))")
             } else {
                 items.append("Old runtimes (\(names)): \(fileHelper.formatBytes(size)) (aggressive mode only)")
+            }
+        }
+
+        // Órfãos ficam fora do total: o app não consegue apagá-los (SIP).
+        let orphans = await runBlocking { self.orphanRuntimeAssets() }
+        if !orphans.isEmpty {
+            let volume = (try? URL(fileURLWithPath: "/").resourceValues(forKeys: [.volumeLocalizedNameKey]))?
+                .volumeLocalizedName ?? "Macintosh HD"
+            for orphan in orphans {
+                items.append("⚠ Orphaned runtime \(orphan.label): \(fileHelper.formatBytes(orphan.size)) " +
+                    "— Xcode no longer uses it; macOS protects it (SIP), so remove it from Recovery › Terminal:")
+                items.append("    rm -rf \"/Volumes/\(volume) - Data\(orphan.path)\"")
             }
         }
 
@@ -219,6 +244,54 @@ class IOSSimulatorsCleaningService: BaseCleaningService, CleaningService, @unche
     }
 
     // MARK: - Runtimes
+
+    /// `.asset` de runtime de simulador em AssetsV2 que nenhum runtime do
+    /// `simctl runtime list` usa. Sem resposta do simctl, não aponta nada.
+    private func orphanRuntimeAssets() -> [OrphanRuntimeAsset] {
+        let result = shell.run("/usr/bin/xcrun", ["simctl", "runtime", "list", "-j"], timeout: 30)
+        guard result.exitCode == 0, let registered = Self.registeredImagePaths(fromJSON: result.output) else { return [] }
+
+        let manager = FileManager.default
+        let collections = ((try? manager.contentsOfDirectory(atPath: Self.mobileAssetRoot)) ?? [])
+            .filter { $0.hasSuffix("SimulatorRuntime") }
+        var assets: [String] = []
+        for collection in collections {
+            let folder = (Self.mobileAssetRoot as NSString).appendingPathComponent(collection)
+            for entry in (try? manager.contentsOfDirectory(atPath: folder)) ?? [] where entry.hasSuffix(".asset") {
+                assets.append((folder as NSString).appendingPathComponent(entry))
+            }
+        }
+
+        return Self.orphanAssetPaths(assets, registeredImagePaths: registered).map { path in
+            let info = NSDictionary(contentsOfFile: (path as NSString).appendingPathComponent("Info.plist"))
+            let properties = info?["MobileAssetProperties"] as? [String: Any]
+            let platform = (info?["CFBundleIdentifier"] as? String)?
+                .replacingOccurrences(of: "com.apple.MobileAsset.", with: "")
+                .replacingOccurrences(of: "SimulatorRuntime", with: "") ?? "Simulator"
+            let version = properties?["SimulatorVersion"] as? String ?? "?"
+            let build = properties?["Build"] as? String ?? "?"
+            return OrphanRuntimeAsset(path: path, size: fileHelper.sizeOfDirectory(atPath: path),
+                                      label: "\(platform) \(version) (\(build))")
+        }
+    }
+
+    /// Caminhos de imagem dos runtimes registrados (`path` de cada entrada de
+    /// `simctl runtime list -j`). `nil` se o JSON não for o esperado.
+    static func registeredImagePaths(fromJSON json: String) -> [String]? {
+        guard let data = json.data(using: .utf8),
+              let dict = try? JSONSerialization.jsonObject(with: data) as? [String: [String: Any]]
+        else { return nil }
+        return dict.values.compactMap { $0["path"] as? String }
+    }
+
+    /// Assets que não contêm a imagem de nenhum runtime registrado. Função pura.
+    static func orphanAssetPaths(_ assets: [String], registeredImagePaths: [String]) -> [String] {
+        let registered = registeredImagePaths.map { ($0 as NSString).standardizingPath }
+        return assets.filter { asset in
+            let prefix = (asset as NSString).standardizingPath + "/"
+            return !registered.contains { $0 == String(prefix.dropLast()) || $0.hasPrefix(prefix) }
+        }.sorted()
+    }
 
     private func obsoleteRuntimes() -> [SimulatorRuntime] {
         let result = shell.execute("xcrun simctl runtime list -j", timeout: 30)
