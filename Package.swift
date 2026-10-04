@@ -127,6 +127,7 @@ let package = Package(
                 // Views
                 "Views/MenuBarView.swift",
                 "Views/DiskXRayWindowView.swift",
+                "Views/DiskXRayFileTree.swift",
                 "Views/Components/CleaningCategoryCard.swift",
                 "Views/Components/StorageStatsView.swift",
                 "Views/Components/CleaningProgressView.swift",
@@ -142,6 +143,7 @@ let package = Package(
                 "Utilities/Deadline.swift",
                 "Utilities/CushionTreemap.swift",
                 "Utilities/WinDirStatFormat.swift",
+                "Utilities/ScanTuning.swift",
                 "Views/Components/AppleIntelligenceInsightView.swift",
                 "Intents/MACLIMPOIntents.swift"
             ]

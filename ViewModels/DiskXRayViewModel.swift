@@ -87,16 +87,15 @@ final class DiskXRayViewModel: ObservableObject {
     private var secondaryColumn: TreeColumn = .name
     private var secondaryAscending = true
 
-    struct Row: Identifiable, Equatable {
-        let id: Int32
-        let depth: Int
-    }
-
-    @Published private(set) var rows: [Row] = []
-    @Published private(set) var expanded: Set<Int32> = []
     @Published private(set) var selected: Int32?
-    /// Incrementado quando a seleção muda por fora da lista, para ela rolar até o item.
+    /// Incrementado quando a seleção deve aparecer na árvore (expandir o caminho
+    /// e rolar até ela) — ex.: clique no treemap.
     @Published private(set) var revealToken = 0
+    /// Incrementado quando a estrutura ou a ordem da árvore muda (novo scan,
+    /// ordenação, F6/F7/Ctrl+L, Lixeira): a árvore nativa recarrega.
+    @Published private(set) var treeVersion = 0
+    /// Nome do volume, lido uma vez por scan.
+    private var volumeName = "Macintosh HD"
     private var sortedChildren: [Int32: [Int32]] = [:]
 
     enum Pane { case tree, largestFiles, extensions }
@@ -166,6 +165,15 @@ final class DiskXRayViewModel: ObservableObject {
     @Published private(set) var zoomItem: Int32 = 0
     @Published private(set) var rendering: CushionTreemap.Rendering?
     @Published private(set) var isRendering = false
+    private struct HighlightKey: Equatable {
+        let image: ObjectIdentifier
+        let ext: Int32
+        let version: Int
+    }
+
+    private var highlightKey: HighlightKey?
+    private var highlightCache: [CGRect] = []
+
     /// Pilha do "Reselect Child": os filhos de onde Select Parent saiu.
     private var reselectStack: [Int32] = []
     private var treemapSize: (width: Int, height: Int) = (0, 0)
@@ -191,7 +199,6 @@ final class DiskXRayViewModel: ObservableObject {
         errorMessage = nil
         index = nil
         rendering = nil
-        rows = []
         selected = nil
         selectedExtension = nil
         largestFiles = []
@@ -219,14 +226,14 @@ final class DiskXRayViewModel: ObservableObject {
                 errorMessage = "Could not read \(firmlinks.displayPath(root))."
                 return
             }
+            volumeName = (try? URL(fileURLWithPath: "/").resourceValues(forKeys: [.volumeLocalizedNameKey]))?
+                .volumeLocalizedName ?? "Macintosh HD"
             index = scanned
             zoomItem = scanned.root
-            // O root é inserido e expandido num scan novo (TreeListControl.cpp:267-278).
-            expanded = [scanned.root]
             assignExtensionColors()
             sortExtensions()
             refreshLargestFiles()
-            rebuildRows()
+            treeVersion += 1
             select(scanned.root, reveal: false)
             scheduleRender()
 
@@ -258,7 +265,7 @@ final class DiskXRayViewModel: ObservableObject {
     private func structureChanged() {
         sortedChildren = [:]
         if let selected, selected < 0, !isPseudoVisible(selected) { self.selected = index?.root }
-        rebuildRows()
+        treeVersion += 1
         scheduleRender()
     }
 
@@ -356,8 +363,7 @@ final class DiskXRayViewModel: ObservableObject {
             guard item == index.root else { return index.name(item) }
             guard isDriveScan, let overview else { return firmlinks.displayPath(index.rootPath) }
             // "{vol} - {free} free of {total} ({pct}%)" (Item.Extended.cpp:637-640)
-            let volume = (try? URL(fileURLWithPath: "/").resourceValues(forKeys: [.volumeLocalizedNameKey]))?
-                .volumeLocalizedName ?? "Macintosh HD"
+            let volume = volumeName
             let pct = overview.capacity == 0 ? 0 : 100.0 * Double(overview.free) / Double(overview.capacity)
             return "\(volume) - \(WinDirStatFormat.bytes(overview.free)) free of " +
                 "\(WinDirStatFormat.bytes(overview.capacity)) (\(WinDirStatFormat.double(pct))%)"
@@ -507,7 +513,20 @@ final class DiskXRayViewModel: ObservableObject {
             sortAscending = column.ascendingByDefault
         }
         sortedChildren = [:]
-        rebuildRows()
+        treeVersion += 1
+    }
+
+    /// Ordenação vinda do cabeçalho nativo (coluna e direção já decididas).
+    func setTreeSort(_ column: TreeColumn, ascending: Bool) {
+        guard column != sortColumn || ascending != sortAscending else { return }
+        if column != sortColumn {
+            secondaryColumn = sortColumn
+            secondaryAscending = sortAscending
+        }
+        sortColumn = column
+        sortAscending = ascending
+        sortedChildren = [:]
+        treeVersion += 1
     }
 
     func toggleColumn(_ column: TreeColumn) {
@@ -515,84 +534,24 @@ final class DiskXRayViewModel: ObservableObject {
         if visibleColumns.contains(column) { visibleColumns.remove(column) } else { visibleColumns.insert(column) }
     }
 
-    func rebuildRows() {
-        guard let index else {
-            rows = []
-            return
-        }
-        var result: [Row] = []
-        func visit(_ item: Int32, depth: Int) {
-            result.append(Row(id: item, depth: depth))
-            guard expanded.contains(item) else { return }
-            for child in treeChildren(item) {
-                visit(child, depth: depth + 1)
-            }
-        }
-        visit(index.root, depth: 0)
-        rows = result
-    }
-
-    func toggle(_ item: Int32) {
-        guard hasChildren(item) else { return }
-        if expanded.contains(item) {
-            expanded.remove(item)
-            if let index, item >= 0 {
-                expanded = expanded.filter { $0 < 0 || !index.isAncestor(item, of: $0) }
-                if let selected, selected >= 0, index.isAncestor(item, of: selected) { select(item, reveal: false) }
-            }
-        } else {
-            expanded.insert(item)
-        }
-        rebuildRows()
-    }
-
     // MARK: - Seleção
 
     func select(_ item: Int32, reveal: Bool = true) {
+        guard selected != item || reveal else { return }
         selected = item
         // Seleção na árvore seleciona a extensão do arquivo (ExtensionView.cpp:105-126).
         if let index, item >= 0, !index.isDirectory(item) {
             selectedExtension = index.extensionIndex[Int(item)]
         }
-        if reveal { expandPath(to: item) }
-        revealToken += 1
+        if reveal { revealToken += 1 }
     }
 
-    private func expandPath(to item: Int32) {
-        guard let index else { return }
-        let lineage: [Int32] = item >= 0 ? Array(index.lineage(item).dropLast()) : [index.root]
-        if !lineage.allSatisfy({ expanded.contains($0) }) {
-            expanded.formUnion(lineage)
-            rebuildRows()
-        }
+    /// Ancestrais a expandir para o item aparecer na árvore (raiz primeiro).
+    func lineage(_ item: Int32) -> [Int32] {
+        guard let index else { return [] }
+        if item < 0 { return [index.root, item] }
+        return index.lineage(item)
     }
-
-    /// Setas: ↑/↓ movem, → expande ou desce, ← recolhe ou sobe, Espaço alterna
-    /// (TreeListControl.cpp:621-686).
-    func moveSelection(_ key: TreeKey) {
-        guard !rows.isEmpty else { return }
-        let position = rows.firstIndex { $0.id == selected } ?? 0
-        let item = rows[position].id
-        switch key {
-        case .up: if position > 0 { select(rows[position - 1].id, reveal: false) }
-        case .down: if position + 1 < rows.count { select(rows[position + 1].id, reveal: false) }
-        case .right:
-            if hasChildren(item), !expanded.contains(item) {
-                toggle(item)
-            } else if let first = treeChildren(item).first, expanded.contains(item) {
-                select(first, reveal: false)
-            }
-        case .left:
-            if expanded.contains(item), hasChildren(item) {
-                toggle(item)
-            } else if let parent = parent(item) {
-                select(parent, reveal: false)
-            }
-        case .space: toggle(item)
-        }
-    }
-
-    enum TreeKey { case up, down, left, right, space }
 
     // MARK: - Largest Files
 
@@ -847,6 +806,10 @@ final class DiskXRayViewModel: ObservableObject {
         guard let rendering, let index else { return [] }
         if focusedPane == .extensions {
             guard let ext = selectedExtension, !extensionName(ext).isEmpty else { return [] }
+            // O hover redesenha o mapa a cada movimento do mouse; varrer a
+            // subárvore inteira (milhões de itens) a cada vez travava a janela.
+            let key = HighlightKey(image: ObjectIdentifier(rendering.image), ext: ext, version: treeVersion)
+            if key == highlightKey { return highlightCache }
             let root = rendering.root
             guard root >= 0 else { return [] }
             var rects: [CGRect] = []
@@ -854,6 +817,8 @@ final class DiskXRayViewModel: ObservableObject {
                 where index.extensionIndex[item] == ext && !index.isRemoved(Int32(item)) {
                 if let rect = rendering.rects[Int32(item)], rect.width > 0, rect.height > 0 { rects.append(rect) }
             }
+            highlightKey = key
+            highlightCache = rects
             return rects
         }
         guard let selected, let rect = rendering.rects[selected], rect.width > 0, rect.height > 0 else { return [] }
@@ -930,7 +895,7 @@ final class DiskXRayViewModel: ObservableObject {
             sortedChildren = [:]
             sortExtensions()
             refreshLargestFiles()
-            rebuildRows()
+            treeVersion += 1
             scheduleRender()
         }
     }

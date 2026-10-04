@@ -200,7 +200,7 @@ private struct FileTabbedView: View {
             if model.index == nil {
                 ScanProgressView(model: model)
             } else if model.tab == .allFiles {
-                FileTreeView(model: model, pendingTrash: $pendingTrash)
+                FileTreeOutline(model: model, pendingTrash: $pendingTrash)
             } else {
                 LargestFilesView(model: model, pendingTrash: $pendingTrash)
             }
@@ -247,89 +247,7 @@ private struct ScanProgressView: View {
     }
 }
 
-// MARK: - All Files
-
-private struct FileTreeView: View {
-    @ObservedObject var model: DiskXRayViewModel
-    @Binding var pendingTrash: Int32?
-    @FocusState private var focused: Bool
-
-    private var columns: [DiskXRayViewModel.TreeColumn] {
-        DiskXRayViewModel.TreeColumn.allCases.filter { model.visibleColumns.contains($0) }
-    }
-
-    /// Largura mínima de todas as colunas; acima disso a Name estica.
-    private var contentWidth: CGFloat {
-        columns.reduce(0) { $0 + $1.width } + 120
-    }
-
-    var body: some View {
-        GeometryReader { geometry in
-            ScrollView(.horizontal) {
-                VStack(spacing: 0) {
-                    header
-                    Divider()
-                    rowsList
-                }
-                .frame(width: max(geometry.size.width, contentWidth))
-                .frame(maxHeight: .infinity)
-            }
-        }
-    }
-
-    private var rowsList: some View {
-        ScrollViewReader { proxy in
-            ScrollView(.vertical) {
-                LazyVStack(spacing: 0) {
-                    ForEach(model.rows) { row in
-                        FileTreeRow(model: model, row: row, columns: columns, listFocused: focused)
-                            .id(row.id)
-                            .contextMenu { ItemMenu(model: model, item: row.id, pendingTrash: $pendingTrash) }
-                    }
-                }
-            }
-            .onChange(of: model.revealToken) {
-                if let selected = model.selected { proxy.scrollTo(selected) }
-            }
-        }
-        .focusable()
-        .focusEffectDisabled()
-        .focused($focused)
-        .onChange(of: focused) { if focused { model.focusedPane = .tree } }
-        .onKeyPress(.upArrow) { model.moveSelection(.up); return .handled }
-        .onKeyPress(.downArrow) { model.moveSelection(.down); return .handled }
-        .onKeyPress(.leftArrow) { model.moveSelection(.left); return .handled }
-        .onKeyPress(.rightArrow) { model.moveSelection(.right); return .handled }
-        .onKeyPress(.space) { model.moveSelection(.space); return .handled }
-        .onKeyPress(.return) {
-            if let selected = model.selected { model.open(selected) }
-            return .handled
-        }
-    }
-
-    private var header: some View {
-        HStack(spacing: 0) {
-            ForEach(columns) { column in
-                HeaderCell(
-                    title: column.title,
-                    sorted: model.sortColumn == column ? model.sortAscending : nil,
-                    alignLeft: column.alignLeft
-                ) { model.sortTree(by: column) }
-                    .frame(width: column == .name ? nil : column.width)
-                    .frame(minWidth: column == .name ? column.width : nil, maxWidth: column == .name ? .infinity : nil)
-            }
-        }
-        .contextMenu {
-            ForEach(DiskXRayViewModel.TreeColumn.allCases) { column in
-                Toggle(column.title, isOn: Binding(
-                    get: { model.visibleColumns.contains(column) },
-                    set: { _ in model.toggleColumn(column) }
-                ))
-                .disabled(column.isRequired)
-            }
-        }
-    }
-}
+// MARK: - All Files: ver DiskXRayFileTree.swift (NSOutlineView)
 
 private struct HeaderCell: View {
     let title: String
@@ -357,77 +275,6 @@ private struct HeaderCell: View {
     }
 }
 
-private struct FileTreeRow: View {
-    @ObservedObject var model: DiskXRayViewModel
-    let row: DiskXRayViewModel.Row
-    let columns: [DiskXRayViewModel.TreeColumn]
-    let listFocused: Bool
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        let item = row.id
-        let isSelected = model.selected == item
-        let focusedSelection = isSelected && listFocused
-        HStack(spacing: 0) {
-            ForEach(columns) { column in
-                cell(column, item: item)
-                    .frame(width: column == .name ? nil : column.width)
-                    .frame(minWidth: column == .name ? column.width : nil, maxWidth: column == .name ? .infinity : nil,
-                           alignment: column.alignLeft ? .leading : .trailing)
-            }
-        }
-        .font(.system(size: 12).monospacedDigit())
-        .foregroundStyle(focusedSelection ? Color.white : Color.primary)
-        .frame(height: Palette.rowHeight)
-        .background(isSelected ? Palette.selection(focused: listFocused, dark: colorScheme == .dark) : .clear)
-        .contentShape(Rectangle())
-        .onTapGesture(count: 2) {
-            // Duplo clique: arquivo abre pelo sistema; pasta alterna.
-            if model.hasChildren(item) { model.toggle(item) } else { model.open(item) }
-        }
-        .simultaneousGesture(TapGesture().onEnded {
-            model.focusedPane = .tree
-            model.select(item, reveal: false)
-        })
-    }
-
-    @ViewBuilder
-    private func cell(_ column: DiskXRayViewModel.TreeColumn, item: Int32) -> some View {
-        switch column {
-        case .name:
-            HStack(spacing: 3) {
-                Spacer().frame(width: CGFloat(row.depth) * 16)
-                if model.hasChildren(item) {
-                    Button { model.toggle(item) } label: {
-                        Image(systemName: model.expanded.contains(item) ? "chevron.down" : "chevron.right")
-                            .font(.system(size: 9, weight: .semibold))
-                            .frame(width: 12, height: 16)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                } else {
-                    Spacer().frame(width: 12)
-                }
-                ItemIcon(model: model, item: item)
-                Text(model.name(item)).lineLimit(1).truncationMode(.tail)
-            }
-            .padding(.leading, 4)
-        case .sizeProportion:
-            SizeProportionBar(
-                subtree: model.fractionOfParent(item),
-                absolute: model.fractionOfRoot(item),
-                indent: row.depth,
-                dark: colorScheme == .dark
-            )
-            .help(model.sizeProportionTooltip(item))
-        default:
-            Text(model.text(column, item))
-                .lineLimit(1)
-                .padding(.horizontal, 5)
-        }
-    }
-}
-
 /// Ícone do item; pseudo-itens com os glifos de IconHandler.cpp:32-38.
 private struct ItemIcon: View {
     @ObservedObject var model: DiskXRayViewModel
@@ -450,90 +297,6 @@ private struct ItemIcon: View {
         }
         .font(.system(size: 13))
         .frame(width: 16, height: 16)
-    }
-}
-
-/// Barra "Size Proportion" (Item.Extended.cpp:49-167): trilho, barra do
-/// subtree (fração do pai) e barra absoluta (fração da raiz), cor por nível.
-private struct SizeProportionBar: View {
-    let subtree: Double
-    let absolute: Double
-    let indent: Int
-    let dark: Bool
-
-    /// Options.h:260-267, FileTreeColors.
-    private static let fileTreeColors: [(Double, Double, Double)] = [
-        (64, 64, 140), (140, 64, 64), (64, 140, 64), (140, 140, 64),
-        (0, 0, 255), (255, 0, 0), (0, 255, 0), (255, 255, 0)
-    ]
-
-    var body: some View {
-        Canvas { context, size in
-            // rc.Deflate(2, 4); rc.left += indent * SizeProportionIndent(16)
-            var rc = CGRect(origin: .zero, size: size).insetBy(dx: 2, dy: 4)
-            let indentWidth = CGFloat(indent) * 16
-            rc.origin.x += indentWidth
-            rc.size.width -= indentWidth
-            guard rc.width > 0, rc.height > 0 else { return }
-
-            let base = Self.fileTreeColors[indent % Self.fileTreeColors.count]
-            let color = (base.0, base.1, base.2)
-            let neutralBack: (Double, Double, Double) = dark ? (40, 40, 40) : (225, 225, 225)
-            let white = (255.0, 255.0, 255.0), black = (0.0, 0.0, 0.0)
-            func blend(_ a: (Double, Double, Double), _ b: (Double, Double, Double), _ t: Double) -> (Double, Double, Double) {
-                let t = min(max(t, 0), 1)
-                return ((a.0 + (b.0 - a.0) * t).rounded(), (a.1 + (b.1 - a.1) * t).rounded(), (a.2 + (b.2 - a.2) * t).rounded())
-            }
-            func blendDark(_ c: (Double, Double, Double), _ d: Double, _ l: Double) -> (Double, Double, Double) {
-                dark ? blend(c, white, d) : blend(c, black, l)
-            }
-            func swiftColor(_ c: (Double, Double, Double)) -> Color { Color(red: c.0 / 255, green: c.1 / 255, blue: c.2 / 255) }
-
-            let trackFill = blendDark(neutralBack, 0.10, 0.06)
-            let trackBorder = blendDark(trackFill, 0.18, 0.18)
-            let subtreeFill = dark ? blend(trackFill, color, 0.68) : blend(trackFill, color, 0.48)
-            let subtreeGlow = blend(subtreeFill, white, dark ? 0.18 : 0.30)
-            let absoluteFill = blendDark(color, 0.12, 0.10)
-            let absoluteGlow = blend(absoluteFill, white, dark ? 0.16 : 0.26)
-            let absoluteEdge = blend(absoluteFill, black, dark ? 0.18 : 0.12)
-
-            func roundRect(_ r: CGRect, fill: (Double, Double, Double), border: (Double, Double, Double)) {
-                let path = Path(roundedRect: r, cornerRadius: 1.5)
-                context.fill(path, with: .color(swiftColor(fill)))
-                context.stroke(path, with: .color(swiftColor(border)), lineWidth: 1)
-            }
-
-            roundRect(rc, fill: trackFill, border: trackBorder)
-            rc = rc.insetBy(dx: 1, dy: 1)
-            guard rc.width > 0, rc.height > 0 else { return }
-            func fractionX(_ f: Double) -> CGFloat { rc.minX + (rc.width * CGFloat(min(max(f, 0), 1))).rounded() }
-
-            let subtreeRight = fractionX(subtree)
-            if subtreeRight > rc.minX {
-                let r = CGRect(x: rc.minX, y: rc.minY, width: subtreeRight - rc.minX, height: rc.height)
-                roundRect(r, fill: subtreeFill, border: subtreeFill)
-                if r.height >= 3, r.width >= 2 {
-                    context.fill(Path(CGRect(x: r.minX + 1, y: r.minY, width: r.width - 2, height: 1)), with: .color(swiftColor(subtreeGlow)))
-                }
-                if subtreeRight < rc.maxX {
-                    context.fill(Path(CGRect(x: subtreeRight, y: rc.minY, width: 1, height: rc.height)), with: .color(swiftColor(trackBorder)))
-                }
-            }
-
-            var absoluteRect = CGRect(x: rc.minX, y: rc.minY, width: fractionX(min(subtree, absolute)) - rc.minX, height: rc.height)
-            absoluteRect = absoluteRect.insetBy(dx: 0, dy: 2)
-            if absoluteRect.width > 0, absoluteRect.height > 0 {
-                roundRect(absoluteRect, fill: absoluteFill, border: absoluteFill)
-                if absoluteRect.height >= 3, absoluteRect.width >= 2 {
-                    context.fill(Path(CGRect(x: absoluteRect.minX + 1, y: absoluteRect.minY, width: absoluteRect.width - 2, height: 1)),
-                                 with: .color(swiftColor(absoluteGlow)))
-                }
-                if absoluteRect.height >= 2 {
-                    context.fill(Path(CGRect(x: absoluteRect.maxX - 1, y: absoluteRect.minY + 1, width: 1, height: absoluteRect.height - 2)),
-                                 with: .color(swiftColor(absoluteEdge)))
-                }
-            }
-        }
     }
 }
 
@@ -820,7 +583,7 @@ private struct TreeMapView: View {
         let menu = NSMenu()
         let selected = model.selected
         func add(_ title: String, enabled: Bool = true, _ action: @escaping () -> Void) {
-            let item = ClosureMenuItem(title: title, action: action)
+            let item = ActionMenuItem(title: title, action: action)
             item.isEnabled = enabled
             menu.addItem(item)
         }
@@ -841,22 +604,6 @@ private struct TreeMapView: View {
         }
         return menu
     }
-}
-
-/// NSMenuItem com closure.
-private final class ClosureMenuItem: NSMenuItem {
-    private let handler: () -> Void
-
-    init(title: String, action handler: @escaping () -> Void) {
-        self.handler = handler
-        super.init(title: title, action: #selector(run), keyEquivalent: "")
-        target = self
-    }
-
-    @available(*, unavailable)
-    required init(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
-
-    @objc private func run() { handler() }
 }
 
 /// Mouse do treemap no nível do AppKit: clique/duplo clique, botão do meio,

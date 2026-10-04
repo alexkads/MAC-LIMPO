@@ -9,8 +9,9 @@ import Foundation
 ///   atributos e datas. O equivalente no macOS é `getattrlistbulk(2)` — nome,
 ///   tipo, tamanho alocado, tamanho lógico, data e inode de muitas entradas por
 ///   chamada, sem um `lstat` por arquivo.
-/// - **Workers paralelos.** `ScanningThreads` (padrão 4) threads tiram pastas
-///   de uma fila e enfileiram as subpastas (BlockingQueue.h).
+/// - **Workers paralelos.** Como o `ScanningThreads` do WinDirStat, threads
+///   tiram pastas de uma fila e enfileiram as subpastas (BlockingQueue.h); a
+///   quantidade e o buffer vêm do `ScanTuning` (hardware e tipo de volume).
 ///
 /// O motor rápido do WinDirStat lê a MFT do NTFS direto do volume; o APFS não
 /// tem equivalente acessível sem root, então este é o caminho de lá também
@@ -30,15 +31,12 @@ enum DiskScanner {
         let currentPath: String
     }
 
-    /// Options.h, ScanningThreads (faixa 1...16). O padrão do WinDirStat é 4,
-    /// mas lá o grosso do trabalho é a leitura da MFT; no APFS a leitura por
-    /// pasta é o único caminho e satura em ~8 threads (medido em 2,9 milhões de
-    /// itens: 1 → 52,6 s, 4 → 20,2 s, 8 → 15,9 s, 16 → 15,3 s).
-    static let scanningThreads = 8
-
+    /// `tuning` padrão: threads e buffer escolhidos para o volume de `root`
+    /// nesta máquina (ScanTuning) — o equivalente ao ScanningThreads do
+    /// WinDirStat, só que ajustado ao hardware em vez de fixo.
     static func scan(
         root: String,
-        threads: Int = scanningThreads,
+        tuning: ScanTuning? = nil,
         isCancelled: @escaping @Sendable () -> Bool,
         progress: @escaping @Sendable (Progress) -> Void
     ) -> DiskScanIndex? {
@@ -49,13 +47,15 @@ enum DiskScanner {
         let queue = WorkQueue(rootDevice: Int32(rootStat.st_dev), estimated: estimated, progress: progress)
         queue.push([(job: 0, path: root)], newJobs: 1)
 
-        let workerCount = max(1, min(16, threads))
+        let tuning = tuning ?? ScanTuning.recommended(for: root)
+        let workerCount = max(1, min(16, tuning.threads))
+        let bufferSize = tuning.bufferSize
         let stores = (0 ..< workerCount).map { _ in WorkerStore() }
         let group = DispatchGroup()
         for (worker, store) in stores.enumerated() {
             group.enter()
             let thread = Thread {
-                runWorker(UInt8(worker), store: store, queue: queue, isCancelled: isCancelled)
+                runWorker(UInt8(worker), store: store, queue: queue, bufferSize: bufferSize, isCancelled: isCancelled)
                 group.leave()
             }
             thread.stackSize = 1 << 20
@@ -219,10 +219,13 @@ enum DiskScanner {
     private static let fsoptPackInvalAttrs: UInt64 = 0x0000_0008
     private static let vdir: UInt32 = 2
 
-    /// Buffer por chamada: 4 MiB, como o LOCAL_BUFFER_SIZE do FinderBasic.
-    private static let bufferSize = 4 * 1024 * 1024
-
-    private static func runWorker(_ worker: UInt8, store: WorkerStore, queue: WorkQueue, isCancelled: () -> Bool) {
+    private static func runWorker(
+        _ worker: UInt8,
+        store: WorkerStore,
+        queue: WorkQueue,
+        bufferSize: Int,
+        isCancelled: () -> Bool
+    ) {
         var attributes = attrlist()
         attributes.bitmapcount = u_short(ATTR_BIT_MAP_COUNT)
         attributes.commonattr = attrCmnReturnedAttrs | attrCmnError | attrCmnName | attrCmnDevID
