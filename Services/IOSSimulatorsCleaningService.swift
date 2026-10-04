@@ -14,27 +14,57 @@ class IOSSimulatorsCleaningService: BaseCleaningService, CleaningService, @unche
         let deletable: Bool
     }
 
+    /// Um dispositivo de simulador, como `simctl list devices -j` o descreve.
+    struct SimulatorDevice: Equatable {
+        let udid: String
+        let name: String
+        /// "iOS 26.5", derivado da chave do runtime.
+        let runtime: String
+        let state: String
+        let isAvailable: Bool
+        /// Tamanho da pasta de dados (o que um `erase` zera), informado pelo próprio simctl.
+        let dataSize: Int64
+
+        var isShutdown: Bool { state == "Shutdown" }
+        var label: String { "\(name) (\(runtime))" }
+    }
+
+    /// O que a limpeza faz com cada dispositivo. Scan e clean usam o mesmo plano,
+    /// para o total mostrado no card ser exatamente o que a limpeza tenta liberar.
+    struct DevicePlan: Equatable {
+        /// Runtime ausente: `simctl delete unavailable` remove o dispositivo inteiro.
+        var delete: [SimulatorDevice] = []
+        /// Desligados: `simctl erase` zera dados e apps instalados.
+        var erase: [SimulatorDevice] = []
+        /// Ligados (ou em transição): o `erase` recusa, e apagar mexeria num
+        /// simulador em uso. Aparecem na lista, fora do total.
+        var inUse: [SimulatorDevice] = []
+
+        var cleanableSize: Int64 { (delete + erase).reduce(0) { $0 + $1.dataSize } }
+    }
+
     func scan(progress _: (@Sendable (String) -> Void)?) async -> ScanResult {
         var totalSize: Int64 = 0
         var items: [String] = []
 
-        // Obtém lista de simuladores não disponíveis
-        let result = shell.execute("xcrun simctl list devices unavailable")
-        if result.exitCode == 0 {
-            let lines = result.output.components(separatedBy: "\n")
-            let deviceLines = lines.filter { $0.contains("(") && $0.contains(")") }
-            items.append("\(deviceLines.count) unavailable simulators")
+        let plan = await devicePlan()
+        totalSize += plan.cleanableSize
+        for device in plan.delete {
+            items.append("Unavailable \(device.label): \(fileHelper.formatBytes(device.dataSize))")
         }
-
-        // Tamanho dos dados dos simuladores
-        let simulatorsPath = fileHelper.expandPath("~/Library/Developer/CoreSimulator/Devices")
-        if fileHelper.fileExists(atPath: simulatorsPath) {
-            totalSize = fileHelper.sizeOfDirectory(atPath: simulatorsPath)
+        for device in plan.erase {
+            items.append("Erase \(device.label): \(fileHelper.formatBytes(device.dataSize))")
+        }
+        for device in plan.inUse {
+            items.append(
+                "\(device.label): \(fileHelper.formatBytes(device.dataSize)) — in use (\(device.state)), " +
+                    "shut it down to clean"
+            )
         }
 
         // Runtimes antigos (o mais novo de cada plataforma fica; remoção só no
         // modo agressivo porque re-baixar um runtime custa vários GB)
-        let obsolete = obsoleteRuntimes()
+        let obsolete = await runBlocking { self.obsoleteRuntimes() }
         if !obsolete.isEmpty {
             let size = obsolete.reduce(Int64(0)) { $0 + $1.sizeBytes }
             let names = obsolete.map { "\($0.platform) \($0.version)" }.joined(separator: ", ")
@@ -60,35 +90,49 @@ class IOSSimulatorsCleaningService: BaseCleaningService, CleaningService, @unche
         var filesRemoved = 0
         var errors: [String] = []
 
-        // Obtém tamanho antes
-        let simulatorsPath = fileHelper.expandPath("~/Library/Developer/CoreSimulator/Devices")
-        let sizeBefore = fileHelper.sizeOfDirectory(atPath: simulatorsPath)
+        let plan = await devicePlan()
 
-        // Remove simuladores não disponíveis
-        let unavailableResult = shell.execute("xcrun simctl delete unavailable", timeout: 120)
-        if unavailableResult.exitCode != 0 {
-            errors.append("Failed to delete unavailable simulators: \(unavailableResult.error)")
+        if !plan.delete.isEmpty {
+            let result = await runBlocking { self.shell.execute("xcrun simctl delete unavailable", timeout: 120) }
+            if result.exitCode != 0 {
+                errors.append("Failed to delete unavailable simulators: \(result.error)")
+            }
         }
 
-        // Limpa dados dos simuladores (mantém os simuladores)
-        let eraseResult = shell.execute("xcrun simctl erase all", timeout: 120)
-        if eraseResult.exitCode != 0 {
-            errors.append("Failed to erase simulator data: \(eraseResult.error)")
+        // Um a um, e só os desligados: o antigo `simctl erase all` falhava inteiro
+        // (CoreSimulator, código 405) se houvesse qualquer simulador ligado.
+        for device in plan.erase {
+            let udid = device.udid
+            let result = await runBlocking { self.shell.run("/usr/bin/xcrun", ["simctl", "erase", udid], timeout: 120) }
+            if result.exitCode != 0 {
+                errors.append("Failed to erase \(device.label): \(result.error)")
+            }
         }
 
-        // Calcula espaço liberado
-        let sizeAfter = fileHelper.sizeOfDirectory(atPath: simulatorsPath)
-        bytesRemoved = max(0, sizeBefore - sizeAfter)
-        filesRemoved = 1 // Conta como 1 operação
+        for device in plan.inUse {
+            logger.log("Simulador em uso, ignorado: \(device.label) [\(device.state)]", level: .info)
+        }
+
+        // Liberado de verdade: tamanho antes menos o que sobrou, pelo próprio simctl.
+        // Um dispositivo apagado some da lista e conta inteiro.
+        if !(plan.delete + plan.erase).isEmpty {
+            let after = await runBlocking { self.listDevices() }
+            let remaining = Dictionary(after.map { ($0.udid, $0.dataSize) }, uniquingKeysWith: { first, _ in first })
+            for device in plan.delete + plan.erase {
+                let freed = max(0, device.dataSize - (remaining[device.udid] ?? 0))
+                bytesRemoved += freed
+                if freed > 0 { filesRemoved += 1 }
+            }
+        }
 
         // Remove runtimes antigos (só no modo agressivo). O simctl fala com o
         // simdiskimaged, então não precisa de sudo para um usuário admin.
         if CleaningOptions.shared.aggressiveMode {
-            for runtime in obsoleteRuntimes() {
-                let deleteResult = shell.execute(
-                    "xcrun simctl runtime delete \(runtime.identifier)",
-                    timeout: 120
-                )
+            for runtime in await runBlocking({ self.obsoleteRuntimes() }) {
+                let identifier = runtime.identifier
+                let deleteResult = await runBlocking {
+                    self.shell.run("/usr/bin/xcrun", ["simctl", "runtime", "delete", identifier], timeout: 120)
+                }
                 if deleteResult.exitCode == 0 {
                     bytesRemoved += runtime.sizeBytes
                     filesRemoved += 1
@@ -113,6 +157,65 @@ class IOSSimulatorsCleaningService: BaseCleaningService, CleaningService, @unche
             executionTime: executionTime,
             success: errors.isEmpty
         )
+    }
+
+    // MARK: - Dispositivos
+
+    private func devicePlan() async -> DevicePlan {
+        await runBlocking { Self.plan(for: self.listDevices()) }
+    }
+
+    private func listDevices() -> [SimulatorDevice] {
+        let result = shell.run("/usr/bin/xcrun", ["simctl", "list", "devices", "-j"], timeout: 30)
+        guard result.exitCode == 0 else { return [] }
+        return Self.devices(fromJSON: result.output)
+    }
+
+    /// Interpreta `simctl list devices -j` (`{"devices": {runtimeId: [device]}}`).
+    static func devices(fromJSON json: String) -> [SimulatorDevice] {
+        guard let data = json.data(using: .utf8),
+              let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let byRuntime = root["devices"] as? [String: [[String: Any]]]
+        else { return [] }
+
+        var devices: [SimulatorDevice] = []
+        for (runtimeId, entries) in byRuntime {
+            // "com.apple.CoreSimulator.SimRuntime.iOS-26-5" → "iOS 26.5"
+            let tail = runtimeId.components(separatedBy: ".").last ?? runtimeId
+            let parts = tail.components(separatedBy: "-")
+            let runtime = parts.count > 1
+                ? "\(parts[0]) \(parts.dropFirst().joined(separator: "."))"
+                : tail
+            for entry in entries {
+                guard let udid = entry["udid"] as? String else { continue }
+                devices.append(SimulatorDevice(
+                    udid: udid,
+                    name: entry["name"] as? String ?? udid,
+                    runtime: runtime,
+                    state: entry["state"] as? String ?? "Unknown",
+                    isAvailable: entry["isAvailable"] as? Bool ?? true,
+                    dataSize: (entry["dataPathSize"] as? NSNumber)?.int64Value ?? 0
+                ))
+            }
+        }
+        return devices.sorted { $0.dataSize > $1.dataSize }
+    }
+
+    /// Decide o destino de cada dispositivo. Função pura (testável).
+    static func plan(for devices: [SimulatorDevice]) -> DevicePlan {
+        var plan = DevicePlan()
+        for device in devices {
+            if !device.isAvailable {
+                plan.delete.append(device)
+            } else if device.isShutdown {
+                // Recém-criado ou já zerado: nada a ganhar com erase.
+                guard device.dataSize > 0 else { continue }
+                plan.erase.append(device)
+            } else {
+                plan.inUse.append(device)
+            }
+        }
+        return plan
     }
 
     // MARK: - Runtimes

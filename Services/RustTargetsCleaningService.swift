@@ -23,6 +23,13 @@ final class RustTargetsCleaningService: BaseCleaningService, CleaningService, @u
         "node_modules", "Pods", "DerivedData", "dist", "build", "vendor"
     ]
 
+    /// Lixeira por padrão (reversível); os testes desligam para não encher a Lixeira real.
+    private let useTrash: Bool
+
+    init(useTrash: Bool = true) {
+        self.useTrash = useTrash
+    }
+
     /// Um `target/` do cargo já medido.
     private struct Candidate {
         let path: String
@@ -126,9 +133,14 @@ final class RustTargetsCleaningService: BaseCleaningService, CleaningService, @u
         let candidates = await findTargets(progress: progress)
         let totalSize = candidates.reduce(Int64(0)) { $0 + $1.size }
 
+        let mounts = candidates.isEmpty ? [:] : await dockerMountPoints()
         let items = candidates.map { candidate -> String in
-            let busy = isBuildInProgress(targetPath: candidate.path)
-            let note = busy ? " — build running, will be skipped" : ""
+            var note = ""
+            if isBuildInProgress(targetPath: candidate.path) {
+                note = " — build running, will be skipped"
+            } else if let container = mounts[candidate.path] {
+                note = " — Docker mount point (\(container)), contents only"
+            }
             return "\(candidate.displayName) (\(fileHelper.formatBytes(candidate.size)))\(note)"
         }
 
@@ -153,21 +165,44 @@ final class RustTargetsCleaningService: BaseCleaningService, CleaningService, @u
 
         logger.log("Iniciando limpeza de targets Rust", level: .info)
 
-        for candidate in await findTargets(progress: nil) {
+        let candidates = await findTargets(progress: nil)
+        let mounts = candidates.isEmpty ? [:] : await dockerMountPoints()
+
+        for candidate in candidates {
             if isBuildInProgress(targetPath: candidate.path) {
                 errors.append("Skipped \(candidate.displayName): a Cargo build is running")
                 logger.log("Pulando \(candidate.path): build do cargo em andamento", level: .warning)
                 continue
             }
 
-            do {
-                try fileHelper.removeItem(atPath: candidate.path)
-                bytesRemoved += candidate.size
+            if let container = mounts[candidate.path] {
+                logger.log(
+                    "\(candidate.path) é ponto de montagem do contêiner \(container); limpando só o conteúdo",
+                    level: .info
+                )
+            }
+
+            // Esvazia o `target/` em vez de removê-lo. O cargo usa a pasta vazia
+            // sem problema, e ela pode ser ponto de montagem de um volume Docker
+            // (`./backend:/app` + volume em `/app/target`): enquanto o contêiner
+            // roda, o virtiofs mantém a pasta aberta e removê-la dá EACCES, o que
+            // marcava a limpeza como falha mesmo com todo o conteúdo apagado.
+            let path = candidate.path
+            let failures = await runBlocking { self.emptyDirectory(atPath: path) }
+            let remaining = await fileHelper.sizeOfDirectoryAsync(atPath: candidate.path)
+            let freed = max(0, candidate.size - remaining)
+            bytesRemoved += freed
+
+            if failures.isEmpty {
                 filesRemoved += 1
-                logger.log("Removido target Rust: \(candidate.path)", level: .info)
-            } catch {
-                errors.append("Failed to clean \(candidate.displayName): \(error.localizedDescription)")
-                logger.log("Falha ao remover \(candidate.path): \(error)", level: .error)
+                logger.log("Esvaziado target Rust: \(candidate.path)", level: .info)
+            } else {
+                errors.append(
+                    "Partially cleaned \(candidate.displayName): \(failures.count) item(s) could not be removed"
+                )
+                for failure in failures {
+                    logger.log("Falha ao remover \(failure)", level: .error)
+                }
             }
         }
 
@@ -179,5 +214,85 @@ final class RustTargetsCleaningService: BaseCleaningService, CleaningService, @u
             executionTime: Date().timeIntervalSince(startTime),
             success: errors.isEmpty
         )
+    }
+
+    // MARK: - Remoção
+
+    /// Remove cada item dentro de `path`, mantendo a própria pasta. Prefere a
+    /// Lixeira e cai para remoção definitiva só se ela recusar. Devolve os
+    /// caminhos que não puderam ser removidos.
+    func emptyDirectory(atPath path: String) -> [String] {
+        var failures: [String] = []
+        let fileManager = FileManager.default
+        // Inclui ocultos (`.rustc_info.json`, `.cargo-lock`…).
+        let children = (try? fileManager.contentsOfDirectory(atPath: path)) ?? []
+
+        for child in children {
+            let childPath = (path as NSString).appendingPathComponent(child)
+            if useTrash, fileHelper.trashItem(atPath: childPath) { continue }
+            do {
+                try fileHelper.removeItem(atPath: childPath)
+            } catch {
+                failures.append(childPath)
+            }
+        }
+        return failures
+    }
+
+    // MARK: - Docker
+
+    /// Caminhos do Mac que servem de ponto de montagem para contêineres em
+    /// execução → nome do contêiner. Vazio se o Docker não estiver rodando.
+    private func dockerMountPoints() async -> [String: String] {
+        await runBlocking {
+            let ids = self.shell.run("/usr/bin/env", ["docker", "ps", "-q"], timeout: 15)
+            let containerIds = ids.output.split(whereSeparator: \.isNewline).map(String.init)
+            guard ids.exitCode == 0, !containerIds.isEmpty else { return [:] }
+
+            let format = "{{$n := .Name}}{{range .Mounts}}{{$n}}|{{.Type}}|{{.Source}}|{{.Destination}}\n{{end}}"
+            let inspect = self.shell.run(
+                "/usr/bin/env",
+                ["docker", "inspect", "--format", format] + containerIds,
+                timeout: 15
+            )
+            guard inspect.exitCode == 0 else { return [:] }
+            return Self.hostMountPoints(fromInspect: inspect.output)
+        }
+    }
+
+    /// Interpreta linhas `nome|tipo|origem|destino` do `docker inspect` e devolve
+    /// os caminhos do Mac sobre os quais o Docker monta algo. Função pura (testável).
+    ///
+    /// Um volume montado em `/app/target` com o projeto em bind mount
+    /// `~/proj:/app` cai em `~/proj/target` no Mac — é a pasta que o Docker
+    /// precisa manter. A origem de bind mounts às vezes vem com o prefixo
+    /// `/host_mnt` da VM, que é removido.
+    static func hostMountPoints(fromInspect output: String) -> [String: String] {
+        struct Mount {
+            let container: String
+            let type: String
+            let source: String
+            let destination: String
+        }
+
+        let mounts: [Mount] = output.split(whereSeparator: \.isNewline).compactMap { line in
+            let fields = line.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
+            guard fields.count == 4 else { return nil }
+            var source = fields[2]
+            if source.hasPrefix("/host_mnt/") { source.removeFirst("/host_mnt".count) }
+            let container = fields[0].hasPrefix("/") ? String(fields[0].dropFirst()) : fields[0]
+            return Mount(container: container, type: fields[1], source: source, destination: fields[3])
+        }
+
+        var result: [String: String] = [:]
+        for bind in mounts where bind.type == "bind" {
+            for other in mounts where other.container == bind.container && other.destination != bind.destination {
+                let prefix = bind.destination.hasSuffix("/") ? bind.destination : bind.destination + "/"
+                guard other.destination.hasPrefix(prefix) else { continue }
+                let relative = String(other.destination.dropFirst(prefix.count))
+                result[(bind.source as NSString).appendingPathComponent(relative)] = bind.container
+            }
+        }
+        return result
     }
 }
