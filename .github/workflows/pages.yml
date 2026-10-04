@@ -1,15 +1,10 @@
 name: Website
 
+# O site é publicado na branch gh-pages com `make docs-deploy` (mkdocs gh-deploy),
+# e o GitHub Pages serve essa branch. Este workflow é a alternativa pelo
+# GitHub Actions: para usá-lo, troque a fonte do Pages para "GitHub Actions"
+# e rode-o manualmente (ou volte o gatilho de push).
 on:
-  push:
-    branches: [main]
-    paths:
-      - "docs/**"
-      - "overrides/**"
-      - "mkdocs.yml"
-      - "requirements-docs.txt"
-      - "CHANGELOG.md"
-      - ".github/workflows/pages.yml"
   workflow_dispatch:
 
 permissions:

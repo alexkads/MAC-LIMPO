@@ -78,13 +78,12 @@ Commit messages follow [Conventional Commits](https://www.conventionalcommits.or
 
 ## Documentation website
 
-The site at <https://alexkads.github.io/MAC-LIMPO/> is built with MkDocs Material from `docs/` and deployed by
-GitHub Actions on every push to `main`. To preview it locally:
+The site at <https://alexkads.github.io/MAC-LIMPO/> is built with MkDocs Material from `docs/` and published to the `gh-pages`
+branch, which GitHub Pages serves:
 
 ```bash
-python3 -m venv .venv && . .venv/bin/activate
-pip install -r requirements-docs.txt
-mkdocs serve
+make docs-serve     # preview at http://127.0.0.1:8000
+make docs-deploy    # build and publish (maintainers)
 ```
 
 ## License

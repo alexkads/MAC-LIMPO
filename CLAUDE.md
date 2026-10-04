@@ -106,7 +106,7 @@ Full-disk map: summary by file category, native folder tree, file-type panel, la
 
 ### Website
 
-MkDocs Material in `docs/` (+ `overrides/` for Open Graph/JSON-LD), English and Portuguese via suffix files (`page.pt.md`), deployed by `.github/workflows/pages.yml`. `docs/cleaning.md` lists the categories — regenerate it when categories change. `mkdocs build --strict` must pass.
+MkDocs Material in `docs/` (+ `overrides/` for Open Graph/JSON-LD), English and Portuguese via suffix files (`page.pt.md`), published to the `gh-pages` branch with `make docs-deploy` (`mkdocs gh-deploy`; `.github/workflows/pages.yml` is a manual alternative). `docs/cleaning.md` lists the categories — regenerate it when categories change. `mkdocs build --strict` must pass.
 
 ### Development hooks (env vars)
 

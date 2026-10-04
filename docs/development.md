@@ -104,13 +104,12 @@ Environment variables for screenshots and debugging (no effect in normal use):
 
 ## Website
 
-Built with [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) from `docs/` and deployed to GitHub
-Pages by `.github/workflows/pages.yml`. Preview locally:
+Built with [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) from `docs/` and published to the
+`gh-pages` branch, which GitHub Pages serves:
 
 ```bash
-python3 -m venv .venv && . .venv/bin/activate
-pip install -r requirements-docs.txt
-mkdocs serve
+make docs-serve     # preview at http://127.0.0.1:8000
+make docs-deploy    # build and publish (maintainers)
 ```
 
 Translations use the suffix convention: `page.md` (English) and `page.pt.md` (Portuguese).
