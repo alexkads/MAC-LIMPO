@@ -1,403 +1,88 @@
+<div align="center">
+
 # MAC-LIMPO
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Platform-macOS-blue" alt="Platform">
-  <img src="https://img.shields.io/badge/Swift-6.4-orange" alt="Swift">
-  <img src="https://img.shields.io/badge/SwiftUI-✓-green" alt="SwiftUI">
-  <img src="https://img.shields.io/badge/License-MIT-lightgrey" alt="License">
-</p>
+**Free up disk space on your Mac — a native menu bar cleaner for developers, with a disk X-ray that shows where every gigabyte goes.**
 
-**MAC-LIMPO** é uma aplicação nativa para macOS construída em SwiftUI que ajuda você a liberar espaço em disco de forma rápida e eficiente. A aplicação roda discretamente no menu bar e oferece limpeza poderosa de diversos componentes do sistema, além de visualização avançada de uso de disco com treemap interativo.
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![macOS 27+](https://img.shields.io/badge/macOS-27%2B-black?logo=apple)](https://alexkads.github.io/MAC-LIMPO/install/)
+[![Swift 6.4](https://img.shields.io/badge/Swift-6.4-F05138?logo=swift&logoColor=white)](https://swift.org)
+[![Latest release](https://img.shields.io/github/v/release/alexkads/MAC-LIMPO)](https://github.com/alexkads/MAC-LIMPO/releases/latest)
+[![Docs](https://img.shields.io/badge/docs-alexkads.github.io%2FMAC--LIMPO-8A2BE2)](https://alexkads.github.io/MAC-LIMPO/)
 
-## 📸 Screenshots
+[Website](https://alexkads.github.io/MAC-LIMPO/) · [Install](#install) · [Features](#features) · [Contributing](CONTRIBUTING.md) · [Português](README.pt-BR.md)
 
-### Interface Principal
+<img src="docs/assets/images/disk-xray-light.png" alt="Disk X-Ray: file types, folder tree and treemap of a Mac disk" width="860">
 
-![Interface Principal](docs/images/main_interface.png)
-_Interface limpa e moderna no menu bar com cards de categorias de limpeza_
+</div>
 
+## Why
 
-## ✨ Funcionalidades
+Xcode, Docker, simulators, `node_modules`, Rust `target/` folders, package caches and AI models quietly eat hundreds of gigabytes. MAC-LIMPO finds them, tells you how much each one takes, and cleans them — moving files to the Trash whenever possible so a cleanup can be undone.
 
-### 🧹 Módulos de Limpeza (22 Categorias)
+It is a native SwiftUI + AppKit app that lives in the menu bar. No telemetry, no account, no subscription.
 
-#### 🛠️ Desenvolvimento
+## Install
 
-- **🐳 Docker**: Remove containers parados, imagens dangling e build cache
-- **📦 Dev Packages**: Limpa caches de npm, pip, brew e cargo
-- **⚙️ Xcode Cache**: Limpa DerivedData, Archives, DeviceSupport e previews
-- **📱 iOS Simulators**: Remove simuladores antigos (não usados há 90+ dias)
-- **💻 IDE Cache**: Limpa caches de JetBrains (Rider, IntelliJ), VS Code, Cursor, Zed, Sublime
-- **🤖 Android SDK**: Limpa System Images, AVDs, Gradle cache e build cache
-- **🎭 Playwright**: Remove cache de browsers do Playwright
-- **🦀 Cargo/Rust**: Limpa cache de build e registry do Cargo
-- **🍺 Homebrew**: Limpa cache de downloads do Homebrew
-- **📋 Terminal Logs**: Remove logs antigos de terminal (zsh, bash)
-
-#### 💻 Sistema
-
-- **📄 Temp Files**: Remove arquivos temporários e caches do sistema
-- **📜 Logs**: Limpa logs antigos do sistema e apps (30+ dias)
-- **🗂️ App Cache**: Remove cache de aplicações
-- **📥 Old Downloads**: Remove downloads com mais de 30 dias
-- **🗑️ Trash Bin**: Esvazia a lixeira
-
-#### 🌐 Navegadores e Apps
-
-- **🌍 Browser Cache**: Limpa caches do Safari, Chrome, Firefox, Edge, Brave e Arc
-- **🎵 Spotify Cache**: Remove cache offline do Spotify
-- **💼 Slack Cache**: Limpa cache e arquivos temporários do Slack
-- **💬 Messaging Apps**: Remove cache de WhatsApp, Teams e Discord
-- **🎨 Adobe Cache**: Limpa cache e arquivos de mídia de apps Adobe
-
-#### ✉️ Email e Mensagens
-
-- **📧 Mail Attachments**: Limpa anexos antigos do app Mail
-- **💬 Messages Attachments**: Remove anexos antigos do Messages
-
-#### 🔧 System Deep Clean
-
-- **💾 System Data**: Limpeza profunda de caches do sistema, Safari, dados de desenvolvimento e Time Machine snapshots
-
-### 🩻 Disk X-Ray — o WinDirStat no Mac
-
-Port fiel do [WinDirStat](https://github.com/windirstat/windirstat): as mesmas três telas sincronizadas, com as fórmulas, cores e padrões do código original.
-
-- **Árvore "All Files"**: Name, Size Proportion (barra por nível), Percentage, Physical Size, Logical Size, Files e Last Change (Items e Folders pelo menu do cabeçalho); ordenação clicando no cabeçalho
-- **"Largest Files"**: os 50 maiores arquivos do scan
-- **Extensões**: cor, descrição do sistema, bytes, % e quantidade; selecionar destaca todos os arquivos daquele tipo no mapa
-- **Treemap cushion**: um retângulo por arquivo, cor pela extensão; clique seleciona na árvore, duplo clique dá zoom, botão do meio reseta, roda seleciona pai/filho, Ctrl+roda dá zoom
-- **`<Free Space>` (F6) e `<Unknown>` (F7)**: fecham a conta com o disco inteiro; **Use Logical Size** (Ctrl+L)
-- Lê ~3 milhões de arquivos em cerca de um minuto; ações: Open, Select in Finder, Copy Path, Delete (to Trash)
-
-### 🎨 Interface Moderna
-
-- Design vibrante com gradientes coloridos
-- Animações suaves e micro-interações
-- Tema adaptável (dark/light mode)
-- Interface intuitiva no menu bar
-- Cards interativos com hover effects
-- Glassmorphism e efeitos modernos
-
-### 📊 Estatísticas
-
-- Visualização de espaço em disco usado/disponível
-- Estimativa de espaço recuperável por categoria
-- Resultados detalhados pós-limpeza
-- Tempo de execução das operações
-- Análise visual de uso de disco
-
-## 🚀 Como Usar
-
-### Pré-requisitos
-
-- macOS 27.0 ou superior
-- Swift 6.4
-
-### Instalação via .pkg (recomendado)
-
-1. Baixe o arquivo `MAC-LIMPO-<versão>.pkg`
-2. Abra e siga o instalador
-3. O app é aberto automaticamente ao final — procure o ícone de lixeira no menu bar
-
-O instalador coloca duas coisas no Mac:
-
-| Caminho | O que é |
-|---|---|
-| `/Applications/MAC-LIMPO.app` | o app de menu bar |
-| `/usr/local/bin/mac-limpo-uninstall` | o desinstalador |
-
-**Para remover tudo:** `sudo mac-limpo-uninstall`
-
-> O `.pkg` também tira a quarentena do app durante a instalação, o que evita o
-> aviso de "desenvolvedor não identificado" que o `.dmg` produz enquanto o
-> projeto não tiver um certificado Developer ID.
-
-### Instalação via DMG
-
-1. Baixe o arquivo `MAC-LIMPO.dmg`
-2. Abra o DMG e arraste o app para Applications
-3. Na primeira vez, clique com o botão direito no app › **Abrir** (assinatura ad-hoc)
-4. Procure o ícone de lixeira no menu bar
-
-### Compilação Manual
-
-1. Clone este repositório:
+### One command (recommended)
 
 ```bash
-git clone <repository_url>
+curl -fsSL https://alexkads.github.io/MAC-LIMPO/install.sh | sh
+```
+
+The script checks your Mac, downloads the source of the latest release, **builds it on your machine** and installs `MAC-LIMPO.app` into `/Applications`. Because the app is compiled locally it never carries the quarantine flag, so it opens on the first click — no Developer ID certificate needed, no Gatekeeper warning. [Read the script](docs/install.sh) before running it if you like.
+
+Requirements: **macOS 27 or later** and the **Command Line Tools** (`xcode-select --install`) or Xcode, with Swift 6.4. The first build takes 2–5 minutes.
+
+```bash
+# Options: build a branch, choose the folder, preview, or uninstall
+curl -fsSL https://alexkads.github.io/MAC-LIMPO/install.sh | sh -s -- --version main
+curl -fsSL https://alexkads.github.io/MAC-LIMPO/install.sh | sh -s -- --dest ~/Applications
+curl -fsSL https://alexkads.github.io/MAC-LIMPO/install.sh | sh -s -- --dry-run
+curl -fsSL https://alexkads.github.io/MAC-LIMPO/install.sh | sh -s -- --uninstall
+```
+
+### Installer package
+
+Each [release](https://github.com/alexkads/MAC-LIMPO/releases/latest) ships a `.pkg`. It is not notarized, so after downloading, right-click it and choose **Open**.
+
+### From source / Xcode
+
+```bash
+git clone https://github.com/alexkads/MAC-LIMPO.git
 cd MAC-LIMPO
+swift run                 # build and launch (look for the icon in the menu bar)
+open Package.swift        # or open the project in Xcode 27 and press ⌘R
+make app                  # assemble build/app/MAC-LIMPO.app
 ```
 
-2. Gere o instalador:
+More in the [installation guide](https://alexkads.github.io/MAC-LIMPO/install/).
 
-```bash
-make installer     # → build/MAC-LIMPO-<versão>.pkg
-make dmg           # → MAC-LIMPO.dmg
-make install       # gera o .pkg e o abre
-```
+## Features
 
-3. Ou compile e rode direto:
+<img src="docs/assets/images/menu-bar-light.png" alt="MAC-LIMPO menu bar popover with storage gauge and cleaning categories" width="300" align="right">
 
-```bash
-make run           # equivale a: swift run
-make app           # só monta e assina build/app/MAC-LIMPO.app
-make help          # lista todos os alvos
-```
+**46 cleaning categories**, grouped and measured before anything is removed:
 
-#### Assinatura
+- **Development** — Xcode DerivedData and archives, iOS simulators, Docker images/build cache, `node_modules`, Rust `target/`, Cargo, Go, pnpm, Bun, npm/pip, NuGet, Dart/Flutter pub, Android SDK, .NET SDKs, old Node versions (nvm), IDE caches (VS Code, Cursor, JetBrains, Zed), Playwright, Cypress, Expo, local AI models.
+- **System** — logs, temporary files, `/var/folders`, app caches, Trash, System Data.
+- **Apps & browsers** — Safari/Chrome/Firefox caches, Spotify, Adobe, Notion, creative apps, leftovers of uninstalled apps.
+- **Communication** — Slack, Messages and Mail attachments, WhatsApp/Teams/Discord caches.
 
-`Scripts/bundle-app.sh` procura uma identidade no keychain nesta ordem:
-*Developer ID Application* → *Apple Development* → ad-hoc. Sem nenhum
-certificado, o build funciona e o app roda localmente, mas não pode ser
-notarizado. Para forçar uma identidade:
+**Disk X-Ray** — a full map of the disk: every file read in seconds (millions of items), a treemap colored by file type, a folder tree, a file-type panel and the largest files. Double-click to zoom, Quick Look, Show in Finder, Move to Trash.
 
-```bash
-IDENTITY="Developer ID Application: ..." make app
-INSTALLER_IDENTITY="Developer ID Installer: ..." make installer
-```
+**Safe by default** — scan first, confirm before cleaning, Trash instead of delete where possible, and caches only (never your documents). See [what it cleans and why it is safe](https://alexkads.github.io/MAC-LIMPO/safety/).
 
-### Uso
+**Native look** — the default *Liquid Glass* theme uses only system components; Classic, Cyberpunk and Matrix themes are one click away. Apple Intelligence can write an on-device storage recommendation, and App Intents expose cleaning to Shortcuts and Siri.
 
-#### Limpeza de Disco
+<br clear="right">
 
-1. Clique no ícone de lixeira no menu bar
-2. Visualize as estimativas de espaço para cada categoria
-3. Clique em qualquer card para limpar aquela categoria
-4. Ou use "Scan All" para escanear todas as categorias
+## Contributing
 
-#### Disk Map
+Contributions are welcome — new cleaning categories especially. Read [CONTRIBUTING.md](CONTRIBUTING.md), the [Code of Conduct](CODE_OF_CONDUCT.md) and the [development guide](https://alexkads.github.io/MAC-LIMPO/development/). Security issues: see [SECURITY.md](SECURITY.md).
 
-1. Clique no ícone de grid no menu bar
-2. Selecione um diretório para escanear (Home, Desktop, Documents, etc.)
-3. Aguarde o scan paralelo (muito rápido!)
-4. Explore visualmente o uso de espaço
-5. Clique em diretórios para navegar
-6. Use o botão "Back" para voltar
+## License
 
-## ⚙️ Estrutura do Projeto
+MAC-LIMPO is free software, released under the [GNU General Public License v3.0 or later](LICENSE). See [NOTICE](NOTICE) for acknowledgements — the Disk X-Ray is inspired by [WinDirStat](https://github.com/windirstat/windirstat).
 
-```
-MAC-LIMPO/
-├── MACLIMPOApp.swift          # App principal e menu bar
-├── Models/
-│   ├── CleaningCategory.swift  # Definição de categorias
-│   ├── CleaningResult.swift    # Modelos de resultados
-│   ├── DiskXRay.swift          # Conta do APFS e firmlinks
-│   └── DiskScanIndex.swift     # Todos os itens do scan em arrays paralelos
-├── Services/
-│   ├── CleaningService.swift   # Protocolo base
-│   ├── DiskScanner.swift       # Varredura fts(3) de cada arquivo
-│   ├── DiskXRayService.swift   # APFS + Lixeira
-│   └── [22 cleaning services]  # Um para cada categoria
-├── ViewModels/
-│   ├── MenuBarViewModel.swift
-│   └── DiskXRayViewModel.swift # Árvore, extensões, zoom, seleção (regras do WinDirStat)
-├── Views/
-│   ├── MenuBarView.swift       # View principal
-│   ├── DiskXRayWindowView.swift # Janela do Disk X-Ray
-│   └── Components/             # Cards, progresso, resultados
-├── Utilities/
-│   ├── FileSystemHelper.swift  # Operações de arquivo
-│   ├── ShellExecutor.swift     # Execução de comandos
-│   ├── CushionTreemap.swift    # Port do treemap do WinDirStat
-│   └── WinDirStatFormat.swift  # Formatos de bytes/data do WinDirStat
-└── Assets.xcassets/
-```
-
-## ⚠️ Avisos Importantes
-
-1. **Operações Destrutivas**: Esta aplicação remove arquivos permanentemente. Sempre revise o que será removido antes de confirmar.
-
-2. **Permissões**: Algumas operações podem requerer:
-   - Full Disk Access
-   - Privilégios administrativos (sudo)
-
-3. **Backup**: Recomenda-se ter backups regulares antes de usar ferramentas de limpeza.
-
-4. **Docker**: A limpeza do Docker remove TODOS os containers parados e imagens não utilizadas. Certifique-se de não precisar deles.
-
-## 🛠️ Tecnologias Utilizadas
-
-- **SwiftUI**: Framework de UI moderna da Apple
-- **AppKit**: Para integração com menu bar (NSStatusItem)
-- **Combine**: Para gerenciamento de estado reativo
-- **Foundation**: Para operações de arquivo e sistema
-- **Swift Concurrency**: TaskGroup para scan paralelo
-- **Canvas**: Renderização eficiente do treemap
-
-## 🎯 Roadmap
-
-### ✅ Implementado (v1.0)
-
-- [x] Interface moderna no menu bar
-- [x] 22 categorias de limpeza
-- [x] Visualização de espaço em disco
-- [x] Resultados detalhados de limpeza
-- [x] Disk Map com treemap interativo
-- [x] Scan paralelo (3-5x mais rápido)
-- [x] Navegação hierárquica no treemap
-- [x] Cores por tipo de arquivo
-- [x] Janela separada para Disk Map
-- [x] Progresso em tempo real
-- [x] Botão voltar para navegação
-
-### 🚧 Em Desenvolvimento (v1.1)
-
-- [ ] Agendamento automático de limpeza
-- [ ] Notificações quando espaço está baixo
-- [ ] Exportação de relatórios de limpeza
-- [ ] Atalhos de teclado
-- [ ] Preferências avançadas
-
-### 📋 Planejado (v2.0)
-
-- [ ] Exclusão de diretórios específicos da limpeza
-- [ ] Análise de duplicatas mais inteligente
-- [ ] Sugestões automáticas de limpeza
-- [ ] Histórico de limpezas
-- [ ] Comparação de scans do Disk Map
-- [ ] Exportar treemap como imagem
-- [ ] Filtros por tipo de arquivo no treemap
-- [ ] Busca de arquivos no treemap
-- [ ] Integração com limpeza (deletar direto do treemap)
-- [ ] Profundidade de scan configurável
-- [ ] Cache de scans anteriores
-
-### 💡 Ideias Futuras
-
-- [ ] Widget para Notification Center
-- [ ] Integração com iCloud Drive
-- [ ] Análise de uso de rede
-- [ ] Monitoramento de apps que consomem espaço
-- [ ] Suporte para múltiplos volumes/discos
-- [ ] Modo de limpeza agressiva
-- [ ] Limpeza de arquivos de log específicos de apps
-- [ ] Detecção de arquivos grandes não usados
-
-## 📝 Licença
-
-Este projeto está sob a licença MIT.
-
-## 🤝 Contribuições
-
-Contribuições são muito bem-vindas! Este projeto está aberto para melhorias, correções de bugs, novas features e documentação.
-
-### Como Contribuir
-
-1. **Fork o projeto**
-
-   ```bash
-   # Clique em "Fork" no GitHub
-   git clone https://github.com/seu-usuario/MAC-LIMPO.git
-   cd MAC-LIMPO
-   ```
-
-2. **Crie uma branch para sua feature**
-
-   ```bash
-   git checkout -b feature/MinhaNovaFeature
-   # ou
-   git checkout -b fix/CorrecaoDeBug
-   ```
-
-3. **Faça suas alterações**
-   - Siga os padrões de código do projeto
-   - Adicione comentários quando necessário
-   - Mantenha o código limpo e legível
-
-4. **Teste suas mudanças**
-
-   ```bash
-   swift build
-   swift run
-   ```
-
-5. **Commit suas mudanças**
-
-   ```bash
-   git add .
-   git commit -m "feat: adiciona nova funcionalidade X"
-   # ou
-   git commit -m "fix: corrige bug Y"
-   ```
-
-6. **Push para sua branch**
-
-   ```bash
-   git push origin feature/MinhaNovaFeature
-   ```
-
-7. **Abra um Pull Request**
-   - Descreva claramente o que foi alterado
-   - Referencie issues relacionadas
-   - Adicione screenshots se aplicável
-
-### Padrões de Código
-
-- **Swift Style Guide**: Siga as convenções do Swift
-- **SwiftUI**: Use componentes reutilizáveis
-- **Nomenclatura**: Use nomes descritivos em inglês
-- **Comentários**: Documente funções complexas
-- **Formatação**: Use 4 espaços para indentação
-
-### Tipos de Contribuição
-
-#### 🐛 Reportar Bugs
-
-- Use o template de issue para bugs
-- Descreva o comportamento esperado vs atual
-- Inclua passos para reproduzir
-- Adicione screenshots se possível
-
-#### ✨ Sugerir Features
-
-- Use o template de issue para features
-- Explique o problema que resolve
-- Descreva a solução proposta
-- Considere alternativas
-
-#### 📝 Melhorar Documentação
-
-- Corrija erros de digitação
-- Adicione exemplos
-- Melhore explicações
-- Traduza para outros idiomas
-
-#### 🧹 Adicionar Novos Serviços de Limpeza
-
-1. Crie um novo arquivo em `Services/`
-2. Implemente o protocolo `CleaningService`
-3. Adicione a categoria em `CleaningCategory.swift`
-4. Registre o serviço em `MenuBarViewModel.swift`
-5. Teste extensivamente antes de submeter
-
-### Áreas que Precisam de Ajuda
-
-- [ ] Testes unitários e de integração
-- [ ] Localização (i18n) para outros idiomas
-- [ ] Otimização de performance
-- [ ] Documentação de código
-- [ ] Novos serviços de limpeza
-- [ ] Melhorias na UI/UX
-
-### Código de Conduta
-
-- Seja respeitoso e inclusivo
-- Aceite críticas construtivas
-- Foque no que é melhor para a comunidade
-- Mostre empatia com outros contribuidores
-
-### 📋 Changelog
-
-Todas as mudanças são documentadas no [CHANGELOG.md](CHANGELOG.md). Ao contribuir, adicione suas mudanças na seção `[Unreleased]`.
-
-Para mais detalhes, veja [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## 👨‍💻 Autor
-
-Desenvolvido com ❤️ usando SwiftUI
-
----
-
-**⚡ Libere espaço, ganhe performance!**
+Copyright © 2025-2026 Alex S S Fonseca and contributors.

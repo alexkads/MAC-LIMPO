@@ -1,0 +1,19 @@
+name: Feature or cleaning category request
+description: Suggest an idea or a new thing to clean
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+    validations:
+      required: true
+  - type: textarea
+    id: paths
+    attributes:
+      label: For a new cleaning category — which folders, and why are they safe to remove?
+      description: Paths the app/tool fills, whether it recreates them, and what happens after cleaning.
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else?

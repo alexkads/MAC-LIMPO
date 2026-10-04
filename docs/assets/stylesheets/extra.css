@@ -1,0 +1,24 @@
+/* Capturas de tela com cantos e sombra, como janelas do macOS. */
+.md-typeset img.screenshot {
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgb(0 0 0 / 18%);
+}
+
+/* Bloco do comando de instalação na página inicial. */
+.md-typeset .install-command pre > code {
+  font-size: 0.85rem;
+}
+
+.md-typeset .hero {
+  text-align: center;
+  margin: 1rem 0 2rem;
+}
+
+.md-typeset .hero h1 {
+  margin-bottom: 0.4rem;
+}
+
+.md-typeset .hero p.tagline {
+  font-size: 1.15rem;
+  opacity: 0.8;
+}

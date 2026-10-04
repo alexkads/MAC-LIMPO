@@ -135,3 +135,7 @@ dmg_staging/
 # IDE
 .vscode/
 .idea/
+
+# Site de documentação (mkdocs build) e ambiente Python local
+site/
+.venv/

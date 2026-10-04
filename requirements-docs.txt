@@ -1,0 +1,4 @@
+# Site de documentação (MkDocs Material) — usado pelo GitHub Actions e por `mkdocs serve`.
+mkdocs==1.6.1
+mkdocs-material==9.7.7
+mkdocs-static-i18n==1.3.1

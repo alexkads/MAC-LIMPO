@@ -108,9 +108,9 @@ The enum is `CaseIterable` and every `switch` over it is exhaustive, so a new ca
 4. `color` switch — `case .<caseName>: return Color(hex: "<hex>")`.
 5. `description` switch — `case .<caseName>: return "<one sentence>"`.
 
-## Step 3 — Register in `Views/MenuBarView.swift`
+## Step 3 — Register in `Services/CleaningServiceRegistry.swift`
 
-Add to the `services` dictionary in `MenuBarViewModel`:
+Add to the `services` dictionary in `CleaningServiceRegistry` (shared by the popover, App Intents and Apple Intelligence):
 ```swift
 .<caseName>: <Name>CleaningService(),
 ```
@@ -127,3 +127,7 @@ Without this the file compiles nowhere and the app builds using the *old* code w
 ## Step 5 — Verify
 
 Run `swift build`. A clean build means all four edits are consistent. If the build "succeeds" but the category doesn't appear, you almost certainly skipped Step 4 (source not listed) — re-check `Package.swift`.
+
+## Step 5 — Update the website
+
+Regenerate the categories table in `docs/cleaning.md` (one row per category: display name and description, grouped like `CleaningGroup`) so the site lists the new category.

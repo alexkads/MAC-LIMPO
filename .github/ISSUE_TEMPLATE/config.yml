@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://alexkads.github.io/MAC-LIMPO/
+    about: Installation, features, safety and FAQ.
+  - name: Report a security vulnerability
+    url: https://github.com/alexkads/MAC-LIMPO/security/advisories/new
+    about: Please report security issues privately.
