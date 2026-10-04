@@ -370,6 +370,15 @@ class MenuBarViewModel: ObservableObject {
 }
 
 struct MenuBarView: View {
+    /// "Version 1.3.9 (12)", do Info.plist gerado por `Scripts/bundle-app.sh`.
+    /// `nil` no `swift run`, que roda o executável solto, sem bundle.
+    static let appVersion: String? = {
+        let info = Bundle.main.infoDictionary
+        guard let short = info?["CFBundleShortVersionString"] as? String, !short.contains("$(") else { return nil }
+        guard let build = info?["CFBundleVersion"] as? String, !build.contains("$(") else { return "Version \(short)" }
+        return "Version \(short) (\(build))"
+    }()
+
     @StateObject private var viewModel = MenuBarViewModel()
     @StateObject private var launchAtLoginService = LaunchAtLoginService()
     @ObservedObject private var cleaningOptions = CleaningOptions.shared
@@ -618,13 +627,22 @@ struct MenuBarView: View {
                             .padding(.horizontal, 20)
                         }
 
-                        // Quit Button
-                        Button("Quit MAC-LIMPO") {
-                            NSApplication.shared.terminate(nil)
+                        // Quit Button + versão
+                        VStack(spacing: 4) {
+                            Button("Quit MAC-LIMPO") {
+                                NSApplication.shared.terminate(nil)
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundColor(themeManager.palette.secondaryText)
+                            .font(.system(size: 12))
+
+                            if let version = Self.appVersion {
+                                Text(version)
+                                    .font(.system(size: 10))
+                                    .foregroundColor(themeManager.palette.secondaryText.opacity(0.6))
+                                    .textSelection(.enabled)
+                            }
                         }
-                        .buttonStyle(.plain)
-                        .foregroundColor(themeManager.palette.secondaryText)
-                        .font(.system(size: 12))
                         .padding(.bottom, 20)
                     }
                 }
