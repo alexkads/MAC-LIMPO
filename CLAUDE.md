@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-MAC-LIMPO is a native macOS menu-bar app (SwiftUI + AppKit) for freeing disk space. It has two surfaces: a popover with cleaning-category cards, and a separate "Disk Map" window showing an interactive treemap of disk usage. Built with Swift Package Manager (not an Xcode project by default — the `.xcodeproj` is generated on demand).
+MAC-LIMPO is a native macOS menu-bar app (SwiftUI + AppKit) for freeing disk space. It has two surfaces: a popover with cleaning-category cards, and a separate "Disk X-Ray" window that accounts for every byte of the disk. Built with Swift Package Manager (not an Xcode project by default — the `.xcodeproj` is generated on demand).
 
 ## Commands
 
@@ -50,7 +50,7 @@ Requires macOS 27.0+, Swift 6.4, and Xcode 27.
 
 **MVVM with a service registry.** Flow: menu bar → `MenuBarViewModel` → per-category `CleaningService` implementations.
 
-- `MACLIMPOApp.swift` — `@main` entry. `AppDelegate` sets `NSApp.setActivationPolicy(.accessory)` (no Dock icon), creates the `NSStatusItem`, hosts `MenuBarView` in an `NSPopover`, and lazily opens the treemap in a standalone `NSWindow`. Also enforces single-instance via `NSRunningApplication`.
+- `MACLIMPOApp.swift` — `@main` entry. `AppDelegate` sets `NSApp.setActivationPolicy(.accessory)` (no Dock icon), creates the `NSStatusItem`, hosts `MenuBarView` in an `NSPopover`, and lazily opens the Disk X-Ray in a standalone `NSWindow`. Also enforces single-instance via `NSRunningApplication`.
 - `Views/MenuBarView.swift` — contains **both** `MenuBarViewModel` (the `ObservableObject`) and the SwiftUI view. The viewmodel holds `services: [CleaningCategory: CleaningService]` — **this dictionary is the service registry**.
 
 **Most cleaners subclass `PathBasedCleaningService`** (`Services/PathBasedCleaningService.swift`) — a tested base that implements `scan`/`clean` once for services that just measure and remove a list of paths. A subclass is ~10 lines: `super.init(category:targets:)` with `[CleanTarget]` (each has a path, optional label, `.removeItem`/`.removeContents` strategy, and optional age filter). Deletions go to the **Trash** (reversible) via `FileSystemHelper.trashItem`, falling back to permanent removal only if the Trash rejects the path. Only services with genuine custom logic (Docker/tool-based, `SystemDataCleaningService`, `VarFoldersCleaningService` allow/deny traversal, `ProjectCleaningService`, glob/enumerator-based ones) implement `CleaningService` directly.
@@ -82,10 +82,14 @@ Services subclass `BaseCleaningService` to get `fileHelper` (`FileSystemHelper.s
 - `logger` — a **global** (`let logger = Logger.shared` in `Services/Logger.swift`) wrapping `os.log`. Call `logger.log(msg, level:)`. Messages in this codebase are typically Portuguese; UI-facing strings are English.
 - `PermissionsHelper` — Full Disk Access checks. Some cleaners need FDA or sudo.
 
-### Disk Map / treemap
+### Disk X-Ray
 
-- `Services/DiskMapService.swift` — parallel directory scan using `withTaskGroup`; progress is tracked through an `actor ProgressCounter` and pushed to the UI via `MainActor.run`.
-- `ViewModels/TreemapViewModel.swift`, `Views/TreemapView.swift` / `TreemapWindowView.swift`, `Utilities/TreemapLayout.swift` (squarified layout), `Models/FileNode.swift` (hierarchical node model).
+The account must close: every byte of the container is shown, nothing estimated.
+
+- `Models/DiskXRay.swift` — `DiskOverview.parse` (container of the Data volume from `diskutil apfs list -plist`; volumes + overhead + free = capacity), `DuOutput` (parses `du -k` stdout/stderr and builds the `XRayNode` tree, adding a "Files in this folder" row per folder), `Firmlinks` (`/System/Volumes/Data/Users` → `/Users`, from `/usr/share/firmlinks`).
+- `Services/DiskXRayService.swift` — one streaming `du -x -k -d 6` over `/System/Volumes/Data` (`-x`: no virtual mounts like DeviceFS; allocated size, so sparse `Docker.raw` is real), progress from finished top-level lines, cancel terminates the process. Deeper levels load on demand (`du -d 3` of that branch); `largestFiles(under:)` walks a subtree for the biggest files.
+- `ViewModels/DiskXRayViewModel.swift` — APFS Data bytes minus what `du` read becomes an explicit "Not measured" row (protected areas; needs Full Disk Access or root). Trash only inside home, never its base folders (`XRayHints.canTrash`).
+- `Models/DiskXRayHints.swift` — what a path is and which card cleans it; hand-written table plus every non-glob `PathBasedCleaningService` target, so the X-Ray and the cleaners never disagree.
 
 ## Conventions
 

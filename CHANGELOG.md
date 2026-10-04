@@ -8,6 +8,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 ## [Unreleased]
 
 ### ✨ Adicionado
+- **Disk X-Ray** (substitui o Disk Map): a conta do disco que fecha. Uma barra a partir do APFS mostra dados, macOS, Preboot, swap, Recovery e livre somando exatamente a capacidade; o volume de dados é medido por um único `du -x` (espaço alocado, pastas ocultas incluídas, montagens virtuais fora), e o que o APFS registra mas não pôde ser lido aparece como "Not measured". Desce pasta a pasta até o arquivo, tem a visão "Largest files" de qualquer subárvore, diz o que cada pasta conhecida é e qual card a limpa, e oferece Quick Look, Reveal in Finder, Copy Path e Move to Trash (só na home).
 - **.NET SDKs**: nova categoria que remove patches superados de SDKs, runtimes e targeting packs em `/usr/local/share/dotnet` (uma senha de admin) e `~/.dotnet`. Mantém o mais novo de cada *feature band* (SDK) e de cada `major.minor` (runtime/pack); previews e packs de workload nunca são tocados.
 - **Cargo/Rust**: remove toolchains rustup fixadas em versão que já foram superadas (canais, `default_toolchain` e `[overrides]` ficam) e o lixo de `~/.rustup/{downloads,tmp}`.
 - **IDE Cache**: apaga extensões que o próprio editor marcou em `extensions/.obsolete` (VS Code, Cursor, Trae, Antigravity, Windsurf, Kiro) e entradas do histórico local (`User/History`) sem toque há mais de 90 dias.

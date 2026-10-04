@@ -387,10 +387,10 @@ struct MenuBarView: View {
     @State private var intelligenceInsight: String?
     @State private var intelligenceStatus: AppleIntelligenceAvailability?
     @State private var isGeneratingInsight = false
-    let onOpenTreemap: () -> Void
+    let onOpenDiskXRay: () -> Void
 
-    init(onOpenTreemap: @escaping () -> Void = {}) {
-        self.onOpenTreemap = onOpenTreemap
+    init(onOpenDiskXRay: @escaping () -> Void = {}) {
+        self.onOpenDiskXRay = onOpenDiskXRay
     }
 
     var body: some View {
@@ -421,14 +421,14 @@ struct MenuBarView: View {
                         Spacer()
 
                         Button(action: {
-                            onOpenTreemap()
+                            onOpenDiskXRay()
                         }) {
-                            Image(systemName: "square.grid.3x3.fill")
+                            Image(systemName: "rays")
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundStyle(themeManager.palette.accentGradient)
                         }
                         .buttonStyle(.plain)
-                        .help("Disk Map")
+                        .help("Disk X-Ray")
 
                         Button(action: {
                             viewModel.refreshDiskStats()

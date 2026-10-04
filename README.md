@@ -16,15 +16,6 @@
 ![Interface Principal](docs/images/main_interface.png)
 _Interface limpa e moderna no menu bar com cards de categorias de limpeza_
 
-### Disk Map - Visualização Treemap
-
-![Disk Map](docs/images/disk_map.png)
-_Visualização interativa de uso de disco estilo WinDirStat_
-
-### Seleção de Diretórios
-
-![Seleção de Diretórios](docs/images/directory_selection.png)
-_Cards bonitos com gradientes para seleção de diretórios_
 
 ## ✨ Funcionalidades
 
@@ -68,15 +59,14 @@ _Cards bonitos com gradientes para seleção de diretórios_
 
 - **💾 System Data**: Limpeza profunda de caches do sistema, Safari, dados de desenvolvimento e Time Machine snapshots
 
-### 🗺️ Disk Map - Visualização Treemap
+### 🩻 Disk X-Ray
 
-- **Treemap Interativo**: Visualização hierárquica estilo WinDirStat
-- **Cores por Tipo**: Código (azul), Documentos (verde), Vídeos (vermelho), Imagens (laranja), Arquivos compactados (roxo)
-- **Navegação**: Zoom in/out, breadcrumb navigation, botão voltar
-- **Janela Separada**: Abre em janela independente, redimensionável e movível
-- **Scan Paralelo**: 3-5x mais rápido usando múltiplos cores do processador
-- **Progresso em Tempo Real**: Barra de progresso atualizada frequentemente
-- **Info Panel**: Detalhes do arquivo/pasta ao passar o mouse
+- **A conta fecha**: barra do disco inteiro a partir do APFS — dados, macOS, Preboot, swap, Recovery e livre somam exatamente a capacidade
+- **Espaço real**: mede o espaço alocado com `du -x` (o `Docker.raw` aparece com o tamanho que ocupa, não o máximo), inclui pastas ocultas e não conta montagens virtuais como o DeviceFS do iPhone
+- **Nada some**: o que o APFS diz que existe e não pôde ser lido vira a linha "Not measured", com o motivo
+- **Do macro ao micro**: desce pasta a pasta até o arquivo; "Largest files" mostra os maiores arquivos de qualquer subárvore
+- **Cada linha diz o que é**: pastas conhecidas mostram o card que as limpa ou o que fazer fora do app
+- **Ações**: Quick Look, Reveal in Finder, Copy Path e Move to Trash (só dentro da sua home)
 
 ### 🎨 Interface Moderna
 
@@ -191,24 +181,22 @@ MAC-LIMPO/
 ├── Models/
 │   ├── CleaningCategory.swift  # Definição de categorias
 │   ├── CleaningResult.swift    # Modelos de resultados
-│   └── FileNode.swift          # Modelo hierárquico para treemap
+│   ├── DiskXRay.swift          # Conta do APFS, árvore e parsers do du
+│   └── DiskXRayHints.swift     # O que cada pasta é e quem a limpa
 ├── Services/
 │   ├── CleaningService.swift   # Protocolo base
-│   ├── DiskMapService.swift    # Scan paralelo de diretórios
+│   ├── DiskXRayService.swift   # APFS + du do volume de dados
 │   └── [22 cleaning services]  # Um para cada categoria
 ├── ViewModels/
 │   ├── MenuBarViewModel.swift
-│   └── TreemapViewModel.swift  # Estado do treemap
+│   └── DiskXRayViewModel.swift # Navegação, carga sob demanda, Lixeira
 ├── Views/
 │   ├── MenuBarView.swift       # View principal
-│   ├── TreemapWindowView.swift # Janela do Disk Map
-│   └── Components/
-│       ├── DirectoryCard.swift # Cards bonitos de diretórios
-│       └── [outros componentes]
+│   ├── DiskXRayWindowView.swift # Janela do Disk X-Ray
+│   └── Components/             # Cards, progresso, resultados
 ├── Utilities/
 │   ├── FileSystemHelper.swift  # Operações de arquivo
-│   ├── ShellExecutor.swift     # Execução de comandos
-│   └── TreemapLayout.swift     # Algoritmo squarified
+│   └── ShellExecutor.swift     # Execução de comandos
 └── Assets.xcassets/
 ```
 

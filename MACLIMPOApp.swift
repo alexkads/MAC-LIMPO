@@ -16,7 +16,7 @@ struct MACLIMPOApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem!
     var popover: NSPopover!
-    var treemapWindow: NSWindow?
+    var diskXRayWindow: NSWindow?
 
     func applicationDidFinishLaunching(_: Notification) {
         // Garante instância única
@@ -53,8 +53,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         popover = NSPopover()
         popover.contentSize = NSSize(width: 420, height: 700)
         popover.behavior = .transient
-        popover.contentViewController = NSHostingController(rootView: MenuBarView(onOpenTreemap: { [weak self] in
-            self?.openTreemapWindow()
+        popover.contentViewController = NSHostingController(rootView: MenuBarView(onOpenDiskXRay: { [weak self] in
+            self?.openDiskXRayWindow()
         }))
     }
 
@@ -70,9 +70,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    func openTreemapWindow() {
+    func openDiskXRayWindow() {
         // Se a janela já existe, apenas traz para frente
-        if let window = treemapWindow {
+        if let window = diskXRayWindow {
             window.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
             return
@@ -80,27 +80,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Cria nova janela
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 900, height: 700),
+            contentRect: NSRect(x: 0, y: 0, width: 1040, height: 780),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
 
-        window.title = "Disk Map - MAC-LIMPO"
+        window.title = "Disk X-Ray — MAC-LIMPO"
         window.center()
         window.isReleasedWhenClosed = false
 
-        // Cria a view do treemap sem o overlay de fundo
-        let treemapView = TreemapWindowView(onClose: { [weak self] in
-            self?.treemapWindow?.close()
+        let xRayView = DiskXRayWindowView(onClose: { [weak self] in
+            self?.diskXRayWindow?.close()
         })
 
-        window.contentView = NSHostingView(rootView: treemapView)
+        window.contentView = NSHostingView(rootView: xRayView)
         window.makeKeyAndOrderFront(nil)
 
         // Ativa a aplicação
         NSApp.activate(ignoringOtherApps: true)
 
-        treemapWindow = window
+        diskXRayWindow = window
     }
 }
