@@ -1,5 +1,5 @@
 ---
-description: Disk X-Ray — see where every gigabyte of your Mac goes with a fast full-disk scan, a file-type treemap, a folder tree and the largest files.
+description: Disk X-Ray — see where every gigabyte of your Mac goes with a fast full-disk scan, a file-type treemap you pinch to magnify (2D or 3D with Metal), a folder tree and the largest files.
 ---
 
 # Disk X-Ray
@@ -16,6 +16,13 @@ Open it from the :material-radiology-box: button at the top of the menu bar popo
 - **Largest Files** — the biggest files anywhere on the disk.
 - **Types** — every category and its extensions with sizes and file counts; click one to highlight it.
 - **Map** — a treemap where every file is a tile sized by how much space it takes and colored by type. Large folders get a header with their name and size.
+
+## 3D map
+
+Turn on the :material-cube-outline: **3D** button in the toolbar and the map is drawn on the GPU with Metal as lit *cushions* (van Wijk & van de Wetering's cushion treemap, the classic WinDirStat look): every file is a small pillow lit from the top left, and the creases between pillows show where one folder ends and the next begins. The relief is the same at any magnification and stays sharp frame by frame while you pinch or pan. Everything else — selection, labels, magnifier, tree — works the same as in 2D, which stays the default.
+
+![Disk X-Ray 3D map](assets/images/disk-xray-3d-light.png#only-light){ .screenshot }
+![Disk X-Ray 3D map](assets/images/disk-xray-3d-dark.png#only-dark){ .screenshot }
 
 ## Using the map
 

@@ -1,5 +1,5 @@
 ---
-description: Disk X-Ray — veja para onde vai cada gigabyte do seu Mac com uma leitura rápida do disco inteiro, um mapa por tipo de arquivo, a árvore de pastas e os maiores arquivos.
+description: Disk X-Ray — veja para onde vai cada gigabyte do seu Mac com uma leitura rápida do disco inteiro, um mapa por tipo de arquivo que você amplia com a pinça (2D ou 3D com Metal), a árvore de pastas e os maiores arquivos.
 ---
 
 # Disk X-Ray
@@ -16,6 +16,13 @@ Abra pelo botão :material-radiology-box: no topo do popover da barra de menus.
 - **Largest Files** — os maiores arquivos de qualquer lugar do disco.
 - **Tipos** — cada categoria e suas extensões, com tamanhos e quantidades; clique para destacar.
 - **Mapa** — cada arquivo é um bloco, do tamanho do espaço que ocupa e com a cor do seu tipo. Pastas grandes ganham um cabeçalho com nome e tamanho.
+
+## Mapa 3D
+
+Ligue o botão :material-cube-outline: **3D** na barra de ferramentas e o mapa passa a ser desenhado na GPU com Metal como *almofadas* iluminadas (o cushion treemap de van Wijk & van de Wetering, o visual clássico do WinDirStat): cada arquivo é um pequeno relevo iluminado do alto à esquerda, e os vincos entre eles mostram onde uma pasta termina e a outra começa. O relevo é o mesmo em qualquer ampliação e fica nítido quadro a quadro durante a pinça e o arrasto. Todo o resto — seleção, nomes, lupa, árvore — funciona igual ao 2D, que continua sendo o padrão.
+
+![Mapa 3D do Disk X-Ray](assets/images/disk-xray-3d-light.png#only-light){ .screenshot }
+![Mapa 3D do Disk X-Ray](assets/images/disk-xray-3d-dark.png#only-dark){ .screenshot }
 
 ## Usando o mapa
 

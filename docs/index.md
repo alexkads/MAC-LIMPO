@@ -44,7 +44,7 @@ The script builds MAC-LIMPO **on your Mac** and installs it into `/Applications`
 
     ---
 
-    Reads every file in seconds and maps the disk by file type: folder tree, type panel, largest files and an interactive treemap.
+    Reads every file in seconds and maps the disk by file type: folder tree, type panel, largest files and a treemap you pinch to magnify down to a single file — in 2D or as a 3D map drawn with Metal.
 
     [:octicons-arrow-right-24: Disk X-Ray](disk-xray.md)
 

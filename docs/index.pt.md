@@ -44,7 +44,7 @@ O script compila o MAC-LIMPO **no seu Mac** e instala em `/Applications`. Compil
 
     ---
 
-    Lê cada arquivo em segundos e mapeia o disco por tipo: árvore de pastas, painel de tipos, maiores arquivos e um mapa interativo.
+    Lê cada arquivo em segundos e mapeia o disco por tipo: árvore de pastas, painel de tipos, maiores arquivos e um mapa que você amplia com a pinça até um único arquivo — em 2D ou como mapa 3D desenhado com Metal.
 
     [:octicons-arrow-right-24: Disk X-Ray](disk-xray.md)
 

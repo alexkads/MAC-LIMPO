@@ -68,7 +68,9 @@ Mais detalhes no [guia de instalação](https://alexkads.github.io/MAC-LIMPO/pt/
 - **Apps e navegadores** — caches do Safari/Chrome/Firefox, Spotify, Adobe, Notion, apps criativos, restos de apps desinstalados.
 - **Comunicação** — Slack, anexos do Messages e do Mail, caches do WhatsApp/Teams/Discord.
 
-**Disk X-Ray** — o mapa completo do disco: cada arquivo lido em segundos (milhões de itens), um mapa colorido por tipo de arquivo, a árvore de pastas, o painel de tipos e os maiores arquivos. Duplo clique para dar zoom, Quick Look, Mostrar no Finder, Mover para a Lixeira.
+**Disk X-Ray** — o mapa completo do disco: cada arquivo lido em segundos (milhões de itens), um mapa colorido por tipo de arquivo, a árvore de pastas, o painel de tipos e os maiores arquivos. Faça a pinça (ou use a roda do mouse) para ampliar até um único arquivo de 1 KB e arraste para deslocar, como num mapa; ⌘↩ voa até o item selecionado. Troque para o **mapa 3D**, desenhado na GPU com Metal como almofadas iluminadas, em que as pastas aparecem como vincos. Duplo clique para entrar numa pasta, Quick Look, Mostrar no Finder, Mover para a Lixeira.
+
+<img src="docs/assets/images/disk-xray-3d-light.png" alt="Disk X-Ray em 3D: o mapa desenhado como almofadas iluminadas com Metal" width="860">
 
 **Seguro por padrão** — escaneia antes, confirma antes de limpar, Lixeira em vez de apagar quando possível e só caches (nunca seus documentos). Veja [o que ele limpa e por que é seguro](https://alexkads.github.io/MAC-LIMPO/pt/safety/).
 

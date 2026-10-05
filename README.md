@@ -69,7 +69,9 @@ More in the [installation guide](https://alexkads.github.io/MAC-LIMPO/install/).
 - **Apps & browsers** — Safari/Chrome/Firefox caches, Spotify, Adobe, Notion, creative apps, leftovers of uninstalled apps.
 - **Communication** — Slack, Messages and Mail attachments, WhatsApp/Teams/Discord caches.
 
-**Disk X-Ray** — a full map of the disk: every file read in seconds (millions of items), a treemap colored by file type, a folder tree, a file-type panel and the largest files. Double-click to zoom, Quick Look, Show in Finder, Move to Trash.
+**Disk X-Ray** — a full map of the disk: every file read in seconds (millions of items), a treemap colored by file type, a folder tree, a file-type panel and the largest files. Pinch (or scroll the mouse wheel) to magnify down to a single 1 KB file and drag to pan, like a map; ⌘↩ flies to the selected item. Switch to the **3D map**, drawn on the GPU with Metal as lit cushions where folders show as creases. Double-click to zoom into a folder, Quick Look, Show in Finder, Move to Trash.
+
+<img src="docs/assets/images/disk-xray-3d-light.png" alt="Disk X-Ray 3D map: the treemap drawn as lit cushions with Metal" width="860">
 
 **Safe by default** — scan first, confirm before cleaning, Trash instead of delete where possible, and caches only (never your documents). See [what it cleans and why it is safe](https://alexkads.github.io/MAC-LIMPO/safety/).
 
