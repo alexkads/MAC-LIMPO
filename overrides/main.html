@@ -3,6 +3,11 @@
 {% block extrahead %}
   {{ super() }}
   <meta name="google-site-verification" content="k1LhNrNQe7r9Bd_-22eu2WUllGcx_B5u4PQUd2RBvvc" />
+  {# Favicons em PNG (múltiplos de 48 px, como o Google pede) além do SVG do tema. #}
+  <link rel="icon" type="image/png" sizes="48x48" href="{{ 'assets/images/favicon-48.png' | url }}">
+  <link rel="icon" type="image/png" sizes="96x96" href="{{ 'assets/images/favicon-96.png' | url }}">
+  <link rel="icon" type="image/png" sizes="192x192" href="{{ 'assets/images/favicon-192.png' | url }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ 'assets/images/apple-touch-icon.png' | url }}">
   {# Cartão de compartilhamento (Open Graph / X) e dados estruturados para buscadores. #}
   {% set title = (page.title ~ " — " ~ config.site_name) if page and page.title and not page.is_homepage else config.site_name ~ " — free disk cleaner for macOS" %}
   {% set description = (page.meta.description if page and page.meta and page.meta.description else config.site_description) %}
