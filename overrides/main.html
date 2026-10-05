@@ -2,6 +2,7 @@
 
 {% block extrahead %}
   {{ super() }}
+  <meta name="google-site-verification" content="k1LhNrNQe7r9Bd_-22eu2WUllGcx_B5u4PQUd2RBvvc" />
   {# Cartão de compartilhamento (Open Graph / X) e dados estruturados para buscadores. #}
   {% set title = (page.title ~ " — " ~ config.site_name) if page and page.title and not page.is_homepage else config.site_name ~ " — free disk cleaner for macOS" %}
   {% set description = (page.meta.description if page and page.meta and page.meta.description else config.site_description) %}
