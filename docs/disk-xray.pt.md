@@ -24,9 +24,16 @@ Abra pelo botão :material-radiology-box: no topo do popover da barra de menus.
 | Clique | Seleciona o arquivo ou a pasta (a árvore acompanha) |
 | Duplo clique | Entra na pasta (zoom) |
 | Trilha / ⟨ | Volta um nível |
-| Rolar | Seleciona a pasta-pai / o filho |
+| Rolar (trackpad) | Seleciona a pasta-pai / o filho |
 | ⌘ + rolar | Zoom para dentro / para fora |
+| Pinça (trackpad), roda do mouse ou ⌥ + rolar | Amplia o mapa em volta do cursor — arquivos pequenos ganham bloco e rótulo, até os de 1 KB. Funciona sem clicar na janela antes |
+| ⌘ + Return / botão direito → Magnify to Fit | Vai até o arquivo ou a pasta selecionada, por menor que seja |
+| Selecionar na árvore ou em Largest Files | O mapa vai até o item: aproxima o suficiente para ler um item pequeno (no máximo até a pasta dele encher o mapa), afasta para caber um grande, ou só desliza se o tamanho já está bom. Itens pequenos demais para o contorno — ou arquivos vazios — ganham um pino com nome e tamanho |
+| Toque duplo com dois dedos | Alterna a ampliação de 4× |
+| Rolar ou arrastar (ampliado) | Desloca o mapa — solte o arraste em movimento e ele desliza |
+| ⌘ + / ⌘ − / ⌘ 0 | Amplia / reduz / tamanho real |
 | Botão direito | Quick Look, Abrir, Mostrar no Finder, Copiar Caminho, Mover para a Lixeira |
+| Parar o ponteiro sobre um bloco | O nome e o tamanho aparecem numa bandeirinha, como um tooltip |
 | Espaço | Quick Look da seleção |
 
 ## Opções da barra de ferramentas
@@ -34,6 +41,8 @@ Abra pelo botão :material-radiology-box: no topo do popover da barra de menus.
 - **On Disk / Logical** — *On Disk* é o espaço que os arquivos ocupam de verdade; *Logical* é o tamanho que eles declaram. Os dois diferem em arquivos esparsos (uma imagem do Docker pode declarar 500 GB e ocupar 30 GB) e comprimidos.
 - **Free** e **System** — somam ao mapa o espaço livre e o que a leitura não alcança (o próprio macOS, Preboot, swap, pastas protegidas), para a conta fechar com o disco inteiro.
 - **Alvo** — o disco inteiro ou uma pasta à sua escolha.
+- **Labels** — nomes nos blocos e cabeçalhos das pastas, no 2D e no 3D. Desligado, o mapa fica limpo e os nomes aparecem só no tooltip.
+- **3D** — desenha o mapa na GPU (Metal) como almofadas iluminadas: cada arquivo vira um pequeno relevo e as pastas aparecem como vincos, então a hierarquia se lê sem molduras, e o zoom fica nítido quadro a quadro. Os nomes ficam nos blocos como no 2D, e parar o ponteiro sobre um bloco mostra o nome e o tamanho numa bandeirinha 3D, como um tooltip. Desligado, o mapa é o 2D plano. A escolha fica salva.
 
 ## Por que é rápido
 

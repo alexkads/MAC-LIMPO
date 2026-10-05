@@ -150,6 +150,8 @@ let package = Package(
                 "Utilities/AsyncSemaphore.swift",
                 "Utilities/Deadline.swift",
                 "Utilities/TreemapRenderer.swift",
+                "Utilities/TreemapMetal.swift",
+                "Utilities/TreemapFlags.swift",
                 "Utilities/SizeFormat.swift",
                 "Utilities/ScanTuning.swift",
                 "Views/Components/AppleIntelligenceInsightView.swift",

@@ -92,12 +92,14 @@ class IOSSimulatorsCleaningService: BaseCleaningService, CleaningService, @unche
         // Órfãos ficam fora do total: o app não consegue apagá-los (SIP).
         let orphans = await runBlocking { self.orphanRuntimeAssets() }
         if !orphans.isEmpty {
-            let volume = (try? URL(fileURLWithPath: "/").resourceValues(forKeys: [.volumeLocalizedNameKey]))?
-                .volumeLocalizedName ?? "Macintosh HD"
+            // Na Recuperação o volume de dados monta com o próprio nome — "Macintosh
+            // HD - Data" na instalação padrão, mas pode ser outro ("Data").
+            let volume = (try? URL(fileURLWithPath: "/System/Volumes/Data").resourceValues(forKeys: [.volumeNameKey]))?
+                .volumeName ?? "Macintosh HD - Data"
             for orphan in orphans {
                 items.append("⚠ Orphaned runtime \(orphan.label): \(fileHelper.formatBytes(orphan.size)) " +
                     "— Xcode no longer uses it; macOS protects it (SIP), so remove it from Recovery › Terminal:")
-                items.append("    rm -rf \"/Volumes/\(volume) - Data\(orphan.path)\"")
+                items.append("    rm -rf \"/Volumes/\(volume)\(orphan.path)\"")
             }
         }
 

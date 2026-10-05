@@ -24,9 +24,16 @@ Open it from the :material-radiology-box: button at the top of the menu bar popo
 | Click | Select the file or folder (the tree follows) |
 | Double-click | Zoom into that folder |
 | Breadcrumb / ⟨ | Go back up |
-| Scroll | Select parent / child |
+| Scroll (trackpad) | Select parent / child |
 | ⌘ + scroll | Zoom in / out |
+| Pinch (trackpad), mouse wheel or ⌥ + scroll | Magnify the map around the pointer — small files get their own tiles and labels, down to 1 KB. Works without clicking the window first |
+| ⌘ + Return / right-click → Magnify to Fit | Fly to the selected file or folder, however small it is |
+| Select in the tree or Largest Files | The map goes to it: magnifies just enough to read a small item (at most until its folder fills the map), zooms out to fit a big one, or only slides if the size is fine. Items too small to outline — or empty files — get a pin with their name and size |
+| Two-finger double-tap | Toggle 4× magnification |
+| Scroll or drag (while magnified) | Pan — release a drag mid-motion and the map glides |
+| ⌘ + / ⌘ − / ⌘ 0 | Magnify in / out / actual size |
 | Right-click | Quick Look, Open, Show in Finder, Copy Path, Move to Trash |
+| Rest the pointer on a block | Its name and size pop up on a little flag, like a tooltip |
 | Space | Quick Look the selection |
 
 ## Options in the toolbar
@@ -34,6 +41,8 @@ Open it from the :material-radiology-box: button at the top of the menu bar popo
 - **On Disk / Logical** — *On Disk* is the space files actually occupy; *Logical* is the size they report. They differ for sparse files (a Docker disk image may report 500 GB and use 30 GB) and compressed files.
 - **Free** and **System** — add the free space and the space the scan cannot read (macOS itself, Preboot, swap, protected folders) to the map, so the whole disk adds up.
 - **Scan target** — the whole disk or a folder of your choice.
+- **Labels** — names on the blocks and folder headers, in 2D and 3D. Off, the map is clean and names show only in the tooltip.
+- **3D** — draws the map on the GPU (Metal) as lit cushions: every file is a small pillow and folders show as creases, so the hierarchy reads without frames, and zooming stays sharp frame by frame. Names sit on the blocks as in 2D, and resting the pointer on a block pops up its name and size on a little 3D flag, like a tooltip. Off, the map is the flat 2D one. The choice is remembered.
 
 ## How it is fast
 

@@ -111,12 +111,48 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    private func fill(_ rep: NSBitmapImageRep, from metal: MetalSnapshotting, in root: NSView) {
+        guard let image = metal.snapshotImage(), let data = rep.bitmapData, rep.samplesPerPixel >= 3 else { return }
+        let scale = CGFloat(rep.pixelsWide) / root.bounds.width
+        var frame = metal.convert(metal.bounds, to: root)
+        if !root.isFlipped { frame.origin.y = root.bounds.height - frame.maxY }
+        let (left, top) = (Int(frame.minX * scale), Int(frame.minY * scale))
+        let (width, height) = (min(image.width, rep.pixelsWide - left), min(image.height, rep.pixelsHigh - top))
+        guard width > 0, height > 0 else { return }
+        var pixels = [UInt8](repeating: 0, count: image.width * image.height * 4)
+        guard let context = CGContext(data: &pixels, width: image.width, height: image.height, bitsPerComponent: 8,
+                                      bytesPerRow: image.width * 4, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return }
+        context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        let background = metal.snapshotBackground
+        let target = [UInt8(background.r * 255), UInt8(background.g * 255), UInt8(background.b * 255)]
+        for y in 0 ..< height {
+            for x in 0 ..< width {
+                let pixel = data + (top + y) * rep.bytesPerRow + (left + x) * rep.samplesPerPixel
+                guard abs(Int(pixel[0]) - Int(target[0])) <= 3, abs(Int(pixel[1]) - Int(target[1])) <= 3,
+                      abs(Int(pixel[2]) - Int(target[2])) <= 3 else { continue }
+                let source = (y * image.width + x) * 4
+                pixel[0] = pixels[source]
+                pixel[1] = pixels[source + 1]
+                pixel[2] = pixels[source + 2]
+            }
+        }
+    }
+
     private func snapshotDiskXRay(to path: String) {
         // A moldura (superview do conteúdo) inclui a barra de título e a toolbar.
         guard let content = diskXRayWindow?.contentView,
               case let view = content.superview ?? content,
               let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return }
         view.cacheDisplay(in: view.bounds, to: rep)
+        // O `cacheDisplay` não enxerga camadas Metal (mapa 3D): onde a captura
+        // ficou com a cor de fundo do mapa, entra a mesma imagem desenhada fora da
+        // tela — o que está por cima (bandeiras, contornos) fica.
+        func compose(_ node: NSView) {
+            if let metal = node as? MetalSnapshotting { fill(rep, from: metal, in: view) }
+            node.subviews.forEach(compose)
+        }
+        compose(view)
         try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: path))
     }
 

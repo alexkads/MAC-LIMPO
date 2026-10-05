@@ -8,6 +8,10 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 ## [Unreleased]
 
 ### ✨ Adicionado
+- **Disk X-Ray — lupa com pinça**: amplia o mapa até 10⁸× (um arquivo de 1 KB num disco inteiro) com pinça, roda do mouse ou ⌥ + rolar, sem precisar clicar na janela antes; arrastar/rolar desloca com inércia, e o mapa redesenha nítido durante o gesto, com camadas por baixo para nunca sobrar borda vazia. O layout é só o squarified dos tamanhos — ampliar não muda a arrumação, e a área fica proporcional ao tamanho em qualquer zoom.
+- **Disk X-Ray — ir até a seleção**: ⌘↩ ou *Magnify to Fit* voa até o item, por menor que seja; selecionar na árvore ou em Largest Files leva o mapa até ele sem exagero (no máximo até a pasta dele encher a tela), e itens pequenos demais para o contorno ganham um pino com nome e tamanho. A caixa azul desliza até a nova seleção, com um pulso ao chegar.
+- **Disk X-Ray — modo 3D (Metal)**: botão de cubo na barra de ferramentas; a GPU desenha o mapa como almofadas iluminadas (cushion treemap), com as pastas aparecendo como vincos, nítido quadro a quadro em qualquer zoom. O 2D continua o mesmo de antes e é o padrão.
+- **Disk X-Ray — nomes e tooltip**: botão *Labels* liga/desliga os nomes dos blocos e cabeçalhos (2D e 3D); parar o ponteiro sobre um bloco mostra o nome e o tamanho numa bandeirinha 3D, como um tooltip, que vira de lado perto da borda.
 - **.NET — modo agressivo**: remove SDKs de majors fora de suporte (6, 7) e bandas superadas do mesmo `major.minor` (9.0.102 com 9.0.306 instalado), preservando o SDK mais novo e a banda fixada por qualquer `global.json`; e desinstala workloads (MAUI, Android, iOS, Aspire 8…) que nenhum projeto em `~/Projects` e pastas afins usa — vários GB em `packs/`.
 - **Homebrew**: além do cache, roda `brew cleanup --prune=all` (versões antigas, downloads, links quebrados) e `brew autoremove` (dependências órfãs), e lista as ferramentas grandes que você instalou e das quais nada depende, com o comando para remover.
 - **iOS Simulators — runtimes órfãos**: o card aponta runtimes que o Xcode não usa mais e que continuam em `/System/Library/AssetsV2` (sobra do `simctl runtime delete`, que só desregistra), com o tamanho e o comando para remover pelo Terminal da Recuperação — a pasta é protegida pelo SIP, nem `sudo rm` apaga.
@@ -25,6 +29,9 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - Novos caminhos: cache do Yarn Berry (`~/.yarn/berry/cache`), `DocumentationCache` do Xcode e índice do Continue (`~/.continue/index`).
 
 ### 🐛 Corrigido
+- **Disk X-Ray — caixas pretas no mapa**: pastas com milhares de arquivos minúsculos (`node_modules`, caches, `.git/objects`) deixavam a área deles vazia; agora ela é pintada com a cor do maior deles.
+- **Disk X-Ray — caixa azul fora do lugar com zoom**: com arquivos de tamanho idêntico, o layout ampliado podia diferir do calculado (até ~300 px num disco inteiro); empates no squarified agora são decididos sempre igual e a área ampliada tem exatamente a escala do mapa a 1×.
+- **iOS Simulators — runtimes órfãos**: o comando para a Recuperação usa o nome real do volume de dados (`Macintosh HD - Data` na instalação padrão, mas pode ser outro).
 - **Disk X-Ray — rótulos embolados no mapa**: pastas com um filho só ou dominante (≥ 90%) viram um cabeçalho com o caminho (`Users › alexkads`), no máximo três níveis de título, tamanho alinhado à direita (sai antes de cortar o nome) e caminhos longos cortados no começo para manter a pasta final.
 - **Disk X-Ray — contorno da seleção cortado**: o contorno azul era desenhado para fora do bloco e sumia nos blocos colados na borda do mapa; agora fica inteiro por dentro do bloco e da área visível.
 - **Avisos no Xcode**: `Invalid Exclude` de `MAC-LIMPO.dmg`/`dmg_staging` (o `.dmg`, sua montagem e o site do MkDocs agora são gerados em `build/`, que existe em todo clone) e captura `weak`/forte de `self` no scan do Disk X-Ray.

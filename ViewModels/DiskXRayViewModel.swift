@@ -31,6 +31,22 @@ final class DiskXRayViewModel: ObservableObject {
     @Published var showUnaccounted = false { didSet { structureChanged() } }
     /// Tamanho lógico (o que os arquivos dizem ter) em vez do espaço ocupado.
     @Published var useLogicalSize = false { didSet { structureChanged() } }
+    /// Mapa em 3D (Metal, relevo de almofadas) ou 2D (CoreGraphics, como sempre
+    /// foi). Lembrado entre aberturas.
+    @Published var map3D = UserDefaults.standard.bool(forKey: "DiskXRayMap3D") {
+        didSet {
+            UserDefaults.standard.set(map3D, forKey: "DiskXRayMap3D")
+            scheduleRender()
+        }
+    }
+    /// Nomes nos blocos e faixas das pastas (2D e 3D); desligado, o mapa fica
+    /// limpo e o nome aparece só no tooltip. Lembrado entre aberturas.
+    @Published var showLabels = UserDefaults.standard.object(forKey: "DiskXRayLabels") as? Bool ?? true {
+        didSet {
+            UserDefaults.standard.set(showLabels, forKey: "DiskXRayLabels")
+            scheduleRender()
+        }
+    }
     static let largestFileCount = 100
 
     // MARK: - Itens sintéticos
@@ -117,8 +133,20 @@ final class DiskXRayViewModel: ObservableObject {
     // MARK: - Mapa
 
     @Published private(set) var zoomItem: Int32 = 0
+    /// Camada mais recente: hit-test, contornos e a parte mais nítida do mapa.
     @Published private(set) var rendering: TreemapRenderer.Rendering?
+    /// Como num jogo de mapa, nada fica vazio ao arrastar ou afastar: por baixo da
+    /// camada atual ficam o mapa inteiro (`baseLayer`) e as últimas camadas da
+    /// mesma geração, esticadas até o redesenho chegar.
+    @Published private(set) var baseLayer: TreemapRenderer.Rendering?
+    @Published private(set) var backdrop: [TreemapRenderer.Rendering] = []
     @Published private(set) var isRendering = false
+    /// Muda quando o mapa muda de verdade (pasta, tamanho, filtros, cores); mexer
+    /// só no viewport mantém a geração e as camadas antigas continuam válidas.
+    private var renderGeneration = 0
+    private var layersGeneration = -1
+    private var renderBusy = false
+    private var renderPending = false
     private var reselectStack: [Int32] = []
     private var treemapSize: (width: Int, height: Int, scale: CGFloat) = (0, 0, 2)
     private var renderTask: Task<Void, Never>?
@@ -127,6 +155,15 @@ final class DiskXRayViewModel: ObservableObject {
     var treemapDark = true
 
     var isZoomed: Bool { index != nil && zoomItem != index?.root }
+
+    /// Lupa (pinça): parte visível do mapa em coordenadas unitárias, quadrada no
+    /// espaço unitário (lado = 1 / ampliação). Independe do tamanho da janela.
+    @Published private(set) var viewport = TreemapRenderer.fullViewport
+    /// Um arquivo de 1 KB num disco de 500 GB pede ~2.000× para ganhar bloco com
+    /// rótulo; o teto cobre discos de vários TB. Em Double o layout segue exato.
+    static let maxMagnification: CGFloat = 100_000_000
+    var magnification: CGFloat { 1 / viewport.width }
+    var isMagnified: Bool { viewport.width < 0.999 }
 
     // MARK: - Scan
 
@@ -150,6 +187,8 @@ final class DiskXRayViewModel: ObservableObject {
         errorMessage = nil
         index = nil
         rendering = nil
+        baseLayer = nil
+        backdrop = []
         selected = nil
         typeFilter = nil
         largestFiles = []
@@ -185,6 +224,7 @@ final class DiskXRayViewModel: ObservableObject {
                 .volumeLocalizedName ?? "Macintosh HD"
             index = scanned
             zoomItem = scanned.root
+            viewport = TreemapRenderer.fullViewport
             buildCategories()
             refreshLargestFiles()
             treeVersion += 1
@@ -194,10 +234,28 @@ final class DiskXRayViewModel: ObservableObject {
             // Desenvolvimento: estado de demonstração para capturas de tela.
             let environment = ProcessInfo.processInfo.environment
             if environment["MACLIMPO_XRAY_LOGICAL"] == "1" { useLogicalSize = true }
+            if let mode = environment["MACLIMPO_XRAY_3D"] { map3D = mode == "1" }
             if environment["MACLIMPO_XRAY_DEMO"] == "1" {
                 showUnaccounted = true
                 showFreeSpace = true
                 if let biggest = largestFiles.first { select(biggest) }
+            }
+            if let factor = environment["MACLIMPO_XRAY_MAGNIFY"].flatMap(Double.init) {
+                magnify(by: factor, around: CGPoint(x: 0.5, y: 0.5))
+            }
+            // Seleciona como a árvore faria (o mapa ampliado desliza até ele).
+            if let name = environment["MACLIMPO_XRAY_SELECT"],
+               let item = (0 ..< Int32(scanned.count)).first(where: { scanned.name($0) == name }) {
+                try? await Task.sleep(for: .seconds(1))
+                select(item, reveal: false)
+            }
+            // Seleciona o primeiro item com esse nome e amplia até ele (depois de a
+            // árvore carregar, que seleciona a raiz).
+            if let name = environment["MACLIMPO_XRAY_FOCUS"],
+               let item = (0 ..< Int32(scanned.count)).first(where: { scanned.name($0) == name }) {
+                try? await Task.sleep(for: .seconds(1))
+                select(item)
+                magnifyToSelection()
             }
         }
     }
@@ -384,10 +442,12 @@ final class DiskXRayViewModel: ObservableObject {
 
     // MARK: - Seleção
 
+    /// `reveal`: mostra na árvore (seleção vinda do mapa). Sem ele a seleção veio
+    /// da árvore ou da lista, e é o mapa que vai até ela.
     func select(_ item: Int32, reveal: Bool = true) {
         guard selected != item || reveal else { return }
         selected = item
-        if reveal { revealToken += 1 }
+        if reveal { revealToken += 1 } else { bringIntoView(item) }
     }
 
     func lineage(_ item: Int32) -> [Int32] {
@@ -543,29 +603,127 @@ final class DiskXRayViewModel: ObservableObject {
         scheduleRender(debounce: true)
     }
 
+    /// O mapa mudou (pasta, tamanho, filtros, cores): nova geração de camadas.
     func scheduleRender(debounce: Bool = false) {
+        renderGeneration += 1
+        startRender(debounce: debounce)
+    }
+
+    /// Só o viewport mudou (pinça, arrasto). Em vez de cancelar e esperar o gesto
+    /// parar, deixa o render em curso terminar e já pede o próximo: o mapa vai
+    /// ficando nítido durante o movimento.
+    private func viewportChanged() {
+        if renderBusy {
+            renderPending = true
+        } else {
+            startRender(debounce: false)
+        }
+    }
+
+    private func startRender(debounce: Bool) {
         guard index != nil, treemapSize.width > 0, treemapSize.height > 0, let source = renderSource() else { return }
         renderCancel?.set()
         let cancel = CancelFlag()
         renderCancel = cancel
         let previous = renderTask
         let root = zoomItem
+        let visible = viewport
+        let generation = renderGeneration
         let (width, height, scale) = treemapSize
-        let style = TreemapRenderer.Style(scale: scale, dark: treemapDark, background: treemapBackground)
+        // Sem Metal (não deve acontecer num Mac atual), o 3D cai para o 2D.
+        let style = TreemapRenderer.Style(scale: scale, dark: treemapDark, background: treemapBackground,
+                                          cushions: map3D && TreemapMetal.shared != nil, labels: showLabels)
+        // Margem além da tela (¼ de cada lado), como os tiles vizinhos de um mapa:
+        // ao arrastar, o que entra pela borda já está desenhado.
+        let (area, areaWidth, areaHeight) = Self.renderArea(visible: visible, width: width, height: height,
+                                                            margin: isMagnified ? 0.25 : 0)
+        let needsBase = isMagnified && (baseLayer == nil || layersGeneration != generation)
         isRendering = true
+        renderBusy = true
+        renderPending = false
 
+        previous?.cancel()
         renderTask = Task {
             await previous?.value
+            await render()
+            // Substituído por outro pedido: ele cuida do resto.
+            guard renderCancel === cancel else { return }
+            renderBusy = false
+            isRendering = false
+            // Cancelado sem substituto (a Lixeira mexendo no índice): não encadeia.
+            if renderPending, !cancel.isSet { startRender(debounce: false) }
+        }
+
+        func render() async {
+            // Sem esta checagem cada pedido cancelado ainda esperava o debounce
+            // inteiro, e uma pinça (dezenas de eventos) enfileirava segundos.
+            guard !cancel.isSet else { return }
             if debounce { try? await Task.sleep(for: .milliseconds(120)) }
             guard !cancel.isSet else { return }
             let result = await runBlocking {
+                TreemapRenderer.render(root: root, width: areaWidth, height: areaHeight, viewport: area, screen: visible,
+                                       style: style, source: source, isCancelled: { cancel.isSet })
+            }
+            guard !cancel.isSet, let result else { return }
+            install(result, generation: generation)
+            guard needsBase, !cancel.isSet else { return }
+            // Base do mapa inteiro, por baixo de tudo, para nunca sobrar borda vazia.
+            let base = await runBlocking {
                 TreemapRenderer.render(root: root, width: width, height: height, style: style, source: source,
                                        isCancelled: { cancel.isSet })
             }
-            guard !cancel.isSet else { return }
-            rendering = result
-            isRendering = false
+            if let base, !cancel.isSet, layersGeneration == generation { baseLayer = base }
         }
+    }
+
+    /// Área a desenhar (o visível mais `margin` de cada lado, dentro do mapa) e o
+    /// tamanho do bitmap. A área é refeita a partir dos pixels inteiros: a escala
+    /// fica exatamente a do mapa a 1× vezes a ampliação, nos dois eixos. Só com o
+    /// bitmap arredondado, a proporção mudava ~0,1% e, com arquivos de tamanho
+    /// idêntico (empates no squarified), a arrumação dos blocos — a caixa da
+    /// seleção (`locate`) ficava fora do lugar.
+    nonisolated static func renderArea(visible: CGRect, width: Int, height: Int,
+                                       margin: CGFloat) -> (area: CGRect, width: Int, height: Int) {
+        let pad = visible.width * margin
+        let wanted = visible.insetBy(dx: -pad, dy: -pad).intersection(TreemapRenderer.fullViewport)
+        let areaWidth = max(1, Int((Double(width) * wanted.width / visible.width).rounded()))
+        let areaHeight = max(1, Int((Double(height) * wanted.height / visible.height).rounded()))
+        let area = CGRect(origin: wanted.origin,
+                          size: CGSize(width: Double(areaWidth) * visible.width / Double(width),
+                                       height: Double(areaHeight) * visible.height / Double(height)))
+        return (area, areaWidth, areaHeight)
+    }
+
+    private func install(_ result: TreemapRenderer.Rendering, generation: Int) {
+        if generation != layersGeneration {
+            layersGeneration = generation
+            backdrop = []
+            baseLayer = nil
+        } else if let current = rendering, current.viewport != TreemapRenderer.fullViewport {
+            // Duas camadas anteriores bastam para a pinça e o arrasto (cada uma
+            // tem dezenas de MB).
+            backdrop = Array((backdrop + [current]).suffix(2))
+        }
+        rendering = result
+        if result.viewport == TreemapRenderer.fullViewport { baseLayer = result }
+    }
+
+    // MARK: - Tooltip 3D
+
+    /// A bandeirinha do item, como tooltip do mapa 3D.
+    func flagSprite(for item: Int32, scale: CGFloat, mirrored: Bool = false) -> TreemapFlags.Sprite? {
+        guard let index else { return nil }
+        return TreemapFlags.sprite(title: name(item), subtitle: SizeFormat.bytes(size(item)),
+                                   folder: item >= 0 && index.isDirectory(item), color: flagColor(item), scale: scale,
+                                   mirrored: mirrored)
+    }
+
+    /// Cor do tipo do arquivo (a faixa junto ao mastro).
+    private func flagColor(_ item: Int32) -> TreemapRenderer.RGB {
+        guard let index, item >= 0 else { return TreemapRenderer.RGB(r: 0.86, g: 0.64, b: 0.28) }
+        let ext = index.extensionIndex[Int(item)]
+        let rgb = (ext >= 0 && Int(ext) < extensionCategory.count ? extensionCategory[Int(ext)] : .other).rgb
+        return TreemapRenderer.RGB(r: rgb.r, g: rgb.g, b: rgb.b)
     }
 
     func item(atPixel point: CGPoint) -> Int32? {
@@ -600,19 +758,221 @@ final class DiskXRayViewModel: ObservableObject {
         if target < 0 || !index.isDirectory(target) { target = parent(target) ?? index.root }
         guard target != zoomItem else { return }
         zoomItem = target
+        viewport = TreemapRenderer.fullViewport
+        stopViewportAnimation()
         scheduleRender()
     }
 
     func zoomOut() {
         guard let index, zoomItem != index.root else { return }
         zoomItem = parent(zoomItem) ?? index.root
+        viewport = TreemapRenderer.fullViewport
+        stopViewportAnimation()
         scheduleRender()
     }
 
     func zoomReset() {
         guard let index, zoomItem != index.root else { return }
         zoomItem = index.root
+        viewport = TreemapRenderer.fullViewport
+        stopViewportAnimation()
         scheduleRender()
+    }
+
+    // MARK: - Lupa
+
+    /// Amplia (fator > 1) ou reduz mantendo parado o ponto sob o cursor.
+    /// `anchor`: posição na área visível do mapa, em fração (0…1).
+    /// `animated`: transição suave (botões e teclado); a pinça segue o dedo.
+    func magnify(by factor: CGFloat, around anchor: CGPoint, animated: Bool = false) {
+        guard index != nil, factor.isFinite, factor > 0 else { return }
+        // Animando, o fator vale sobre o destino (⌘+ repetido acumula).
+        let from = viewportAnimation == nil ? viewport : animationTarget
+        let side = 1 / min(Self.maxMagnification, max(1, (1 / from.width) * factor))
+        let x = from.minX + anchor.x * from.width
+        let y = from.minY + anchor.y * from.height
+        let target = CGRect(x: x - anchor.x * side, y: y - anchor.y * side, width: side, height: side)
+        if animated { animateViewport(to: target) } else { setViewport(target) }
+    }
+
+    /// Arrasta o conteúdo; `delta` em fração da área visível (positivo: para a
+    /// direita/para baixo, como o dedo no trackpad).
+    func pan(by delta: CGSize) {
+        guard isMagnified else { return }
+        setViewport(viewport.offsetBy(dx: -delta.width * viewport.width, dy: -delta.height * viewport.height))
+    }
+
+    func resetMagnification() {
+        animateViewport(to: TreemapRenderer.fullViewport)
+    }
+
+    /// Toque duplo com dois dedos: alterna entre o mapa inteiro e 4×.
+    func toggleMagnification(around anchor: CGPoint) {
+        if isMagnified { resetMagnification() } else { magnify(by: 4, around: anchor, animated: true) }
+    }
+
+    var canMagnifyToSelection: Bool { index != nil && selected != nil }
+
+    /// Amplia até o item selecionado ocupar boa parte do mapa — chega a um
+    /// arquivo de 1 KB no disco inteiro, num voo só (o layout não muda com a
+    /// ampliação, então a posição calculada agora é a que vai aparecer).
+    func magnifyToSelection() {
+        guard let index, let item = selected else { return }
+        let inside = item == zoomItem || (item < 0 ? zoomItem == index.root : index.isAncestor(zoomItem, of: item))
+        if !inside {
+            stopViewportAnimation()
+            zoomItem = index.root
+            viewport = TreemapRenderer.fullViewport
+            scheduleRender()
+        } else if item == zoomItem {
+            resetMagnification()
+            return
+        }
+        guard let unit = mapAnchor(for: item).flatMap(unitRect) else { return }
+        animateViewport(to: TreemapRenderer.viewport(fitting: unit, maxMagnification: Self.maxMagnification))
+    }
+
+    /// Selecionado na árvore ou na lista: o mapa vai até ele como o Google Maps
+    /// mostra um resultado — sem exagero. Pequeno demais para ler: aproxima até
+    /// ocupar ~⅓ da tela, mas no máximo até a pasta dele encher a tela (arquivos
+    /// de poucos KB pediriam milhares de ×; o contexto fica e o pino marca o
+    /// lugar). Maior que a tela: afasta até caber. Tamanho bom: só desliza, e só
+    /// se estiver fora da tela. Um item de 0 KB não tem área: vale a pasta dele.
+    private func bringIntoView(_ item: Int32) {
+        guard let anchor = mapAnchor(for: item), let unit = unitRect(of: anchor) else { return }
+        let current = viewportAnimation == nil ? viewport : animationTarget
+        var side = current.width
+        if max(unit.width, unit.height) / side < 0.2 {
+            var readable = TreemapRenderer.viewport(fitting: unit, fill: 0.35, minThickness: 0.08,
+                                                    maxMagnification: Self.maxMagnification).width
+            if anchor != zoomItem, let folder = parent(anchor), let folderUnit = unitRect(of: folder) {
+                readable = max(readable, TreemapRenderer.viewport(fitting: folderUnit, fill: 0.9, minThickness: 0.3,
+                                                                  maxMagnification: Self.maxMagnification).width)
+            }
+            side = min(side, readable)
+        } else if min(unit.width, unit.height) / side > 1.1 {
+            side = min(1, max(unit.width, unit.height) / 0.9)
+        }
+        if side == current.width {
+            // Já aparece (ao menos metade do que caberia na tela): não mexe.
+            let shown = unit.intersection(current)
+            let shownArea = shown.isNull ? 0 : shown.width * shown.height
+            guard shownArea < min(unit.width * unit.height, side * side) * 0.5 else { return }
+        }
+        animateViewport(to: CGRect(x: unit.midX - side / 2, y: unit.midY - side / 2, width: side, height: side))
+    }
+
+    /// O item, ou o ancestral mais próximo com tamanho: um arquivo de 0 KB não
+    /// tem área no mapa, então ele aparece pela pasta dele.
+    func mapAnchor(for item: Int32) -> Int32? {
+        lineage(item).reversed().first { size($0) > 0 || $0 == zoomItem }
+    }
+
+    /// Onde a seleção está no mapa (coordenadas unitárias): o retângulo do item,
+    /// ou o da pasta (`anchor`) para um item de 0 KB. Calculado pelos tamanhos,
+    /// não pelo bitmap na tela — contorno e pino não dependem de qual render já
+    /// chegou. Guardado por seleção, pasta em zoom e geração do mapa (a view pede
+    /// a cada quadro da animação).
+    func selectionGeometry() -> (rect: CGRect, anchor: Int32)? {
+        guard let item = selected else { return nil }
+        let key = MarkerKey(item: item, root: zoomItem, generation: renderGeneration,
+                            width: treemapSize.width, height: treemapSize.height)
+        if let cached = markerCache, cached.key == key { return cached.value }
+        let value = mapAnchor(for: item).flatMap { anchor in unitRect(of: anchor).map { ($0, anchor) } }
+        markerCache = (key, value)
+        return value
+    }
+
+    private struct MarkerKey: Equatable {
+        let item: Int32, root: Int32, generation: Int, width: Int, height: Int
+    }
+
+    private var markerCache: (key: MarkerKey, value: (rect: CGRect, anchor: Int32)?)?
+
+    /// Onde o item fica no mapa da pasta em zoom (coordenadas unitárias), mesmo
+    /// fora da tela ou menor que um pixel; `nil` se não está dentro dela ou tem
+    /// tamanho zero.
+    func unitRect(of item: Int32) -> CGRect? {
+        guard treemapSize.width > 0, treemapSize.height > 0, let source = renderSource() else { return nil }
+        let path = lineage(item)
+        guard let start = path.firstIndex(of: zoomItem) else { return nil }
+        let width = CGFloat(treemapSize.width), height = CGFloat(treemapSize.height)
+        guard let rect = TreemapRenderer.locate(Array(path[start...]), in: CGRect(x: 0, y: 0, width: width, height: height),
+                                                source: source)
+        else { return nil }
+        return CGRect(x: rect.minX / width, y: rect.minY / height, width: rect.width / width, height: rect.height / height)
+    }
+
+    private func clamp(_ rect: CGRect) -> CGRect {
+        var clamped = rect
+        clamped.origin.x = min(max(0, rect.minX), 1 - rect.width)
+        clamped.origin.y = min(max(0, rect.minY), 1 - rect.height)
+        return clamped
+    }
+
+    /// Gesto do usuário: aplica na hora e interrompe a animação em curso.
+    private func setViewport(_ rect: CGRect) {
+        stopViewportAnimation()
+        applyViewport(rect)
+    }
+
+    private func applyViewport(_ rect: CGRect) {
+        let clamped = clamp(rect)
+        guard clamped != viewport else { return }
+        viewport = clamped
+        viewportChanged()
+    }
+
+    // MARK: - Transição animada
+
+    private var viewportAnimation: Timer?
+    private var animationTarget = TreemapRenderer.fullViewport
+
+    /// Transição suave como no Google Maps: o lado varia em escala logarítmica
+    /// (cada dobra de zoom leva o mesmo tempo, mesmo de 1× a 2.000×) e o centro
+    /// acompanha o progresso do zoom — num zoom em torno de um ponto, ele fica parado.
+    private func animateViewport(to rect: CGRect) {
+        let target = clamp(rect)
+        let start = viewport
+        stopViewportAnimation()
+        guard target != start else { return }
+        animationTarget = target
+        // Destino longe (várias telas): afasta no meio do caminho para os dois
+        // pontos caberem e aproxima no fim, em vez de atravessar telas borradas.
+        let distance = hypot(target.midX - start.midX, target.midY - start.midY)
+        let wider = max(start.width, target.width)
+        let bump = distance > wider * 1.5 ? max(0, log(min(1, distance * 1.2) / wider)) : 0
+        // Cada dobra de zoom leva o mesmo tempo: voos longos (2.000×) duram mais.
+        let doublings = abs(log2(start.width / target.width)) + 2 * bump / log(2)
+        let duration = min(1.2, 0.3 + 0.06 * doublings)
+        let began = ProcessInfo.processInfo.systemUptime
+        let timer = Timer(timeInterval: 1.0 / 120, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.animationStep(from: start, to: target, bump: bump, began: began, duration: duration)
+            }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        viewportAnimation = timer
+    }
+
+    private func animationStep(from start: CGRect, to target: CGRect, bump: CGFloat, began: TimeInterval,
+                               duration: TimeInterval) {
+        let t = min(1, (ProcessInfo.processInfo.systemUptime - began) / duration)
+        let eased = t < 0.5 ? 4 * t * t * t : 1 - pow(-2 * t + 2, 3) / 2
+        let (from, to) = (start.width, target.width)
+        let side = exp(log(from) + (log(to) - log(from)) * eased + bump * 4 * eased * (1 - eased))
+        // Sem o afastamento, o centro acompanha o progresso do zoom (ponto fixo
+        // continua fixo); com ele, os dois cabem na tela no meio e basta o eased.
+        let progress = bump > 0 || from == to ? eased : (from - side) / (from - to)
+        let x = start.midX + (target.midX - start.midX) * progress
+        let y = start.midY + (target.midY - start.midY) * progress
+        applyViewport(t >= 1 ? target : CGRect(x: x - side / 2, y: y - side / 2, width: side, height: side))
+        if t >= 1 { stopViewportAnimation() }
+    }
+
+    private func stopViewportAnimation() {
+        viewportAnimation?.invalidate()
+        viewportAnimation = nil
     }
 
     /// Trilha da raiz até o item em zoom.
@@ -700,7 +1060,10 @@ final class DiskXRayViewModel: ObservableObject {
             if let selected, selected >= 0, selected == item || index.isAncestor(item, of: selected) {
                 self.selected = index.parent[Int(item)]
             }
-            if zoomItem == item || index.isAncestor(item, of: zoomItem) { zoomItem = index.parent[Int(item)] }
+            if zoomItem == item || index.isAncestor(item, of: zoomItem) {
+                zoomItem = index.parent[Int(item)]
+                viewport = TreemapRenderer.fullViewport
+            }
             sortedChildren = [:]
             buildCategories()
             refreshLargestFiles()
