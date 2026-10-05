@@ -20,7 +20,7 @@
 
 Xcode, Docker, simulators, `node_modules`, Rust `target/` folders, package caches and AI models quietly eat hundreds of gigabytes. MAC-LIMPO finds them, tells you how much each one takes, and cleans them — moving files to the Trash whenever possible so a cleanup can be undone.
 
-It is a native SwiftUI + AppKit app that lives in the menu bar. No telemetry, no account, no subscription.
+It is a native SwiftUI + AppKit app that lives in the menu bar — a **free, open-source alternative to CleanMyMac** for cleaning and to **DaisyDisk / GrandPerspective / WinDirStat** as a **disk space analyzer**. No telemetry, no account, no subscription.
 
 ## Install
 

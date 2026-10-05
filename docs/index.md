@@ -1,5 +1,5 @@
 ---
-description: Free, open-source macOS disk cleaner for developers — clean Xcode, Docker, simulators, node_modules and 40+ caches from the menu bar, and see where every gigabyte goes.
+description: Free, open-source macOS disk cleaner and disk space analyzer for developers — a CleanMyMac and DaisyDisk alternative. Clean Xcode, Docker, simulators, node_modules and 40+ caches from the menu bar, and see where every gigabyte goes.
 ---
 
 <div class="hero" markdown>

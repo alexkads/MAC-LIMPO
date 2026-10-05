@@ -2,7 +2,7 @@
 
 # MAC-LIMPO
 
-**Libere espaço no seu Mac — um limpador nativo na barra de menus, feito para desenvolvedores, com um raio-x do disco que mostra para onde vai cada gigabyte.**
+**Libere espaço no seu Mac — um limpador nativo na barra de menus, feito para desenvolvedores, com um raio-x do disco que mostra para onde vai cada gigabyte.** Gratuito e de código aberto: uma alternativa ao CleanMyMac para limpar e ao DaisyDisk para analisar o espaço em disco.
 
 [![Licença: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![macOS 27+](https://img.shields.io/badge/macOS-27%2B-black?logo=apple)](https://alexkads.github.io/MAC-LIMPO/pt/install/)

@@ -1,9 +1,10 @@
 site_name: MAC-LIMPO
 site_url: https://alexkads.github.io/MAC-LIMPO/
 site_description: >-
-  Free, open-source macOS disk cleaner for developers. Clean Xcode DerivedData, Docker,
-  simulators, node_modules, Rust targets and 40+ caches from the menu bar, and see where
-  every gigabyte goes with the Disk X-Ray treemap.
+  Free, open-source macOS disk cleaner and disk space analyzer for developers — a
+  CleanMyMac and DaisyDisk alternative. Clean Xcode DerivedData, Docker, simulators,
+  node_modules, Rust targets and 40+ caches from the menu bar, and see where every
+  gigabyte goes with the Disk X-Ray treemap.
 site_author: Alex S S Fonseca
 repo_url: https://github.com/alexkads/MAC-LIMPO
 repo_name: alexkads/MAC-LIMPO
