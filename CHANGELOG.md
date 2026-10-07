@@ -34,6 +34,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - Novos caminhos: cache do Yarn Berry (`~/.yarn/berry/cache`), `DocumentationCache` do Xcode e índice do Continue (`~/.continue/index`).
 
 ### 🐛 Corrigido
+- **"Você está em dia" logo depois de uma release**: a CDN do raw.githubusercontent (5 min) e do Pages (10 min) ainda entregava o manifesto anterior; o pedido agora fura o cache (parâmetro `t` + `Cache-Control: no-cache`).
 - **Aviso de atualização derrubava o app**: a checagem de ferramentas de compilação esperava um processo na thread principal; o SwiftUI redesenhava a faixa no meio da inicialização e o app caía (`dispatch_once` recursivo). Agora só olha arquivos.
 - **Docs — `sudo` na instalação**: a página de instalação e o README explicam que o comando roda sem `sudo` e que o script pede a senha sozinho quando precisa substituir uma cópia do `.pkg` (`sudo curl … | sh` não adianta; `| sudo sh` deixaria o app do root de novo).
 - **Instalador (`install.sh`) sobre uma cópia do `.pkg`**: o app instalado pelo `.pkg` pertence ao root, e o script tentava apagá-lo sem `sudo` (só olhava se `/Applications` era gravável), parando em `Permission denied`. Agora confere o dono do bundle e pede a senha só nesse caso; o `--uninstall` tinha o mesmo defeito.

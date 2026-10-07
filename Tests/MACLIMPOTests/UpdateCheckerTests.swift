@@ -84,3 +84,19 @@ final class UpdateRetryTests: XCTestCase {
         XCTAssertTrue(script.contains(#"[ "$IN_BACKGROUND" -eq 1 ] || quit_running_app"#))
     }
 }
+
+/// Logo depois de uma release a CDN ainda guarda o manifesto anterior; o
+/// pedido do app precisa furar esse cache.
+final class UpdateFreshRequestTests: XCTestCase {
+    func testManifestRequestBypassesCaches() {
+        let url = URL(string: "https://raw.githubusercontent.com/alexkads/MAC-LIMPO/main/docs/updates.json")!
+        let request = UpdateChecker.freshRequest(url, now: Date(timeIntervalSince1970: 1_800_000_000))
+        XCTAssertEqual(request.url?.absoluteString, url.absoluteString + "?t=1800000000")
+        XCTAssertEqual(request.value(forHTTPHeaderField: "Cache-Control"), "no-cache")
+    }
+
+    func testLocalFilesAreLeftAlone() {
+        let url = URL(string: "file:///tmp/updates.json")!
+        XCTAssertEqual(UpdateChecker.freshRequest(url).url, url)
+    }
+}

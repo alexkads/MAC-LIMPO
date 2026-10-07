@@ -189,7 +189,7 @@ final class UpdateChecker: ObservableObject {
         let urls = ProcessInfo.processInfo.environment["MACLIMPO_UPDATE_URL"].flatMap(URL.init(string:)).map { [$0] } ?? manifestURLs
         for url in urls {
             do {
-                let (data, response) = try await session.data(from: url)
+                let (data, response) = try await session.data(for: freshRequest(url))
                 if let http = response as? HTTPURLResponse, http.statusCode != 200 { continue }
                 let manifest = try JSONDecoder().decode(UpdateManifest.self, from: data)
                 // Um arquivo sem versão válida ou sem título não vira aviso em branco.
@@ -200,6 +200,21 @@ final class UpdateChecker: ObservableObject {
             }
         }
         return .failure(CheckError.noAnswer)
+    }
+
+    /// Pede a cópia mais nova: o raw.githubusercontent guarda o arquivo por 5 min
+    /// e o Pages por 10 — sem isto, logo depois de uma release o app ainda
+    /// recebia a versão anterior e dizia "você está em dia". O parâmetro muda a
+    /// chave do cache da CDN; o cabeçalho pede revalidação a quem o respeita.
+    nonisolated static func freshRequest(_ url: URL, now: Date = Date()) -> URLRequest {
+        var request = URLRequest(url: url)
+        if url.scheme == "https", var components = URLComponents(url: url, resolvingAgainstBaseURL: false) {
+            components.queryItems = (components.queryItems ?? []) + [URLQueryItem(name: "t", value: String(Int(now.timeIntervalSince1970)))]
+            request.url = components.url ?? url
+        }
+        request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
+        request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
+        return request
     }
 
     /// "v1.3.10" → [1, 3, 10]. Qualquer parte não numérica invalida a versão.
