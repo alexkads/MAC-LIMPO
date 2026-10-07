@@ -1,26 +1,24 @@
 {
-  "version": "1.3.25",
+  "version": "1.3.26",
   "date": "2026-10-07",
-  "important": true,
-  "url": "https://github.com/alexkads/MAC-LIMPO/releases/tag/v1.3.25",
+  "important": false,
+  "url": "https://github.com/alexkads/MAC-LIMPO/releases/tag/v1.3.26",
   "notes": {
     "en": {
-      "title": "Updates now install by themselves, in the background",
+      "title": "Test release: checks that updates install by themselves",
       "changes": [
-        "New versions are built on your Mac in the background while you keep working — nothing closes.",
-        "When it's ready, reopen MAC-LIMPO (or click Reopen Now) to use it.",
-        "Fixes a crash that could happen when an update was announced."
+        "No changes to the app — this version exists to exercise the automatic update.",
+        "If you're reading this in MAC-LIMPO, the update was found; reopen to finish."
       ],
-      "why": "Fixes a crash in 1.3.24's update banner, and from now on you never have to update by hand."
+      "why": "Confirms that automatic updates work on your Mac."
     },
     "pt-BR": {
-      "title": "As atualizações agora se instalam sozinhas, em segundo plano",
+      "title": "Versão de teste: confere que as atualizações se instalam sozinhas",
       "changes": [
-        "As versões novas são compiladas no seu Mac em segundo plano enquanto você usa — nada fecha.",
-        "Quando fica pronta, reabra o MAC-LIMPO (ou clique em Reabrir Agora) para usar.",
-        "Corrige um travamento que podia acontecer quando uma atualização era anunciada."
+        "Nada muda no app — esta versão existe para exercitar a atualização automática.",
+        "Se você está lendo isto no MAC-LIMPO, a atualização foi encontrada; reabra para concluir."
       ],
-      "why": "Corrige um travamento da faixa de atualização da 1.3.24, e daqui em diante você nunca mais atualiza à mão."
+      "why": "Confirma que a atualização automática funciona no seu Mac."
     }
   }
 }
