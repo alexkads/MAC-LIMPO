@@ -56,6 +56,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - **Detecção de Full Disk Access**: passa a sondar o `TCC.db` do usuário; o probe antigo (`Safari/History.db`) não existe em quem nunca abriu o Safari, e o app se achava sem permissão para sempre.
 
 ### 🔄 Alterado
+- **1.3.26 — versão de teste** da atualização automática: nada muda no app.
 - **Requisito baixou para macOS 26.6+** (Apple silicon), o mínimo do Xcode 27/Swift 6.4 — o app não usa nada exclusivo do macOS 27. O `install.sh` confere versão principal e secundária, aponta a atualização gratuita para quem está no 26.0–26.5 e recusa Macs Intel com uma mensagem clara.
 
 ### ⚡️ Desempenho
