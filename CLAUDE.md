@@ -17,6 +17,7 @@ swift test                  # run unit tests (Tests/MACLIMPOTests)
 make app                    # assemble + sign build/app/MAC-LIMPO.app  (Scripts/bundle-app.sh)
 make installer              # → build/MAC-LIMPO-<version>.pkg          (Installer/build-installer.sh)
 make dmg                    # → build/MAC-LIMPO-<version>.dmg          (./create_installer.sh)
+make docs-deploy            # publish the site + install.sh to gh-pages (release first — see Releasing)
 ./create_xcode_project.sh   # generate an Xcode project if you need the IDE
 swiftformat . && swiftlint  # format + lint (configs: .swiftformat, .swiftlint.yml)
 ```
@@ -104,7 +105,11 @@ Full-disk map: summary by file category, native folder tree, file-type panel, la
 
 ### Distribution without a Developer ID
 
-`docs/install.sh` (published at `https://alexkads.github.io/MAC-LIMPO/install.sh`) checks the Mac, downloads the latest release source, builds with `Scripts/bundle-app.sh` and installs into `/Applications` — locally built apps carry no quarantine flag, so Gatekeeper doesn't block them. Keep it POSIX `sh` and `shellcheck`-clean.
+`docs/install.sh` (published at `https://alexkads.github.io/MAC-LIMPO/install.sh`) checks the Mac, downloads the latest release source, builds with `Scripts/bundle-app.sh` and installs into `/Applications` — locally built apps carry no quarantine flag, so Gatekeeper doesn't block them. Keep it POSIX `sh` and `shellcheck`-clean. Its minimums (macOS 26.6 on Apple silicon — Xcode 27's own floor — and Swift 6.4) must match `Package.swift`, `LSMinimumSystemVersion` and `Installer/Distribution.xml`. An existing copy from the `.pkg` is root-owned, so it is removed with `sudo` (`remove_app` checks the bundle's owner, not whether `/Applications` is writable).
+
+### Releasing
+
+Users only see published work: the site's `install.sh` (updated by `make docs-deploy`) builds the **latest GitHub release**, not `main`, and the `.pkg` ships with the release. A fix to something the user hit through the installer isn't done until it's published. Follow the `release` skill (`.claude/skills/release/SKILL.md`): VERSION + CHANGELOG (`[Unreleased]`) → tag → `make installer` → push → `gh release create` with the `.pkg` → `make docs-deploy` → check the published script. Release before deploying the site whenever the script's requirements change.
 
 ### Website
 
