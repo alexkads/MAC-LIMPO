@@ -26,7 +26,7 @@ curl -fsSL https://alexkads.github.io/MAC-LIMPO/install.sh | sh
 
 </div>
 
-The script builds MAC-LIMPO **on your Mac** and installs it into `/Applications`. Built locally, the app opens on the first click — no Gatekeeper warning, no paid certificate. Needs macOS 27+ and the Command Line Tools. [More options →](install.md)
+The script builds MAC-LIMPO **on your Mac** and installs it into `/Applications`. Built locally, the app opens on the first click — no Gatekeeper warning, no paid certificate. Needs macOS 26.6+ and the Command Line Tools. [More options →](install.md)
 
 ## What it does
 

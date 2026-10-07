@@ -5,7 +5,7 @@
 **Libere espaço no seu Mac — um limpador nativo na barra de menus, feito para desenvolvedores, com um raio-x do disco que mostra para onde vai cada gigabyte.** Gratuito e de código aberto: uma alternativa ao CleanMyMac para limpar e ao DaisyDisk para analisar o espaço em disco.
 
 [![Licença: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
-[![macOS 27+](https://img.shields.io/badge/macOS-27%2B-black?logo=apple)](https://alexkads.github.io/MAC-LIMPO/pt/install/)
+[![macOS 26.6+](https://img.shields.io/badge/macOS-26.6%2B-black?logo=apple)](https://alexkads.github.io/MAC-LIMPO/pt/install/)
 [![Swift 6.4](https://img.shields.io/badge/Swift-6.4-F05138?logo=swift&logoColor=white)](https://swift.org)
 [![Última versão](https://img.shields.io/github/v/release/alexkads/MAC-LIMPO)](https://github.com/alexkads/MAC-LIMPO/releases/latest)
 
@@ -31,7 +31,7 @@ curl -fsSL https://alexkads.github.io/MAC-LIMPO/install.sh | sh
 
 O script confere o seu Mac, baixa o código da última versão, **compila na sua máquina** e instala o `MAC-LIMPO.app` em `/Applications`. Como o app sai do compilador do próprio Mac, ele nunca recebe a marca de quarentena e abre no primeiro clique — sem certificado de desenvolvedor e sem aviso do Gatekeeper. Se quiser, [leia o script](docs/install.sh) antes.
 
-Requisitos: **macOS 27 ou mais novo** e as **Command Line Tools** (`xcode-select --install`) ou o Xcode, com Swift 6.4. A primeira compilação leva de 2 a 5 minutos.
+Requisitos: **macOS 26.6 ou mais novo** e as **Command Line Tools** (`xcode-select --install`) ou o Xcode, com Swift 6.4. A primeira compilação leva de 2 a 5 minutos.
 
 ```bash
 # Opções: compilar uma branch, escolher a pasta, simular ou desinstalar

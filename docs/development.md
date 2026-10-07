@@ -6,7 +6,7 @@ description: Build MAC-LIMPO from source, open it in Xcode, run the tests, add a
 
 ## Requirements
 
-- macOS 27+ on Apple silicon
+- macOS 26.6+ on Apple silicon
 - Xcode 27, or the Command Line Tools with Swift 6.4
 
 ## Build, run and test

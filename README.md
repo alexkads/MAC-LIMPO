@@ -5,7 +5,7 @@
 **Free up disk space on your Mac — a native menu bar cleaner for developers, with a disk X-ray that shows where every gigabyte goes.**
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
-[![macOS 27+](https://img.shields.io/badge/macOS-27%2B-black?logo=apple)](https://alexkads.github.io/MAC-LIMPO/install/)
+[![macOS 26.6+](https://img.shields.io/badge/macOS-26.6%2B-black?logo=apple)](https://alexkads.github.io/MAC-LIMPO/install/)
 [![Swift 6.4](https://img.shields.io/badge/Swift-6.4-F05138?logo=swift&logoColor=white)](https://swift.org)
 [![Latest release](https://img.shields.io/github/v/release/alexkads/MAC-LIMPO)](https://github.com/alexkads/MAC-LIMPO/releases/latest)
 [![Docs](https://img.shields.io/badge/docs-alexkads.github.io%2FMAC--LIMPO-8A2BE2)](https://alexkads.github.io/MAC-LIMPO/)
@@ -32,7 +32,7 @@ curl -fsSL https://alexkads.github.io/MAC-LIMPO/install.sh | sh
 
 The script checks your Mac, downloads the source of the latest release, **builds it on your machine** and installs `MAC-LIMPO.app` into `/Applications`. Because the app is compiled locally it never carries the quarantine flag, so it opens on the first click — no Developer ID certificate needed, no Gatekeeper warning. [Read the script](docs/install.sh) before running it if you like.
 
-Requirements: **macOS 27 or later** and the **Command Line Tools** (`xcode-select --install`) or Xcode, with Swift 6.4. The first build takes 2–5 minutes.
+Requirements: **macOS 26.6 or later** and the **Command Line Tools** (`xcode-select --install`) or Xcode, with Swift 6.4. The first build takes 2–5 minutes.
 
 ```bash
 # Options: build a branch, choose the folder, preview, or uninstall

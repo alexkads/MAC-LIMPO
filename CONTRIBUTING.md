@@ -15,7 +15,7 @@ Contribuições em português também são bem-vindas — issues e PRs podem ser
 
 ## Development setup
 
-Requirements: macOS 27+, Xcode 27 (or the Command Line Tools with Swift 6.4).
+Requirements: macOS 26.6+, Xcode 27 (or the Command Line Tools with Swift 6.4).
 
 ```bash
 git clone https://github.com/alexkads/MAC-LIMPO.git

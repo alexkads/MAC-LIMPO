@@ -122,7 +122,7 @@ cat > "$APP/Contents/Info.plist" << EOF
     <key>CFBundleVersion</key>
     <string>$BUILD_NUMBER</string>
     <key>LSMinimumSystemVersion</key>
-    <string>27.0</string>
+    <string>26.6</string>
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.utilities</string>
     <key>LSUIElement</key>
@@ -144,7 +144,7 @@ if [ -d "Assets.xcassets" ]; then
     xcrun actool Assets.xcassets \
         --compile "$APP/Contents/Resources" \
         --platform macosx \
-        --minimum-deployment-target 27.0 \
+        --minimum-deployment-target 26.6 \
         --app-icon AppIcon \
         --output-partial-info-plist /tmp/assetcatalog_generated_info.plist > /dev/null || \
         echo "warning: compilação do ícone reportou problemas (seguindo sem ícone customizado)."

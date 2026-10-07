@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "MAC-LIMPO",
     platforms: [
-        .macOS(.v27)
+        .macOS("26.6")
     ],
     products: [
         .executable(

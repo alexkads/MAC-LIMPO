@@ -12,7 +12,7 @@ curl -fsSL https://alexkads.github.io/MAC-LIMPO/install.sh | sh
 
 What it does, in order:
 
-1. Checks the Mac: macOS 27+, the Command Line Tools (or Xcode) with Swift 6.4, ~2 GB free.
+1. Checks the Mac: macOS 26.6+, the Command Line Tools (or Xcode) with Swift 6.4, ~2 GB free.
 2. Downloads the source of the [latest release](https://github.com/alexkads/MAC-LIMPO/releases/latest) (or `main` if there is none yet).
 3. Builds the app with `Scripts/bundle-app.sh` — 2–5 minutes the first time; updates reuse the build cache in `~/Library/Caches/MAC-LIMPO-build`.
 4. Installs `MAC-LIMPO.app` into `/Applications` (or `~/Applications` if `/Applications` is not writable) and opens it.

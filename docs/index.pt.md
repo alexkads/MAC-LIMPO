@@ -26,7 +26,7 @@ curl -fsSL https://alexkads.github.io/MAC-LIMPO/install.sh | sh
 
 </div>
 
-O script compila o MAC-LIMPO **no seu Mac** e instala em `/Applications`. Compilado localmente, o app abre no primeiro clique — sem aviso do Gatekeeper e sem certificado pago. Precisa do macOS 27+ e das Command Line Tools. [Mais opções →](install.md)
+O script compila o MAC-LIMPO **no seu Mac** e instala em `/Applications`. Compilado localmente, o app abre no primeiro clique — sem aviso do Gatekeeper e sem certificado pago. Precisa do macOS 26.6+ e das Command Line Tools. [Mais opções →](install.md)
 
 ## O que ele faz
 

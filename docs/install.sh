@@ -31,7 +31,8 @@ OWNER="alexkads"
 REPO="MAC-LIMPO"
 APP_NAME="MAC-LIMPO"
 SITE="https://alexkads.github.io/MAC-LIMPO/"
-MIN_MACOS=27
+MIN_MACOS_MAJOR=26
+MIN_MACOS_MINOR=6
 MIN_SWIFT_MAJOR=6
 MIN_SWIFT_MINOR=4
 
@@ -85,7 +86,7 @@ Options (with curl | sh, pass them after \`sh -s --\`):
   --uninstall       remove the app and the build cache
   --help            this text
 
-Needs macOS ${MIN_MACOS}+, the Command Line Tools (or Xcode) with Swift ${MIN_SWIFT_MAJOR}.${MIN_SWIFT_MINOR}+,
+Needs macOS ${MIN_MACOS_MAJOR}.${MIN_MACOS_MINOR}+ on Apple silicon, the Command Line Tools (or Xcode) with Swift ${MIN_SWIFT_MAJOR}.${MIN_SWIFT_MINOR}+,
 an internet connection and ~2 GB free. Takes 2–5 minutes the first time.
 HELP
 }
@@ -140,8 +141,18 @@ step "checking this Mac"
 
 MACOS="$(sw_vers -productVersion)"
 MACOS_MAJOR="${MACOS%%.*}"
-if [ "$MACOS_MAJOR" -lt "$MIN_MACOS" ]; then
-  fail "MAC-LIMPO needs macOS ${MIN_MACOS} or later — this Mac has ${MACOS}."
+MACOS_MINOR=0
+case "$MACOS" in *.*) MACOS_MINOR="${MACOS#*.}"; MACOS_MINOR="${MACOS_MINOR%%.*}" ;; esac
+# Xcode 27 (Swift 6.4) itself needs macOS 26.6, so that is the floor for building here.
+if [ "$MACOS_MAJOR" -lt "$MIN_MACOS_MAJOR" ] ||
+   { [ "$MACOS_MAJOR" -eq "$MIN_MACOS_MAJOR" ] && [ "$MACOS_MINOR" -lt "$MIN_MACOS_MINOR" ]; }; then
+  fail "MAC-LIMPO needs macOS ${MIN_MACOS_MAJOR}.${MIN_MACOS_MINOR} or later — this Mac has ${MACOS}."
+  [ "$MACOS_MAJOR" -eq "$MIN_MACOS_MAJOR" ] && echo "   It is a free update: System Settings › General › Software Update."
+  exit 1
+fi
+# sysctl, not uname -m: a Terminal running under Rosetta reports x86_64.
+if [ "$(sysctl -n hw.optional.arm64 2>/dev/null)" != "1" ]; then
+  fail "MAC-LIMPO needs a Mac with Apple silicon (Xcode 27 does not run on Intel)."
   exit 1
 fi
 ok "macOS ${MACOS}"

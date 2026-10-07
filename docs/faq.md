@@ -12,7 +12,7 @@ description: Frequently asked questions about MAC-LIMPO.
     an app compiled on your own Mac is not quarantined and opens normally. See [Install](install.md).
 
 ??? question "Which macOS versions are supported?"
-    macOS 27 or later on Apple silicon. Building needs the Command Line Tools or Xcode with Swift 6.4.
+    macOS 26.6 or later on Apple silicon. Building needs the Command Line Tools or Xcode with Swift 6.4.
 
 ??? question "Will it delete my files?"
     It targets caches, build output and temporary files that tools recreate. Path-based cleaners move items to

@@ -12,7 +12,7 @@ description: Perguntas frequentes sobre o MAC-LIMPO.
     um app compilado no seu próprio Mac não fica em quarentena e abre normalmente. Veja [Instalar](install.md).
 
 ??? question "Quais versões do macOS são suportadas?"
-    macOS 27 ou mais novo, em Apple silicon. Compilar exige as Command Line Tools ou o Xcode com Swift 6.4.
+    macOS 26.6 ou mais novo, em Apple silicon. Compilar exige as Command Line Tools ou o Xcode com Swift 6.4.
 
 ??? question "Ele vai apagar meus arquivos?"
     Ele mira caches, saídas de compilação e temporários que as ferramentas recriam. As limpezas por caminho

@@ -15,7 +15,7 @@ O projeto usa Swift Package Manager e não mantém um `.xcodeproj` versionado. N
 ### 3. Conferir a configuração
 Preencha os campos:
 - **Product Name**: `MAC-LIMPO`
-- **Deployment target**: macOS `27.0`
+- **Deployment target**: macOS `26.6`
 - **Swift tools**: `6.4`
 - **Arquitetura de distribuição**: `arm64`
 - O target já inclui Foundation Models e App Intents por meio dos imports do pacote.
@@ -39,7 +39,7 @@ Não adicione os arquivos manualmente. O `Package.swift` lista explicitamente to
 
 1. Na aba "General"
 2. Em "Minimum Deployments"
-3. Defina "macOS" para `27.0` — o projeto não oferece suporte a versões anteriores
+3. Defina "macOS" para `26.6` — o projeto não oferece suporte a versões anteriores
 
 ### 7. Build e Executar
 

@@ -179,7 +179,7 @@ Antes de usar a aplicação, verifique:
 - `AppKit` para menu bar integration
 
 ### Compatibilidade
-- **macOS 27.0+**
+- **macOS 26.6+** (Apple silicon)
 - Swift 6.4 em modo Swift 6
 - Requer Xcode 27 para compilar
 
