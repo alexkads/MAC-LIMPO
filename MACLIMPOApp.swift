@@ -1,5 +1,7 @@
 import AppKit
+import Combine
 import SwiftUI
+import UserNotifications
 
 @main
 struct MACLIMPOApp: App {
@@ -13,11 +15,12 @@ struct MACLIMPOApp: App {
 }
 
 @MainActor
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
     var statusItem: NSStatusItem!
     var popover: NSPopover!
     var welcomePopover: NSPopover?
     var diskXRayWindow: NSWindow?
+    private var updateObservation: AnyCancellable?
 
     func applicationDidFinishLaunching(_: Notification) {
         // Garante instância única
@@ -45,7 +48,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         if let button = statusItem.button {
             // Ícone do menu bar (SF Symbol)
-            button.image = NSImage(systemSymbolName: "trash.circle.fill", accessibilityDescription: "MAC-LIMPO")
+            button.image = Self.statusImage(badged: false)
             button.action = #selector(togglePopover)
             button.target = self
         }
@@ -57,6 +60,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         popover.contentViewController = NSHostingController(rootView: MenuBarView(onOpenDiskXRay: { [weak self] in
             self?.openDiskXRayWindow()
         }))
+
+        // Versão nova: ponto no ícone + faixa no popover + notificação (uma vez).
+        if Bundle.main.bundleURL.pathExtension == "app" {
+            UNUserNotificationCenter.current().delegate = self
+        }
+        let updater = UpdateChecker.shared
+        updateObservation = updater.$state.combineLatest(updater.$dismissedVersion)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _, _ in self?.refreshStatusIcon() }
+        updater.start()
 
         // Desenvolvimento: abre o Disk X-Ray direto (sem clicar no menu bar) e,
         // com MACLIMPO_SNAPSHOT=<arquivo.png>, salva um retrato da janela depois
@@ -128,7 +141,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Fica até a pessoa responder: o app acabou de abrir em segundo plano e
         // um clique em qualquer outro lugar fecharia um balão transitório.
         welcome.behavior = .applicationDefined
+        let updated = CommandLine.arguments.contains(WelcomeGate.updatedArgument) ? UpdateChecker.currentVersion : nil
         welcome.contentViewController = NSHostingController(rootView: WelcomeView(
+            updatedTo: updated,
             onOpen: { [weak self] in
                 self?.closeWelcome()
                 self?.togglePopover()
@@ -159,6 +174,53 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func closeWelcome() {
         welcomePopover?.performClose(nil)
         welcomePopover = nil
+    }
+
+    // MARK: - Ícone e notificação de versão nova
+
+    /// O ícone da barra de menus; com versão nova, ganha um ponto no canto
+    /// (recortado do símbolo para continuar legível como imagem modelo).
+    static func statusImage(badged: Bool) -> NSImage? {
+        guard let symbol = NSImage(systemSymbolName: "trash.circle.fill", accessibilityDescription: "MAC-LIMPO") else { return nil }
+        guard badged else { return symbol }
+        let size = symbol.size
+        let image = NSImage(size: size, flipped: false) { rect in
+            symbol.draw(in: rect)
+            let dot = NSRect(x: rect.maxX - size.width * 0.42, y: rect.maxY - size.height * 0.42,
+                             width: size.width * 0.42, height: size.height * 0.42)
+            NSGraphicsContext.current?.compositingOperation = .clear
+            NSBezierPath(ovalIn: dot.insetBy(dx: -1.5, dy: -1.5)).fill()
+            NSGraphicsContext.current?.compositingOperation = .sourceOver
+            NSColor.black.setFill()
+            NSBezierPath(ovalIn: dot).fill()
+            return true
+        }
+        image.isTemplate = true
+        image.accessibilityDescription = String(localized: "MAC-LIMPO — update available")
+        return image
+    }
+
+    private func refreshStatusIcon() {
+        let pending = UpdateChecker.shared.hasPendingUpdate
+        statusItem?.button?.image = Self.statusImage(badged: pending)
+        statusItem?.button?.toolTip = pending ? String(localized: "MAC-LIMPO — update available") : nil
+    }
+
+    /// Clique na notificação de versão nova: abre o popover, onde está a faixa.
+    nonisolated func userNotificationCenter(
+        _: UNUserNotificationCenter, didReceive _: UNNotificationResponse
+    ) async {
+        await MainActor.run {
+            if !self.popover.isShown { self.togglePopover() }
+        }
+    }
+
+    /// Mostra a notificação mesmo com o app "em primeiro plano" (um app de
+    /// barra de menus quase sempre está).
+    nonisolated func userNotificationCenter(
+        _: UNUserNotificationCenter, willPresent _: UNNotification
+    ) async -> UNNotificationPresentationOptions {
+        [.banner, .sound]
     }
 
     @objc func togglePopover() {

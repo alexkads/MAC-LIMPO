@@ -219,6 +219,9 @@ struct NativeMenuBarContent: View {
                 }
             }
             Toggle("Launch at Login", isOn: $launchAtLogin.isEnabled)
+            if version != nil {
+                Button("Check for Updates…") { UpdateChecker.shared.check(manual: true) }
+            }
             Toggle(isOn: $cleaningOptions.aggressiveMode) {
                 Text("Aggressive cleaning")
                 Text("Also clears large regenerable caches (Chrome AI models, all unused Docker images)")

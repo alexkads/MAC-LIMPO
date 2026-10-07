@@ -19,6 +19,11 @@ description: Frequently asked questions about MAC-LIMPO.
     Language & Region) and uses English for any other language. This site opens in Portuguese for Portuguese
     browsers; the language selector at the top switches it, and your pick is remembered.
 
+??? question "How do I update?"
+    MAC-LIMPO checks for new versions by itself: a dot appears on its menu bar icon, the popover shows what's new
+    and you get one notification. Click **Update** — it builds the new version on your Mac in the background and
+    reopens. You can also use **Check for Updates…** in Settings, or run the install command again.
+
 ??? question "Will it delete my files?"
     It targets caches, build output and temporary files that tools recreate. Path-based cleaners move items to
     the Trash. See [Safety](safety.md) for the details and the exceptions.

@@ -7,6 +7,8 @@ import SwiftUI
 /// primeira execução de todas; abrir o app à mão depois disso não mostra nada.
 enum WelcomeGate {
     static let launchArgument = "--welcome"
+    /// O install.sh rodado pelo botão Atualizar reabre o app com isto.
+    static let updatedArgument = "--updated"
     static let shownKey = "welcomeShown"
 
     static func shouldShow(arguments: [String], environment: [String: String], defaults: UserDefaults) -> Bool {
@@ -19,12 +21,15 @@ enum WelcomeGate {
         if environment.keys.contains(where: { $0.hasPrefix("MACLIMPO_SNAPSHOT") || $0.hasPrefix("MACLIMPO_XRAY") || $0 == "MACLIMPO_OPEN_XRAY" }) {
             return false
         }
-        return arguments.contains(launchArgument) || !defaults.bool(forKey: shownKey)
+        return arguments.contains(launchArgument) || arguments.contains(updatedArgument) || !defaults.bool(forKey: shownKey)
     }
 }
 
-/// Balão que aponta para o ícone na barra de menus logo depois da instalação.
+/// Balão que aponta para o ícone na barra de menus logo depois da instalação —
+/// ou, depois de uma atualização pelo app, que confirma a versão nova.
 struct WelcomeView: View {
+    /// Versão recém-instalada pelo botão Atualizar; `nil` numa instalação.
+    var updatedTo: String?
     let onOpen: () -> Void
     let onDismiss: () -> Void
 
@@ -36,11 +41,18 @@ struct WelcomeView: View {
                     .foregroundStyle(.tint)
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Welcome to MAC-LIMPO").font(.headline)
-                    Text("Installed and running").font(.subheadline).foregroundStyle(.secondary)
+                    if let updatedTo {
+                        Text("MAC-LIMPO was updated").font(.headline)
+                        Text("Version \(updatedTo) is installed and running").font(.subheadline).foregroundStyle(.secondary)
+                    } else {
+                        Text("Welcome to MAC-LIMPO").font(.headline)
+                        Text("Installed and running").font(.subheadline).foregroundStyle(.secondary)
+                    }
                 }
             }
-            Text("MAC-LIMPO lives here in the menu bar — there's no Dock icon or main window. Click this icon anytime to scan your Mac and free up space.")
+            (updatedTo == nil
+                ? Text("MAC-LIMPO lives here in the menu bar — there's no Dock icon or main window. Click this icon anytime to scan your Mac and free up space.")
+                : Text("Same place as always: click this icon in the menu bar to scan your Mac and free up space."))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             HStack {

@@ -466,6 +466,16 @@
         }
       }
     },
+    "Builds on this Mac in the background (2–5 minutes). MAC-LIMPO reopens by itself when it's done." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compila neste Mac em segundo plano (2 a 5 minutos). O MAC-LIMPO reabre sozinho quando terminar."
+          }
+        }
+      }
+    },
     "Bun Cache" : {
       "localizations" : {
         "pt-BR" : {
@@ -492,6 +502,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cargo/Rust"
+          }
+        }
+      }
+    },
+    "Check for Updates…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Procurar Atualizações…"
           }
         }
       }
@@ -1012,6 +1032,16 @@
         }
       }
     },
+    "Close" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fechar"
+          }
+        }
+      }
+    },
     "Communication" : {
       "localizations" : {
         "pt-BR" : {
@@ -1028,6 +1058,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Continuar Sem Permissão"
+          }
+        }
+      }
+    },
+    "Copy Command" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar Comando"
           }
         }
       }
@@ -1058,6 +1098,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Não foi possível ler %@."
+          }
+        }
+      }
+    },
+    "Couldn't check for a new version: %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não consegui verificar se há versão nova: %@"
           }
         }
       }
@@ -1248,6 +1298,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Clique duplo para entrar · pinça para ampliar"
+          }
+        }
+      }
+    },
+    "Downloading the installer…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Baixando o instalador…"
           }
         }
       }
@@ -1806,6 +1866,16 @@
         }
       }
     },
+    "Hide What's New" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar Novidades"
+          }
+        }
+      }
+    },
     "Hide progress" : {
       "localizations" : {
         "pt-BR" : {
@@ -1842,6 +1912,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Imagens"
+          }
+        }
+      }
+    },
+    "Important update: version %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atualização importante: versão %@"
           }
         }
       }
@@ -1896,6 +1976,16 @@
         }
       }
     },
+    "Later" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Depois"
+          }
+        }
+      }
+    },
     "Launch at Login" : {
       "localizations" : {
         "pt-BR" : {
@@ -1946,12 +2036,32 @@
         }
       }
     },
+    "Looking for a new version…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Procurando versão nova…"
+          }
+        }
+      }
+    },
     "MAC-LIMPO" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "MAC-LIMPO"
+          }
+        }
+      }
+    },
+    "MAC-LIMPO %@ is available" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O MAC-LIMPO %@ está disponível"
           }
         }
       }
@@ -2014,6 +2124,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "O MAC-LIMPO precisa do Acesso Total ao Disco para limpar todas as áreas do sistema e liberar o máximo de espaço.\n\nSem essa permissão: ~5–40 GB liberados\nCom essa permissão: ~50–200 GB liberados\n\nQuer abrir os Ajustes do Sistema para ativá-la?"
+          }
+        }
+      }
+    },
+    "MAC-LIMPO was updated" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O MAC-LIMPO foi atualizado"
+          }
+        }
+      }
+    },
+    "MAC-LIMPO — update available" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MAC-LIMPO — atualização disponível"
           }
         }
       }
@@ -2284,6 +2414,16 @@
         }
       }
     },
+    "No update server answered. Check your internet connection." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum servidor de atualização respondeu. Confira sua conexão com a internet."
+          }
+        }
+      }
+    },
     "Node Versions" : {
       "localizations" : {
         "pt-BR" : {
@@ -2414,6 +2554,16 @@
         }
       }
     },
+    "Opens the download page for the new version." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre a página de download da versão nova."
+          }
+        }
+      }
+    },
     "Original attachments preserved to maintain message history" : {
       "localizations" : {
         "pt-BR" : {
@@ -2446,6 +2596,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ limpo em parte: %2$lld item(ns) não puderam ser removidos"
+          }
+        }
+      }
+    },
+    "Paste it in Terminal to update by hand" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cole no Terminal para atualizar à mão"
           }
         }
       }
@@ -2730,6 +2890,16 @@
         }
       }
     },
+    "Same place as always: click this icon in the menu bar to scan your Mac and free up space." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No lugar de sempre: clique neste ícone na barra de menus para escanear o Mac e liberar espaço."
+          }
+        }
+      }
+    },
     "Scan" : {
       "localizations" : {
         "pt-BR" : {
@@ -2916,6 +3086,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fatia"
+          }
+        }
+      }
+    },
+    "Show Log" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar Log"
           }
         }
       }
@@ -3140,12 +3320,48 @@
         }
       }
     },
+    "The installer download was incomplete. Try again." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O download do instalador veio incompleto. Tente de novo."
+          }
+        }
+      }
+    },
+    "The installer stopped with an error." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O instalador parou com um erro."
+          }
+        }
+      }
+    },
     "The on-device model is still preparing. Try again later." : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "O modelo no dispositivo ainda está sendo preparado. Tente de novo mais tarde."
+          }
+        }
+      }
+    },
+    "The update didn't work, and version %@ keeps working. %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The update didn't work, and version %1$@ keeps working. %2$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A atualização não deu certo, e a versão %1$@ continua funcionando. %2$@"
           }
         }
       }
@@ -3166,6 +3382,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Este Mac não é compatível com a Apple Intelligence."
+          }
+        }
+      }
+    },
+    "This build has no version number (development build)." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este build não tem número de versão (build de desenvolvimento)."
           }
         }
       }
@@ -3220,6 +3446,16 @@
         }
       }
     },
+    "Try Again" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tentar de Novo"
+          }
+        }
+      }
+    },
     "Try another search term" : {
       "localizations" : {
         "pt-BR" : {
@@ -3246,6 +3482,32 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Subir um nível"
+          }
+        }
+      }
+    },
+    "Update" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atualizar"
+          }
+        }
+      }
+    },
+    "Updating to version %@ — %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Updating to version %1$@ — %2$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atualizando para a versão %1$@ — %2$@"
           }
         }
       }
@@ -3296,6 +3558,26 @@
         }
       }
     },
+    "Version %@ available" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versão %@ disponível"
+          }
+        }
+      }
+    },
+    "Version %@ is installed and running" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A versão %@ está instalada e em execução"
+          }
+        }
+      }
+    },
     "Video" : {
       "localizations" : {
         "pt-BR" : {
@@ -3316,6 +3598,16 @@
         }
       }
     },
+    "What's New" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Novidades"
+          }
+        }
+      }
+    },
     "Xcode Cache" : {
       "localizations" : {
         "pt-BR" : {
@@ -3326,12 +3618,32 @@
         }
       }
     },
+    "You can keep using MAC-LIMPO. It closes and reopens by itself when the new version is ready." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pode continuar usando o MAC-LIMPO. Ele fecha e reabre sozinho quando a versão nova estiver pronta."
+          }
+        }
+      }
+    },
     "You can now free up much more space. Run the cleaning again for better results." : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Agora dá para liberar muito mais espaço. Rode a limpeza de novo para um resultado melhor."
+          }
+        }
+      }
+    },
+    "You're on the latest version (%@)." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Você está na versão mais recente (%@)."
           }
         }
       }

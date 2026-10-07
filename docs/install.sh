@@ -40,7 +40,7 @@ MIN_SWIFT_MINOR=4
 HOME_DIR="${MACLIMPO_HOME:-$HOME/Library/Caches/MAC-LIMPO-build}"
 SOURCE="$HOME_DIR/source"
 
-REF=""; DEST=""; DRY=0; UNINSTALL=0; OPEN_AFTER=1
+REF=""; DEST=""; DRY=0; UNINSTALL=0; OPEN_AFTER=1; FROM_APP=0
 
 if [ -t 1 ]; then
   C='\033[1;36m'; G='\033[1;32m'; Y='\033[1;33m'; R='\033[1;31m'; B='\033[1m'; Z='\033[0m'
@@ -100,6 +100,8 @@ while [ $# -gt 0 ]; do
     --dest)      [ $# -ge 2 ] || missing --dest /Applications; DEST="$2"; shift 2 ;;
     --dest=*)    DEST="${1#*=}"; shift ;;
     --no-open)   OPEN_AFTER=0; shift ;;
+    # Used by the app's Update button: reopen with --updated instead of --welcome.
+    --from-app)  FROM_APP=1; shift ;;
     --dry-run)   DRY=1; shift ;;
     --uninstall) UNINSTALL=1; shift ;;
     -h|--help)   usage; exit 0 ;;
@@ -248,7 +250,9 @@ ok "installed $DEST/$APP_NAME.app"
 
 if [ "$OPEN_AFTER" -eq 1 ]; then
   # --welcome: the app points at its own menu bar icon (it has no Dock icon or window).
-  run open "$DEST/$APP_NAME.app" --args --welcome
+  # --updated: started by the app's Update button — it confirms the new version instead.
+  if [ "$FROM_APP" -eq 1 ]; then LAUNCH_ARG="--updated"; else LAUNCH_ARG="--welcome"; fi
+  run open "$DEST/$APP_NAME.app" --args "$LAUNCH_ARG"
   echo
   printf '%bWelcome! MAC-LIMPO is running in the menu bar%b — the trash icon at the top right of the screen.\n' "$B" "$Z"
   echo "   There's no Dock icon or main window: click that icon to scan and clean."

@@ -5,7 +5,7 @@ description: Publish a MAC-LIMPO change to users — bump VERSION, CHANGELOG, ta
 
 # Releasing MAC-LIMPO
 
-Users get MAC-LIMPO through two published channels, and **neither sees a local commit**:
+Users get MAC-LIMPO through two published channels (and installed apps learn about new versions from `docs/updates.json`), and **none of them sees a local commit**:
 
 - `https://alexkads.github.io/MAC-LIMPO/install.sh` — served from the `gh-pages` branch, updated only by `make docs-deploy`. It downloads the source of the **latest GitHub release** (not `main`) and builds it.
 - The `.pkg` attached to the GitHub release.
@@ -22,6 +22,7 @@ So a fix in `docs/install.sh` reaches users after `make docs-deploy`; a fix in t
 1. **Verify** — `make strings` (no key may be left without `pt-BR`), `swift build`, `swift test` (includes `LocalizationTests`), `shellcheck docs/install.sh` (if touched), `mkdocs build --strict -d <scratch dir>` (if docs touched).
 2. **Version** — `VERSION` holds `x.y.z`; bump the patch (`printf '1.3.21\n' > VERSION`). `Makefile`, `Scripts/bundle-app.sh` and `Installer/build-installer.sh` read it.
 3. **CHANGELOG.md** — releases since 1.1.0 accumulate under `## [Unreleased]` (Portuguese, `- **Title**: explanation.`), in the sections `### ✨ Adicionado`, `### 🐛 Corrigido`, `### 🔄 Alterado`, `### ⚡️ Desempenho`. Headings like `### 🐛 Corrigido` **repeat in older versions** — when editing by script, insert after the *first* occurrence, never assert a single match. Make the edit and the commit one `&&` chain, so a failed edit doesn't commit a half-done release.
+3b. **docs/updates.json** — what installed apps read to announce the version (dot on the icon, banner, notification). Set `version` (= VERSION), `date`, `url` (`…/releases/tag/vx.y.z`), `important` (true only for fixes users must get — the banner turns red), and `notes.en` / `notes.pt-BR` with `title` (one line), `changes` (2–4 short bullets) and `why`. `UpdateCheckerTests` fails if it doesn't match `VERSION` or lacks either language. Pushing `main` publishes it at once through raw.githubusercontent, so push and `gh release create` back to back — otherwise apps announce a version whose source `install.sh` can't fetch yet.
 4. **Commit + tag** — `chore: versão x.y.z (<resumo>)`, then `git tag vx.y.z`. Commit messages are Portuguese, no attribution lines.
 5. **Package** — `make installer` → `build/MAC-LIMPO-x.y.z.pkg`. Check it: `pkgutil --expand <pkg> <scratch>/pkgx && grep 'os-version min' <scratch>/pkgx/Distribution`.
 6. **Push** — `git push origin main vx.y.z`.

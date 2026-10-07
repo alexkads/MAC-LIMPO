@@ -14,6 +14,11 @@ description: Perguntas frequentes sobre o MAC-LIMPO.
 ??? question "Quais versões do macOS são suportadas?"
     macOS 26.6 ou mais novo, em Apple silicon. Compilar exige as Command Line Tools ou o Xcode com Swift 6.4.
 
+??? question "Como atualizo?"
+    O MAC-LIMPO procura versões novas sozinho: aparece um ponto no ícone da barra de menus, o popover mostra as
+    novidades e chega uma notificação. Clique em **Atualizar** — ele compila a versão nova no seu Mac em segundo
+    plano e reabre. Também dá para usar **Procurar Atualizações…** nos Ajustes, ou rodar o comando de instalação de novo.
+
 ??? question "Em quais idiomas ele funciona?"
     Inglês e português do Brasil. O app segue o idioma do seu Mac (Ajustes do Sistema › Geral › Idioma e
     Região) e usa inglês para qualquer outro idioma. Este site abre em português para navegadores em português;

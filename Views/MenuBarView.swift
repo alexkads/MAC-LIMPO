@@ -411,6 +411,7 @@ struct MenuBarView: View {
     @StateObject private var launchAtLoginService = LaunchAtLoginService()
     @ObservedObject private var cleaningOptions = CleaningOptions.shared
     @ObservedObject private var themeManager = ThemeManager.shared
+    @ObservedObject private var updater = UpdateChecker.shared
     @State private var searchText = ""
     @State private var intelligenceInsight: String?
     @State private var intelligenceStatus: AppleIntelligenceAvailability?
@@ -438,6 +439,9 @@ struct MenuBarView: View {
             // Fundo temático (Classic = transparente; neon = gradiente escuro)
             themeManager.palette.backgroundView
 
+            // Faixa de atualização por cima do conteúdo, nos dois estilos.
+            VStack(spacing: 0) {
+            UpdateBanner(updater: updater)
             if themeManager.palette.isGlass {
                 // Liquid Glass: tudo nativo (List, Gauge, Picker, NSSearchField, vidro).
                 NativeMenuBarContent(
@@ -714,6 +718,12 @@ struct MenuBarView: View {
                                 .foregroundColor(themeManager.palette.secondaryText)
                                 .font(.system(size: 12))
 
+                                if Self.appVersion != nil {
+                                    Button("Check for Updates…") { updater.check(manual: true) }
+                                        .buttonStyle(.link)
+                                        .font(.system(size: 11))
+                                }
+
                                 if let version = Self.appVersion {
                                     Text(version)
                                         .font(.system(size: 10))
@@ -726,6 +736,7 @@ struct MenuBarView: View {
                     }
                 }
 
+            }
             }
 
             // Painéis inline (não fecham o popover): nativos no Liquid Glass.
@@ -780,6 +791,8 @@ struct MenuBarView: View {
         .animation(.easeInOut(duration: 0.35), value: themeManager.theme)
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewModel.showProgress)
         .animation(.easeInOut(duration: 0.2), value: viewModel.confirmationRequest?.id)
+        .animation(.easeInOut(duration: 0.25), value: updater.state)
+        .animation(.easeInOut(duration: 0.25), value: updater.dismissedVersion)
         .onChange(of: cleaningOptions.aggressiveMode) { _, _ in
             // As estimativas mudam com o modo agressivo; re-escaneia para refletir.
             viewModel.scanAllCategories()

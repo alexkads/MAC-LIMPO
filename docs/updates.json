@@ -1,0 +1,26 @@
+{
+  "version": "1.3.24",
+  "date": "2026-10-07",
+  "important": false,
+  "url": "https://github.com/alexkads/MAC-LIMPO/releases/tag/v1.3.24",
+  "notes": {
+    "en": {
+      "title": "MAC-LIMPO now tells you when a new version is out",
+      "changes": [
+        "A dot on the menu bar icon, a banner in the popover and a macOS notification announce new versions.",
+        "Update builds the new version on your Mac in the background; MAC-LIMPO reopens by itself.",
+        "Check for Updates… in Settings, any time."
+      ],
+      "why": "From now on you'll never miss a fix or a new cleaning category."
+    },
+    "pt-BR": {
+      "title": "O MAC-LIMPO agora avisa quando sai versão nova",
+      "changes": [
+        "Um ponto no ícone da barra de menus, uma faixa no popover e uma notificação do macOS anunciam as versões novas.",
+        "Atualizar compila a versão nova no seu Mac em segundo plano; o MAC-LIMPO reabre sozinho.",
+        "Procurar Atualizações… nos Ajustes, quando quiser."
+      ],
+      "why": "Daqui em diante você não perde nenhuma correção nem categoria de limpeza nova."
+    }
+  }
+}
