@@ -30,7 +30,7 @@ It is a native SwiftUI + AppKit app that lives in the menu bar — a **free, ope
 curl -fsSL https://alexkads.github.io/MAC-LIMPO/install.sh | sh
 ```
 
-The script checks your Mac, downloads the source of the latest release, **builds it on your machine** and installs `MAC-LIMPO.app` into `/Applications`. Because the app is compiled locally it never carries the quarantine flag, so it opens on the first click — no Developer ID certificate needed, no Gatekeeper warning. [Read the script](docs/install.sh) before running it if you like.
+The script checks your Mac, downloads the source of the latest release, **builds it on your machine** and installs `MAC-LIMPO.app` into `/Applications`. Because the app is compiled locally it never carries the quarantine flag, so it opens on the first click — no Developer ID certificate needed, no Gatekeeper warning. [Read the script](docs/install.sh) before running it if you like. Run it **without `sudo`**: if a copy installed by the `.pkg` is in the way, the script asks for your Mac password itself. When it's done, a welcome balloon points at the app's icon in the menu bar.
 
 Requirements: **macOS 26.6 or later** and the **Command Line Tools** (`xcode-select --install`) or Xcode, with Swift 6.4. The first build takes 2–5 minutes.
 

@@ -29,7 +29,7 @@ Xcode, Docker, simuladores, `node_modules`, pastas `target/` do Rust, caches de 
 curl -fsSL https://alexkads.github.io/MAC-LIMPO/install.sh | sh
 ```
 
-O script confere o seu Mac, baixa o código da última versão, **compila na sua máquina** e instala o `MAC-LIMPO.app` em `/Applications`. Como o app sai do compilador do próprio Mac, ele nunca recebe a marca de quarentena e abre no primeiro clique — sem certificado de desenvolvedor e sem aviso do Gatekeeper. Se quiser, [leia o script](docs/install.sh) antes.
+O script confere o seu Mac, baixa o código da última versão, **compila na sua máquina** e instala o `MAC-LIMPO.app` em `/Applications`. Como o app sai do compilador do próprio Mac, ele nunca recebe a marca de quarentena e abre no primeiro clique — sem certificado de desenvolvedor e sem aviso do Gatekeeper. Se quiser, [leia o script](docs/install.sh) antes. Rode **sem `sudo`**: se houver uma cópia instalada pelo `.pkg` no caminho, o próprio script pede a senha do seu Mac. No fim, um balão de boas-vindas aponta para o ícone do app na barra de menus.
 
 Requisitos: **macOS 26.6 ou mais novo** e as **Command Line Tools** (`xcode-select --install`) ou o Xcode, com Swift 6.4. A primeira compilação leva de 2 a 5 minutos.
 

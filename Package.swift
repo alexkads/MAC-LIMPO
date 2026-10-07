@@ -133,6 +133,7 @@ let package = Package(
                 // Views
                 "Views/MenuBarView.swift",
                 "Views/NativeMenuBarView.swift",
+                "Views/WelcomeView.swift",
                 "Views/DiskXRayWindowView.swift",
                 "Views/DiskXRayFileTree.swift",
                 "Views/Components/CleaningCategoryCard.swift",

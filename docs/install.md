@@ -15,7 +15,15 @@ What it does, in order:
 1. Checks the Mac: macOS 26.6+, the Command Line Tools (or Xcode) with Swift 6.4, ~2 GB free.
 2. Downloads the source of the [latest release](https://github.com/alexkads/MAC-LIMPO/releases/latest) (or `main` if there is none yet).
 3. Builds the app with `Scripts/bundle-app.sh` — 2–5 minutes the first time; updates reuse the build cache in `~/Library/Caches/MAC-LIMPO-build`.
-4. Installs `MAC-LIMPO.app` into `/Applications` (or `~/Applications` if `/Applications` is not writable) and opens it.
+4. Installs `MAC-LIMPO.app` into `/Applications` (or `~/Applications` if `/Applications` is not writable) and opens it. A welcome balloon points at the trash icon in the menu bar — MAC-LIMPO has no Dock icon or main window, it lives there.
+
+!!! warning "Don't put `sudo` in the command"
+    Run it exactly as above, as your own user. If `/Applications` already has a copy installed by the `.pkg`
+    (that copy belongs to root), the script calls `sudo` by itself just to remove it, and asks for **your Mac
+    password** once — typing it is expected.
+
+    `sudo curl … | sh` doesn't help: `sudo` only applies to `curl`, the download. And `curl … | sudo sh` would
+    build and install everything as root, leaving a root-owned app that the next update can't replace.
 
 !!! info "Why build instead of download?"
     MAC-LIMPO is not signed with a paid Apple Developer ID. macOS checks apps that arrive from the internet

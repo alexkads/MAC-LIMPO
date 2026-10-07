@@ -8,6 +8,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 ## [Unreleased]
 
 ### ✨ Adicionado
+- **Boas-vindas depois de instalar**: o app só existe na barra de menus, então depois de instalar ninguém sabia onde ele estava. Agora um balão sai do próprio ícone ("MAC-LIMPO lives here in the menu bar"), com *Open MAC-LIMPO* e *Got It*; se o ícone estiver escondido (notch, barra cheia), um alerta diz onde procurar. Aparece quando o `install.sh` ou o `.pkg` abrem o app e na primeira execução.
 - **Disk X-Ray — lupa com pinça**: amplia o mapa até 10⁸× (um arquivo de 1 KB num disco inteiro) com pinça, roda do mouse ou ⌥ + rolar, sem precisar clicar na janela antes; arrastar/rolar desloca com inércia, e o mapa redesenha nítido durante o gesto, com camadas por baixo para nunca sobrar borda vazia. O layout é só o squarified dos tamanhos — ampliar não muda a arrumação, e a área fica proporcional ao tamanho em qualquer zoom.
 - **Disk X-Ray — ir até a seleção**: ⌘↩ ou *Magnify to Fit* voa até o item, por menor que seja; selecionar na árvore ou em Largest Files leva o mapa até ele sem exagero (no máximo até a pasta dele encher a tela), e itens pequenos demais para o contorno ganham um pino com nome e tamanho. A caixa azul desliza até a nova seleção, com um pulso ao chegar.
 - **Disk X-Ray — modo 3D (Metal)**: botão de cubo na barra de ferramentas; a GPU desenha o mapa como almofadas iluminadas (cushion treemap), com as pastas aparecendo como vincos, nítido quadro a quadro em qualquer zoom. O 2D continua o mesmo de antes e é o padrão.
@@ -29,6 +30,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - Novos caminhos: cache do Yarn Berry (`~/.yarn/berry/cache`), `DocumentationCache` do Xcode e índice do Continue (`~/.continue/index`).
 
 ### 🐛 Corrigido
+- **Docs — `sudo` na instalação**: a página de instalação e o README explicam que o comando roda sem `sudo` e que o script pede a senha sozinho quando precisa substituir uma cópia do `.pkg` (`sudo curl … | sh` não adianta; `| sudo sh` deixaria o app do root de novo).
 - **Instalador (`install.sh`) sobre uma cópia do `.pkg`**: o app instalado pelo `.pkg` pertence ao root, e o script tentava apagá-lo sem `sudo` (só olhava se `/Applications` era gravável), parando em `Permission denied`. Agora confere o dono do bundle e pede a senha só nesse caso; o `--uninstall` tinha o mesmo defeito.
 - **Disk X-Ray — caixas pretas no mapa**: pastas com milhares de arquivos minúsculos (`node_modules`, caches, `.git/objects`) deixavam a área deles vazia; agora ela é pintada com a cor do maior deles.
 - **Disk X-Ray — caixa azul fora do lugar com zoom**: com arquivos de tamanho idêntico, o layout ampliado podia diferir do calculado (até ~300 px num disco inteiro); empates no squarified agora são decididos sempre igual e a área ampliada tem exatamente a escala do mapa a 1×.

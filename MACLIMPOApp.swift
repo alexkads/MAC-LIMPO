@@ -16,6 +16,7 @@ struct MACLIMPOApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem!
     var popover: NSPopover!
+    var welcomePopover: NSPopover?
     var diskXRayWindow: NSWindow?
 
     func applicationDidFinishLaunching(_: Notification) {
@@ -97,9 +98,71 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
         }
+
+        if WelcomeGate.shouldShow(arguments: CommandLine.arguments, environment: environment, defaults: .standard) {
+            // O botão do status item só ganha janela e posição depois que a
+            // barra de menus faz o layout.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
+                self?.showWelcome()
+            }
+        }
+    }
+
+    /// Boas-vindas logo depois de instalar: um balão saindo do próprio ícone
+    /// mostra onde o app foi parar. Se o ícone não está à vista (atrás do
+    /// notch, barra cheia ou desligado em Ajustes › Barra de Menus), um alerta
+    /// no centro da tela diz onde procurar.
+    func showWelcome() {
+        UserDefaults.standard.set(true, forKey: WelcomeGate.shownKey)
+        NSApp.activate(ignoringOtherApps: true)
+
+        guard let button = statusItem.button, let barWindow = button.window, statusItem.isVisible,
+              barWindow.occlusionState.contains(.visible),
+              NSScreen.screens.contains(where: { $0.frame.contains(barWindow.frame) })
+        else {
+            showWelcomeAlert()
+            return
+        }
+
+        let welcome = NSPopover()
+        // Fica até a pessoa responder: o app acabou de abrir em segundo plano e
+        // um clique em qualquer outro lugar fecharia um balão transitório.
+        welcome.behavior = .applicationDefined
+        welcome.contentViewController = NSHostingController(rootView: WelcomeView(
+            onOpen: { [weak self] in
+                self?.closeWelcome()
+                self?.togglePopover()
+            },
+            onDismiss: { [weak self] in self?.closeWelcome() }
+        ))
+        welcome.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        welcomePopover = welcome
+    }
+
+    private func showWelcomeAlert() {
+        let alert = NSAlert()
+        alert.messageText = "Welcome to MAC-LIMPO"
+        alert.informativeText = """
+        MAC-LIMPO lives in the menu bar — look for the trash icon at the top right of the screen. \
+        There's no Dock icon or main window.
+
+        Don't see it? The menu bar may be full or the icon hidden by the notch: hold ⌘ and drag \
+        other icons aside, or allow MAC-LIMPO in System Settings › Menu Bar.
+        """
+        alert.addButton(withTitle: "Got It")
+        // Aberto em segundo plano, o pedido de ativação pode ser ignorado pelo
+        // macOS; sem isto o alerta ficaria atrás da janela em uso.
+        alert.window.level = .floating
+        alert.runModal()
+    }
+
+    private func closeWelcome() {
+        welcomePopover?.performClose(nil)
+        welcomePopover = nil
     }
 
     @objc func togglePopover() {
+        closeWelcome()
         if let button = statusItem.button {
             if popover.isShown {
                 popover.performClose(nil)

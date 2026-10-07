@@ -35,14 +35,15 @@ fi
 
 # Sobe o app já para o usuário que está na frente da máquina. É um app de menu
 # bar sem janela nem ícone no Dock: sem isto, uma instalação bem-sucedida não
-# mostra nada na tela e parece que não aconteceu.
+# mostra nada na tela e parece que não aconteceu. --welcome faz o app apontar
+# para o próprio ícone na barra de menus.
 CONSOLE_USER=$(/usr/bin/stat -f "%Su" /dev/console 2>/dev/null)
 if [ -n "$CONSOLE_USER" ] && [ "$CONSOLE_USER" != "root" ]; then
     CONSOLE_UID=$(/usr/bin/id -u "$CONSOLE_USER" 2>/dev/null)
     if [ -n "$CONSOLE_UID" ]; then
         /bin/launchctl asuser "$CONSOLE_UID" \
             /usr/bin/sudo -u "$CONSOLE_USER" \
-            /usr/bin/open -a "$APP" 2>/dev/null
+            /usr/bin/open -a "$APP" --args --welcome 2>/dev/null
     fi
 fi
 
