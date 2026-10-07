@@ -29,6 +29,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - Novos caminhos: cache do Yarn Berry (`~/.yarn/berry/cache`), `DocumentationCache` do Xcode e índice do Continue (`~/.continue/index`).
 
 ### 🐛 Corrigido
+- **Instalador (`install.sh`) sobre uma cópia do `.pkg`**: o app instalado pelo `.pkg` pertence ao root, e o script tentava apagá-lo sem `sudo` (só olhava se `/Applications` era gravável), parando em `Permission denied`. Agora confere o dono do bundle e pede a senha só nesse caso; o `--uninstall` tinha o mesmo defeito.
 - **Disk X-Ray — caixas pretas no mapa**: pastas com milhares de arquivos minúsculos (`node_modules`, caches, `.git/objects`) deixavam a área deles vazia; agora ela é pintada com a cor do maior deles.
 - **Disk X-Ray — caixa azul fora do lugar com zoom**: com arquivos de tamanho idêntico, o layout ampliado podia diferir do calculado (até ~300 px num disco inteiro); empates no squarified agora são decididos sempre igual e a área ampliada tem exatamente a escala do mapa a 1×.
 - **iOS Simulators — runtimes órfãos**: o comando para a Recuperação usa o nome real do volume de dados (`Macintosh HD - Data` na instalação padrão, mas pode ser outro).
@@ -46,6 +47,9 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - **Docker — volumes de cache de build**: desde a 1.3.5 todo volume nomeado não usado era preservado, inclusive caches reconstruíveis como `cargo-target`, `node-modules` e `next-cache` de projetos compose (um único `cargo-target` chegava a 53 GB, invisível ao Rust Targets por viver dentro do `Docker.raw`). Volumes não usados com esses nomes voltam a ser limpos; bancos, uploads e demais volumes de dados continuam preservados.
 - **Pedidos de permissão em loop**: sem Full Disk Access, os scans de System Data, Logs e dos apps em containers (WhatsApp, Teams, Podcasts, apps criativos) abriam um diálogo do macOS por container em `~/Library/Containers` e `~/Library/Group Containers` — centenas deles — e os cards ficavam girando para sempre. Essas áreas agora são puladas sem a permissão, e o System Data informa quantas ficaram de fora.
 - **Detecção de Full Disk Access**: passa a sondar o `TCC.db` do usuário; o probe antigo (`Safari/History.db`) não existe em quem nunca abriu o Safari, e o app se achava sem permissão para sempre.
+
+### 🔄 Alterado
+- **Requisito baixou para macOS 26.6+** (Apple silicon), o mínimo do Xcode 27/Swift 6.4 — o app não usa nada exclusivo do macOS 27. O `install.sh` confere versão principal e secundária, aponta a atualização gratuita para quem está no 26.0–26.5 e recusa Macs Intel com uma mensagem clara.
 
 ### ⚡️ Desempenho
 - System Data mede os caminhos com `du` em lotes, em vez de um processo por caminho (antes eram mais de mil só nos containers).
