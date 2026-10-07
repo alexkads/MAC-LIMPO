@@ -1,24 +1,24 @@
 {
-  "version": "1.3.26",
+  "version": "1.3.27",
   "date": "2026-10-07",
   "important": false,
-  "url": "https://github.com/alexkads/MAC-LIMPO/releases/tag/v1.3.26",
+  "url": "https://github.com/alexkads/MAC-LIMPO/releases/tag/v1.3.27",
   "notes": {
     "en": {
-      "title": "Test release: checks that updates install by themselves",
+      "title": "Update checks always get the latest announcement",
       "changes": [
-        "No changes to the app — this version exists to exercise the automatic update.",
-        "If you're reading this in MAC-LIMPO, the update was found; reopen to finish."
+        "Right after a release, Check for Updates no longer says you're up to date because of a cached answer.",
+        "Second test of the automatic update: if you're reading this in MAC-LIMPO, it's working."
       ],
-      "why": "Confirms that automatic updates work on your Mac."
+      "why": "New versions show up as soon as they're published."
     },
     "pt-BR": {
-      "title": "Versão de teste: confere que as atualizações se instalam sozinhas",
+      "title": "A busca por atualizações sempre recebe o anúncio mais novo",
       "changes": [
-        "Nada muda no app — esta versão existe para exercitar a atualização automática.",
-        "Se você está lendo isto no MAC-LIMPO, a atualização foi encontrada; reabra para concluir."
+        "Logo depois de uma release, Procurar Atualizações não diz mais que você está em dia por causa de uma resposta guardada em cache.",
+        "Segundo teste da atualização automática: se você está lendo isto no MAC-LIMPO, está funcionando."
       ],
-      "why": "Confirma que a atualização automática funciona no seu Mac."
+      "why": "As versões novas aparecem assim que são publicadas."
     }
   }
 }

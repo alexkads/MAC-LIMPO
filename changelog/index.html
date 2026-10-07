@@ -1518,6 +1518,7 @@ e este projeto adere ao <a href="https://semver.org/lang/pt-BR/">Semantic Versio
 </ul>
 <h3 id="corrigido">🐛 Corrigido<a class="headerlink" href="#corrigido" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>"Você está em dia" logo depois de uma release</strong>: a CDN do raw.githubusercontent (5 min) e do Pages (10 min) ainda entregava o manifesto anterior; o pedido agora fura o cache (parâmetro <code>t</code> + <code>Cache-Control: no-cache</code>).</li>
 <li><strong>Aviso de atualização derrubava o app</strong>: a checagem de ferramentas de compilação esperava um processo na thread principal; o SwiftUI redesenhava a faixa no meio da inicialização e o app caía (<code>dispatch_once</code> recursivo). Agora só olha arquivos.</li>
 <li><strong>Docs — <code>sudo</code> na instalação</strong>: a página de instalação e o README explicam que o comando roda sem <code>sudo</code> e que o script pede a senha sozinho quando precisa substituir uma cópia do <code>.pkg</code> (<code>sudo curl … | sh</code> não adianta; <code>| sudo sh</code> deixaria o app do root de novo).</li>
 <li><strong>Instalador (<code>install.sh</code>) sobre uma cópia do <code>.pkg</code></strong>: o app instalado pelo <code>.pkg</code> pertence ao root, e o script tentava apagá-lo sem <code>sudo</code> (só olhava se <code>/Applications</code> era gravável), parando em <code>Permission denied</code>. Agora confere o dono do bundle e pede a senha só nesse caso; o <code>--uninstall</code> tinha o mesmo defeito.</li>
@@ -1542,6 +1543,7 @@ e este projeto adere ao <a href="https://semver.org/lang/pt-BR/">Semantic Versio
 <h3 id="alterado">🔄 Alterado<a class="headerlink" href="#alterado" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>1.3.26 — versão de teste</strong> da atualização automática: nada muda no app.</li>
+<li><strong>1.3.27 — segundo teste</strong> da atualização automática, já com o pedido do manifesto furando o cache.</li>
 <li><strong>Requisito baixou para macOS 26.6+</strong> (Apple silicon), o mínimo do Xcode 27/Swift 6.4 — o app não usa nada exclusivo do macOS 27. O <code>install.sh</code> confere versão principal e secundária, aponta a atualização gratuita para quem está no 26.0–26.5 e recusa Macs Intel com uma mensagem clara.</li>
 </ul>
 <h3 id="desempenho">⚡️ Desempenho<a class="headerlink" href="#desempenho" title="Permanent link">&para;</a></h3>
