@@ -66,6 +66,39 @@
     
     
   
+  
+  <script>
+    (function () {
+      var KEY = "maclimpo.lang";
+      var current = document.documentElement.lang || "en";
+      var choice = null;
+      try { choice = localStorage.getItem(KEY); } catch (e) {}
+
+      document.addEventListener("click", function (event) {
+        var link = event.target.closest && event.target.closest("a.md-select__link[hreflang]");
+        if (!link) return;
+        try { localStorage.setItem(KEY, link.getAttribute("hreflang")); } catch (e) {}
+      });
+
+      function go(lang) {
+        var alternate = document.querySelector('link[rel="alternate"][hreflang="' + lang + '"]');
+        if (alternate) location.replace(alternate.href + location.search + location.hash);
+      }
+
+      if (/bot|crawl|spider|slurp|preview/i.test(navigator.userAgent)) return;
+      if (choice) {
+        if (choice !== current) go(choice);
+        return;
+      }
+      if (current !== "en") return;
+      var languages = navigator.languages || [navigator.language || ""];
+      for (var i = 0; i < languages.length; i++) {
+        var language = (languages[i] || "").toLowerCase();
+        if (language.indexOf("pt") === 0) { go("pt"); return; }
+        if (language.indexOf("en") === 0) return;
+      }
+    })();
+  </script>
   <meta name="google-site-verification" content="k1LhNrNQe7r9Bd_-22eu2WUllGcx_B5u4PQUd2RBvvc" />
   
   <link rel="icon" type="image/png" sizes="48x48" href="assets/images/favicon-48.png">
