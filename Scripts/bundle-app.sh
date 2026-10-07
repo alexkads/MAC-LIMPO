@@ -165,9 +165,15 @@ fi
 # pt-BR.lproj/ dentro de Resources; o app segue o idioma do macOS e cai no
 # inglês para o que não tiver tradução. Textos novos: make strings.
 echo "==> Compilando traduções"
+# O xcstringstool vem com o Xcode; só com as Command Line Tools (caminho do
+# install.sh) o mesmo resultado sai de Scripts/compile-xcstrings.py.
 for catalog in Localization/*.xcstrings; do
     [ -f "$catalog" ] || continue
-    xcrun xcstringstool compile "$catalog" --output-directory "$APP/Contents/Resources" > /dev/null
+    if xcrun --find xcstringstool > /dev/null 2>&1; then
+        xcrun xcstringstool compile "$catalog" --output-directory "$APP/Contents/Resources" > /dev/null
+    else
+        python3 Scripts/compile-xcstrings.py "$catalog" "$APP/Contents/Resources"
+    fi
 done
 
 # ---------------------------------------------------------------- assinatura
