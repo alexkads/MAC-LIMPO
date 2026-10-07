@@ -466,12 +466,12 @@
         }
       }
     },
-    "Builds on this Mac in the background (2–5 minutes). MAC-LIMPO reopens by itself when it's done." : {
+    "Builds on this Mac in the background (2–5 minutes) while you keep working." : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Compila neste Mac em segundo plano (2 a 5 minutos). O MAC-LIMPO reabre sozinho quando terminar."
+            "value" : "Compila neste Mac em segundo plano (2 a 5 minutos) enquanto você continua usando."
           }
         }
       }
@@ -1956,6 +1956,26 @@
         }
       }
     },
+    "It takes effect the next time MAC-LIMPO opens — or reopen it now from the menu bar." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ela entra na próxima vez que o MAC-LIMPO abrir — ou reabra agora pela barra de menus."
+          }
+        }
+      }
+    },
+    "It takes effect the next time MAC-LIMPO opens — or reopen now." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ela entra na próxima vez que o MAC-LIMPO abrir — ou reabra agora."
+          }
+        }
+      }
+    },
     "Labels" : {
       "localizations" : {
         "pt-BR" : {
@@ -2056,6 +2076,16 @@
         }
       }
     },
+    "MAC-LIMPO %@ installed" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MAC-LIMPO %@ instalado"
+          }
+        }
+      }
+    },
     "MAC-LIMPO %@ is available" : {
       "localizations" : {
         "pt-BR" : {
@@ -2078,6 +2108,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "O MAC-LIMPO encontrou %1$@ de espaço possivelmente recuperável em %2$lld categorias."
+          }
+        }
+      }
+    },
+    "MAC-LIMPO keeps working meanwhile. Nothing closes." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O MAC-LIMPO continua funcionando enquanto isso. Nada fecha."
           }
         }
       }
@@ -2870,6 +2910,16 @@
         }
       }
     },
+    "Reopen Now" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reabrir Agora"
+          }
+        }
+      }
+    },
     "Rescan" : {
       "localizations" : {
         "pt-BR" : {
@@ -3340,6 +3390,16 @@
         }
       }
     },
+    "The new version wasn't found after installing." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A versão nova não foi encontrada depois de instalar."
+          }
+        }
+      }
+    },
     "The on-device model is still preparing. Try again later." : {
       "localizations" : {
         "pt-BR" : {
@@ -3496,18 +3556,18 @@
         }
       }
     },
-    "Updating to version %@ — %@" : {
+    "Updating to version %@ in the background — %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Updating to version %1$@ — %2$@"
+            "value" : "Updating to version %1$@ in the background — %2$@"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Atualizando para a versão %1$@ — %2$@"
+            "value" : "Atualizando para a versão %1$@ em segundo plano — %2$@"
           }
         }
       }
@@ -3568,6 +3628,16 @@
         }
       }
     },
+    "Version %@ installed" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versão %@ instalada"
+          }
+        }
+      }
+    },
     "Version %@ is installed and running" : {
       "localizations" : {
         "pt-BR" : {
@@ -3614,16 +3684,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cache do Xcode"
-          }
-        }
-      }
-    },
-    "You can keep using MAC-LIMPO. It closes and reopens by itself when the new version is ready." : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pode continuar usando o MAC-LIMPO. Ele fecha e reabre sozinho quando a versão nova estiver pronta."
           }
         }
       }
@@ -3704,6 +3764,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "brew cleanup falhou: %@"
+          }
+        }
+      }
+    },
+    "building" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "compilando"
           }
         }
       }

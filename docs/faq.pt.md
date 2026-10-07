@@ -15,9 +15,11 @@ description: Perguntas frequentes sobre o MAC-LIMPO.
     macOS 26.6 ou mais novo, em Apple silicon. Compilar exige as Command Line Tools ou o Xcode com Swift 6.4.
 
 ??? question "Como atualizo?"
-    O MAC-LIMPO procura versões novas sozinho: aparece um ponto no ícone da barra de menus, o popover mostra as
-    novidades e chega uma notificação. Clique em **Atualizar** — ele compila a versão nova no seu Mac em segundo
-    plano e reabre. Também dá para usar **Procurar Atualizações…** nos Ajustes, ou rodar o comando de instalação de novo.
+    Não precisa. O MAC-LIMPO procura versões novas sozinho e, se o seu Mac tem as Command Line Tools ou o Xcode,
+    compila a nova em segundo plano enquanto você continua usando — nada fecha. Quando fica pronta, um ponto no
+    ícone da barra de menus e uma notificação avisam; ela entra na próxima abertura do app, ou clique em
+    **Reabrir Agora**. Instalou pelo `.pkg` sem ferramentas de compilação? A faixa aponta para o download.
+    **Procurar Atualizações…** nos Ajustes confere na hora.
 
 ??? question "Em quais idiomas ele funciona?"
     Inglês e português do Brasil. O app segue o idioma do seu Mac (Ajustes do Sistema › Geral › Idioma e

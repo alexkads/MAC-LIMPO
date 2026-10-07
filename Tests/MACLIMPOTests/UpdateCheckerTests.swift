@@ -61,3 +61,26 @@ final class UpdateCheckerTests: XCTestCase {
         XCTAssertTrue(script.contains("--updated"))
     }
 }
+
+/// Atualização automática: uma versão que falhou espera 24 h antes de ser
+/// tentada sozinha de novo; outra versão não é afetada.
+final class UpdateRetryTests: XCTestCase {
+    override func tearDown() {
+        UserDefaults.standard.removeObject(forKey: "updateFailure")
+        super.tearDown()
+    }
+
+    func testFailedVersionWaitsADay() {
+        UpdateChecker.recordFailure("9.9.9")
+        XCTAssertTrue(UpdateChecker.failedRecently("9.9.9"))
+        XCTAssertFalse(UpdateChecker.failedRecently("9.9.10"))
+        XCTAssertFalse(UpdateChecker.failedRecently("9.9.9", now: Date().addingTimeInterval(25 * 60 * 60)))
+    }
+
+    func testInstallScriptKnowsInBackground() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let script = try String(contentsOf: root.appendingPathComponent("docs/install.sh"), encoding: .utf8)
+        XCTAssertTrue(script.contains("--in-background)"))
+        XCTAssertTrue(script.contains(#"[ "$IN_BACKGROUND" -eq 1 ] || quit_running_app"#))
+    }
+}

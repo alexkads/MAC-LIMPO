@@ -20,9 +20,11 @@ description: Frequently asked questions about MAC-LIMPO.
     browsers; the language selector at the top switches it, and your pick is remembered.
 
 ??? question "How do I update?"
-    MAC-LIMPO checks for new versions by itself: a dot appears on its menu bar icon, the popover shows what's new
-    and you get one notification. Click **Update** — it builds the new version on your Mac in the background and
-    reopens. You can also use **Check for Updates…** in Settings, or run the install command again.
+    You don't have to. MAC-LIMPO checks for new versions by itself and, if your Mac has the Command Line Tools or
+    Xcode, builds the new one in the background while you keep working — nothing closes. When it's ready, a dot on
+    the menu bar icon and a notification tell you; it takes effect the next time the app opens, or click
+    **Reopen Now**. Installed from the `.pkg` without build tools? The banner links to the download instead.
+    **Check for Updates…** in Settings checks right away.
 
 ??? question "Will it delete my files?"
     It targets caches, build output and temporary files that tools recreate. Path-based cleaners move items to

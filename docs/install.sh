@@ -40,7 +40,7 @@ MIN_SWIFT_MINOR=4
 HOME_DIR="${MACLIMPO_HOME:-$HOME/Library/Caches/MAC-LIMPO-build}"
 SOURCE="$HOME_DIR/source"
 
-REF=""; DEST=""; DRY=0; UNINSTALL=0; OPEN_AFTER=1; FROM_APP=0
+REF=""; DEST=""; DRY=0; UNINSTALL=0; OPEN_AFTER=1; FROM_APP=0; IN_BACKGROUND=0
 
 if [ -t 1 ]; then
   C='\033[1;36m'; G='\033[1;32m'; Y='\033[1;33m'; R='\033[1;31m'; B='\033[1m'; Z='\033[0m'
@@ -102,6 +102,9 @@ while [ $# -gt 0 ]; do
     --no-open)   OPEN_AFTER=0; shift ;;
     # Used by the app's Update button: reopen with --updated instead of --welcome.
     --from-app)  FROM_APP=1; shift ;;
+    # Automatic update started by the app (1.3.25+): swap the bundle on disk while
+    # the app keeps running — no quit, no relaunch; the app offers "Reopen Now".
+    --in-background) IN_BACKGROUND=1; OPEN_AFTER=0; shift ;;
     --dry-run)   DRY=1; shift ;;
     --uninstall) UNINSTALL=1; shift ;;
     -h|--help)   usage; exit 0 ;;
@@ -240,7 +243,7 @@ if [ -z "$DEST" ]; then
   if [ -w /Applications ]; then DEST="/Applications"; else DEST="$HOME/Applications"; fi
 fi
 step "installing into $DEST"
-quit_running_app
+[ "$IN_BACKGROUND" -eq 1 ] || quit_running_app
 run mkdir -p "$DEST"
 remove_app "$DEST/$APP_NAME.app"
 run ditto "$BUILT" "$DEST/$APP_NAME.app"

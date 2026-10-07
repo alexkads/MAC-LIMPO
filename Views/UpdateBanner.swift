@@ -32,6 +32,8 @@ struct UpdateBanner: View {
             AnyView(installing(manifest, step: step))
         case let .failed(manifest, reason, log):
             AnyView(failed(manifest, reason: reason, log: log))
+        case let .installed(manifest) where manifest.version != updater.dismissedVersion:
+            AnyView(installed(manifest))
         case let .upToDate(version):
             AnyView(message(
                 icon: "checkmark.circle.fill", tint: .green,
@@ -98,7 +100,7 @@ struct UpdateBanner: View {
             }
 
             Text(UpdateChecker.canBuildFromSource
-                ? String(localized: "Builds on this Mac in the background (2–5 minutes). MAC-LIMPO reopens by itself when it's done.")
+                ? String(localized: "Builds on this Mac in the background (2–5 minutes) while you keep working.")
                 : String(localized: "Opens the download page for the new version."))
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -123,12 +125,48 @@ struct UpdateBanner: View {
         HStack(alignment: .top, spacing: 10) {
             ProgressView().controlSize(.small)
             VStack(alignment: .leading, spacing: 2) {
-                Text("Updating to version \(manifest.version) — \(step)").font(.callout.weight(.semibold))
-                Text("You can keep using MAC-LIMPO. It closes and reopens by itself when the new version is ready.")
+                Text("Updating to version \(manifest.version) in the background — \(step)").font(.callout.weight(.semibold))
+                Text("MAC-LIMPO keeps working meanwhile. Nothing closes.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
+        }
+    }
+
+    private func installed(_ manifest: UpdateManifest) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Version \(manifest.version) installed").font(.headline)
+                    Text("It takes effect the next time MAC-LIMPO opens — or reopen now.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            } icon: {
+                Image(systemName: "checkmark.circle.fill").foregroundStyle(.green).font(.title2)
+            }
+            if showsNotes, let notes = manifest.localizedNotes() {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(notes.changes, id: \.self) { change in
+                        Text("• \(change)").font(.callout).fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .padding(.leading, 30)
+            }
+            HStack {
+                Button("Reopen Now") { updater.reopenNow() }
+                    .buttonStyle(.borderedProminent)
+                if manifest.localizedNotes()?.changes.isEmpty == false {
+                    Button(showsNotes ? "Hide What's New" : "What's New") {
+                        withAnimation { showsNotes.toggle() }
+                    }
+                }
+                Spacer()
+                Button("Later") { updater.dismiss() }
+            }
+            .controlSize(.small)
         }
     }
 

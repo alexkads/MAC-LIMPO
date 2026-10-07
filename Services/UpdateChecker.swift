@@ -9,8 +9,8 @@ import Foundation
 /// novidades em inglês e português. O arquivo é escrito à mão a cada release
 /// (skill `release`) e servido pelo raw.githubusercontent.com e pelo GitHub
 /// Pages — nada de GitHub Actions nem de assinatura da Apple.
-struct UpdateManifest: Decodable, Equatable {
-    struct Notes: Decodable, Equatable {
+struct UpdateManifest: Codable, Equatable {
+    struct Notes: Codable, Equatable {
         let title: String
         let changes: [String]
         let why: String?
@@ -29,12 +29,16 @@ struct UpdateManifest: Decodable, Equatable {
     }
 }
 
-/// Avisa quando há versão nova, como o VintageLightbox: confere ao abrir e de
-/// hora em hora, fica em silêncio quando não há nada (ou quando a rede falha),
-/// e só a verificação manual responde "em dia" ou "não consegui verificar".
-/// Ao achar uma versão nova, o ícone da barra de menus ganha um ponto, o
-/// popover mostra uma faixa (Atualizar · Novidades · Depois) e sai uma
-/// notificação do macOS — uma vez por versão.
+/// Atualiza como o VintageLightbox: confere ao abrir e de hora em hora, fica em
+/// silêncio quando não há nada (ou quando a rede falha), e só a verificação
+/// manual responde "em dia" ou "não consegui verificar". Ao achar uma versão
+/// nova, quem tem o Swift já começa a compilá-la em segundo plano — sem clique,
+/// sem fechar o app: o install.sh troca o bundle no disco e a faixa oferece
+/// "Reabrir Agora" (senão, a versão nova entra na próxima abertura). Uma falha
+/// não é retentada sozinha por 24 h, e uma trava impede dois instaladores.
+/// Sem ferramentas de compilação (instalou pelo .pkg), a faixa aponta para o
+/// download. O ícone da barra ganha um ponto e sai uma notificação do macOS
+/// por versão.
 @MainActor
 final class UpdateChecker: ObservableObject {
     static let shared = UpdateChecker()
@@ -48,6 +52,11 @@ final class UpdateChecker: ObservableObject {
     nonisolated static let installScriptURL = URL(string: "https://alexkads.github.io/MAC-LIMPO/install.sh")!
     nonisolated static let releasesURL = URL(string: "https://github.com/alexkads/MAC-LIMPO/releases/latest")!
     private static let notifiedKey = "notifiedUpdateVersion"
+    private nonisolated static let failureKey = "updateFailure"
+    /// Uma versão que falhou não é retentada sozinha antes disto.
+    private nonisolated static let retryAfter: TimeInterval = 24 * 60 * 60
+    /// Trava de um instalador em andamento; vence depois disto (build travado).
+    private nonisolated static let lockLifetime: TimeInterval = 3 * 60 * 60
     private static let checkInterval: TimeInterval = 60 * 60
 
     enum State: Equatable {
@@ -57,11 +66,17 @@ final class UpdateChecker: ObservableObject {
         /// Compilando em segundo plano; `step` é a última etapa do install.sh.
         case installing(UpdateManifest, step: String)
         case failed(UpdateManifest, reason: String, log: URL?)
+        /// Instalada no disco; entra na próxima abertura ou em "Reabrir Agora".
+        case installed(UpdateManifest)
         case upToDate(version: String)
         case unreachable(reason: String)
     }
 
-    @Published private(set) var state: State = .idle
+    @Published private(set) var state: State = .idle {
+        didSet {
+            if state != oldValue { logger.log("Atualização: \(state)", level: .info) }
+        }
+    }
     /// "Depois": some até a próxima abertura do app (não é salvo), e uma
     /// versão ainda mais nova volta a aparecer.
     @Published private(set) var dismissedVersion: String?
@@ -80,7 +95,7 @@ final class UpdateChecker: ObservableObject {
     /// Há algo para mostrar no ícone da barra de menus.
     var hasPendingUpdate: Bool {
         switch state {
-        case let .available(manifest): manifest.version != dismissedVersion
+        case let .available(manifest), let .installed(manifest): manifest.version != dismissedVersion
         case .installing, .failed: true
         default: false
         }
@@ -89,6 +104,12 @@ final class UpdateChecker: ObservableObject {
     /// Começa as verificações automáticas: logo depois de abrir e de hora em hora.
     func start() {
         guard Self.currentVersion != nil, timer == nil else { return }
+        // Um instalador ainda rodando (o app foi reaberto no meio do build):
+        // volta a acompanhá-lo em vez de começar outro.
+        if Self.installerIsRunning(), let manifest = Self.runningInstallManifest() {
+            state = .installing(manifest, step: String(localized: "building"))
+            watch(Self.installerRun, manifest: manifest)
+        }
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
             self?.check(manual: false)
         }
@@ -100,6 +121,7 @@ final class UpdateChecker: ObservableObject {
     func check(manual: Bool) {
         switch state {
         case .installing, .checking: return
+        case .installed where !manual: return
         default: break
         }
         // Já avisado e não dispensado: a checagem de hora em hora não precisa repetir.
@@ -116,7 +138,11 @@ final class UpdateChecker: ObservableObject {
             switch result {
             case let .success(manifest) where Self.isVersion(manifest.version, newerThan: current):
                 state = .available(manifest)
-                if !manual { notifyOnce(manifest) }
+                if Self.canBuildFromSource, manual || !Self.failedRecently(manifest.version) {
+                    install()
+                } else if !manual {
+                    notifyOnce(manifest, installed: false)
+                }
             case .success:
                 state = manual ? .upToDate(version: current) : .idle
             case let .failure(error):
@@ -136,6 +162,8 @@ final class UpdateChecker: ObservableObject {
         case let .available(manifest), let .failed(manifest, _, _):
             dismissedVersion = manifest.version
             state = .available(manifest)
+        case let .installed(manifest):
+            dismissedVersion = manifest.version
         case .upToDate, .unreachable:
             state = .idle
         default:
@@ -196,22 +224,29 @@ final class UpdateChecker: ObservableObject {
 
     // MARK: - Notificação do macOS
 
-    private func notifyOnce(_ manifest: UpdateManifest) {
+    /// Uma notificação por versão e por momento: "disponível" (quando não dá
+    /// para instalar sozinho) ou "instalada".
+    private func notifyOnce(_ manifest: UpdateManifest, installed: Bool) {
         let defaults = UserDefaults.standard
-        guard defaults.string(forKey: Self.notifiedKey) != manifest.version else { return }
+        let tag = "\(installed ? "installed" : "available"):\(manifest.version)"
+        guard defaults.string(forKey: Self.notifiedKey) != tag else { return }
         // Só um .app de verdade tem notificações (o swift run não tem bundle).
         guard Bundle.main.bundleURL.pathExtension == "app" else { return }
-        defaults.set(manifest.version, forKey: Self.notifiedKey)
+        defaults.set(tag, forKey: Self.notifiedKey)
         let center = UNUserNotificationCenter.current()
-        let title = String(localized: "MAC-LIMPO \(manifest.version) is available")
-        let body = manifest.localizedNotes()?.title ?? ""
+        let title = installed
+            ? String(localized: "MAC-LIMPO \(manifest.version) installed")
+            : String(localized: "MAC-LIMPO \(manifest.version) is available")
+        let body = installed
+            ? String(localized: "It takes effect the next time MAC-LIMPO opens — or reopen it now from the menu bar.")
+            : manifest.localizedNotes()?.title ?? ""
         center.requestAuthorization(options: [.alert, .sound]) { granted, _ in
             guard granted else { return }
             let content = UNMutableNotificationContent()
             content.title = title
             content.body = body
             content.sound = .default
-            center.add(UNNotificationRequest(identifier: "update-\(manifest.version)", content: content, trigger: nil))
+            center.add(UNNotificationRequest(identifier: "update-\(tag)", content: content, trigger: nil))
         }
     }
 
@@ -221,21 +256,23 @@ final class UpdateChecker: ObservableObject {
     /// o install.sh compila a versão nova neste Mac, sem quarentena. Sem
     /// ferramentas de compilação (instalou pelo .pkg), abre a página da versão.
     nonisolated static let canBuildFromSource: Bool = {
-        // xcode-select -p não abre o diálogo "instalar ferramentas", ao contrário do xcrun.
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/xcode-select")
-        process.arguments = ["-p"]
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = FileHandle.nullDevice
-        guard (try? process.run()) != nil else { return false }
-        process.waitUntilExit()
-        let developerDir = String(decoding: pipe.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        guard process.terminationStatus == 0, !developerDir.isEmpty else { return false }
+        // Só olha arquivos — nada de Process aqui: esperar um processo roda o
+        // run loop da thread principal, o SwiftUI redesenha a faixa no meio, a
+        // faixa lê esta mesma constante ainda sendo inicializada e o app cai
+        // (dispatch_once recursivo). Nem xcrun, que abre o diálogo "instalar
+        // ferramentas". A pasta ativa é a do DEVELOPER_DIR, a escolhida com
+        // xcode-select -s (/var/db/xcode_select_link) ou as padrão.
         let fm = FileManager.default
-        return fm.isExecutableFile(atPath: "\(developerDir)/usr/bin/swift")
-            || fm.isExecutableFile(atPath: "\(developerDir)/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift")
+        let candidates = [
+            ProcessInfo.processInfo.environment["DEVELOPER_DIR"],
+            try? fm.destinationOfSymbolicLink(atPath: "/var/db/xcode_select_link"),
+            "/Applications/Xcode.app/Contents/Developer",
+            "/Library/Developer/CommandLineTools",
+        ].compactMap(\.self)
+        return candidates.contains { developerDir in
+            fm.isExecutableFile(atPath: "\(developerDir)/usr/bin/swift")
+                || fm.isExecutableFile(atPath: "\(developerDir)/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift")
+        }
     }()
 
     func install() {
@@ -248,20 +285,75 @@ final class UpdateChecker: ObservableObject {
             NSWorkspace.shared.open(manifest.url.flatMap(URL.init(string:)) ?? Self.releasesURL)
             return
         }
+        if Self.installerIsRunning() {
+            state = .installing(manifest, step: String(localized: "building"))
+            watch(Self.installerRun, manifest: manifest)
+            return
+        }
         state = .installing(manifest, step: String(localized: "Downloading the installer…"))
         Task {
             do {
-                let run = try await Self.launchInstaller()
-                watch(run, manifest: manifest)
+                try await Self.launchInstaller(for: manifest)
+                watch(Self.installerRun, manifest: manifest)
             } catch {
+                Self.releaseLock()
+                Self.recordFailure(manifest.version)
                 state = .failed(manifest, reason: error.localizedDescription, log: nil)
             }
         }
     }
 
+    /// Reabre na versão instalada: sai primeiro (a checagem de instância única
+    /// da versão nova fecharia a si mesma se esta ainda estivesse aberta).
+    func reopenNow() {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/sh")
+        process.arguments = ["-c", #"( sleep 1; /usr/bin/open "$0" --args --updated ) > /dev/null 2>&1 &"#,
+                             Bundle.main.bundleURL.path]
+        try? process.run()
+        NSApp.terminate(nil)
+    }
+
     struct InstallerRun {
         let log: URL
         let status: URL
+    }
+
+    nonisolated static let updateFolder = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+        .appendingPathComponent("MAC-LIMPO-build/update", isDirectory: true)
+    nonisolated static let installerRun = InstallerRun(
+        log: updateFolder.appendingPathComponent("install.log"),
+        status: updateFolder.appendingPathComponent("install.status")
+    )
+    private nonisolated static let lockFile = updateFolder.appendingPathComponent("install.lock")
+
+    /// Há um instalador nosso em andamento (trava recente e sem status final).
+    nonisolated static func installerIsRunning() -> Bool {
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: lockFile.path),
+              let created = attributes[.modificationDate] as? Date else { return false }
+        return Date().timeIntervalSince(created) < lockLifetime
+            && !FileManager.default.fileExists(atPath: installerRun.status.path)
+    }
+
+    /// A versão que o instalador em andamento está instalando (gravada na trava).
+    nonisolated static func runningInstallManifest() -> UpdateManifest? {
+        guard let data = try? Data(contentsOf: lockFile) else { return nil }
+        return try? JSONDecoder().decode(UpdateManifest.self, from: data)
+    }
+
+    nonisolated static func releaseLock() {
+        try? FileManager.default.removeItem(at: lockFile)
+    }
+
+    nonisolated static func failedRecently(_ version: String, now: Date = Date()) -> Bool {
+        guard let failure = UserDefaults.standard.dictionary(forKey: failureKey),
+              failure["version"] as? String == version,
+              let when = failure["date"] as? Double else { return false }
+        return now.timeIntervalSince1970 - when < retryAfter
+    }
+
+    nonisolated static func recordFailure(_ version: String) {
+        UserDefaults.standard.set(["version": version, "date": Date().timeIntervalSince1970], forKey: failureKey)
     }
 
     enum InstallError: LocalizedError {
@@ -272,45 +364,44 @@ final class UpdateChecker: ObservableObject {
     }
 
     /// Baixa o install.sh para um arquivo (nunca `curl | sh`), confere que veio
-    /// inteiro e o roda desanexado: ele continua mesmo quando fecha este app
-    /// para trocar o bundle, e no fim reabre a versão nova com `--updated`.
-    nonisolated static func launchInstaller() async throws -> InstallerRun {
-        let folder = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("MAC-LIMPO-build/update", isDirectory: true)
-        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        let script = folder.appendingPathComponent("install.sh")
-        let log = folder.appendingPathComponent("install.log")
-        let status = folder.appendingPathComponent("install.status")
-        try? FileManager.default.removeItem(at: status)
+    /// inteiro e o roda desanexado e com prioridade baixa (`nice`), no modo
+    /// `--in-background`: compila e troca o bundle no disco sem fechar o app.
+    nonisolated static func launchInstaller(for manifest: UpdateManifest) async throws {
+        try FileManager.default.createDirectory(at: updateFolder, withIntermediateDirectories: true)
+        let script = updateFolder.appendingPathComponent("install.sh")
+        try? FileManager.default.removeItem(at: installerRun.status)
 
         let configuration = URLSessionConfiguration.ephemeral
         configuration.timeoutIntervalForRequest = 30
-        let (data, response) = try await URLSession(configuration: configuration).data(from: installScriptURL)
+        // Desenvolvimento: MACLIMPO_UPDATE_INSTALLER=<url ou file://> troca o script.
+        let source = ProcessInfo.processInfo.environment["MACLIMPO_UPDATE_INSTALLER"].flatMap(URL.init(string:)) ?? installScriptURL
+        let (data, response) = try await URLSession(configuration: configuration).data(from: source)
         let text = String(decoding: data, as: UTF8.self)
-        guard (response as? HTTPURLResponse)?.statusCode == 200,
-              text.hasPrefix("#!/bin/sh"), text.contains("--from-app"), text.contains("Docs:") else {
+        if let http = response as? HTTPURLResponse, http.statusCode != 200 { throw InstallError.incompleteScript }
+        guard text.hasPrefix("#!/bin/sh"), text.contains("--in-background)"), text.contains("Docs:") else {
             throw InstallError.incompleteScript
         }
         try data.write(to: script)
+        // A trava guarda a versão: se o app for reaberto no meio, retoma daqui.
+        try JSONEncoder().encode(manifest).write(to: lockFile)
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/bin/sh")
         // Subshell em segundo plano: o sh de fora sai na hora e o instalador
-        // fica com o launchd — sobrevive ao fechamento deste app.
-        // --dest: reinstala onde este app está (pode ser ~/Applications).
+        // fica com o launchd. --dest: reinstala onde este app está.
         let destination = Bundle.main.bundleURL.deletingLastPathComponent().path
-        process.arguments = ["-c", #"( /bin/sh "$0" --from-app --dest "$3" > "$1" 2>&1; echo $? > "$2" ) &"#,
-                             script.path, log.path, status.path, destination]
+        process.arguments = [
+            "-c", #"( /usr/bin/nice -n 10 /bin/sh "$0" --in-background --dest "$3" > "$1" 2>&1; echo $? > "$2" ) &"#,
+            script.path, installerRun.log.path, installerRun.status.path, destination,
+        ]
         var environment = ProcessInfo.processInfo.environment
         environment["PATH"] = "/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/usr/local/bin"
         process.environment = environment
         try process.run()
-        process.waitUntilExit()
-        return InstallerRun(log: log, status: status)
     }
 
-    /// Acompanha o log ("▸ etapa") até o instalador fechar o app. Se ele
-    /// terminar antes disso com erro, mostra o motivo e o caminho do log.
+    /// Acompanha o log ("▸ etapa") até o instalador terminar; no fim confere
+    /// a versão que ficou no disco.
     private func watch(_ run: InstallerRun, manifest: UpdateManifest) {
         installPoll?.invalidate()
         // O timer roda no run loop principal, então já está no MainActor.
@@ -324,15 +415,30 @@ final class UpdateChecker: ObservableObject {
         if let statusText = try? String(contentsOf: run.status, encoding: .utf8) {
             installPoll?.invalidate()
             installPoll = nil
+            Self.releaseLock()
             let code = Int(statusText.trimmingCharacters(in: .whitespacesAndNewlines)) ?? 1
             if code != 0 {
+                Self.recordFailure(manifest.version)
                 state = .failed(manifest, reason: Self.failureReason(in: log), log: run.log)
+            } else if let installed = Self.installedVersion(), !Self.isVersion(manifest.version, newerThan: installed) {
+                state = .installed(manifest)
+                notifyOnce(manifest, installed: true)
+            } else {
+                Self.recordFailure(manifest.version)
+                state = .failed(manifest, reason: String(localized: "The new version wasn't found after installing."), log: run.log)
             }
             return
         }
         if let step = Self.lastStep(in: log) {
             state = .installing(manifest, step: step)
         }
+    }
+
+    /// Versão do bundle no disco agora (o install.sh troca o deste app). Lido
+    /// do arquivo, não do `Bundle`, que guarda o Info.plist de quando abriu.
+    nonisolated static func installedVersion() -> String? {
+        let plist = Bundle.main.bundleURL.appendingPathComponent("Contents/Info.plist")
+        return (NSDictionary(contentsOf: plist) as? [String: Any])?["CFBundleShortVersionString"] as? String
     }
 
     /// Última linha "▸ etapa" do install.sh, sem as cores do terminal.
