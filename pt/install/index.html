@@ -862,8 +862,16 @@
 <li>Confere o Mac: macOS 26.6+, as Command Line Tools (ou o Xcode) com Swift 6.4 e ~2 GB livres.</li>
 <li>Baixa o código da <a href="https://github.com/alexkads/MAC-LIMPO/releases/latest">última versão</a> (ou da <code>main</code>, se ainda não houver nenhuma).</li>
 <li>Compila o app com o <code>Scripts/bundle-app.sh</code> — de 2 a 5 minutos na primeira vez; as atualizações reaproveitam o cache em <code>~/Library/Caches/MAC-LIMPO-build</code>.</li>
-<li>Instala o <code>MAC-LIMPO.app</code> em <code>/Applications</code> (ou em <code>~/Applications</code>, se não houver permissão) e abre.</li>
+<li>Instala o <code>MAC-LIMPO.app</code> em <code>/Applications</code> (ou em <code>~/Applications</code>, se não houver permissão) e abre. Um balão de boas-vindas aponta para o ícone de lixeira na barra de menus — o MAC-LIMPO não tem ícone no Dock nem janela principal, ele mora ali.</li>
 </ol>
+<div class="admonition warning">
+<p class="admonition-title">Não coloque <code>sudo</code> no comando</p>
+<p>Rode exatamente como acima, com o seu usuário. Se <code>/Applications</code> já tiver uma cópia instalada pelo <code>.pkg</code>
+(essa cópia pertence ao root), o próprio script chama o <code>sudo</code> só para removê-la e pede <strong>a senha do seu
+Mac</strong> uma vez — é esperado digitar.</p>
+<p><code>sudo curl … | sh</code> não ajuda: o <code>sudo</code> vale só para o <code>curl</code>, o download. E <code>curl … | sudo sh</code> compilaria e
+instalaria tudo como root, deixando um app do root que a próxima atualização não consegue substituir.</p>
+</div>
 <div class="admonition info">
 <p class="admonition-title">Por que compilar em vez de baixar?</p>
 <p>O MAC-LIMPO não é assinado com um Developer ID pago da Apple. O macOS interroga os apps que chegam pela

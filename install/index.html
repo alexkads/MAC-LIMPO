@@ -862,8 +862,16 @@
 <li>Checks the Mac: macOS 26.6+, the Command Line Tools (or Xcode) with Swift 6.4, ~2 GB free.</li>
 <li>Downloads the source of the <a href="https://github.com/alexkads/MAC-LIMPO/releases/latest">latest release</a> (or <code>main</code> if there is none yet).</li>
 <li>Builds the app with <code>Scripts/bundle-app.sh</code> — 2–5 minutes the first time; updates reuse the build cache in <code>~/Library/Caches/MAC-LIMPO-build</code>.</li>
-<li>Installs <code>MAC-LIMPO.app</code> into <code>/Applications</code> (or <code>~/Applications</code> if <code>/Applications</code> is not writable) and opens it.</li>
+<li>Installs <code>MAC-LIMPO.app</code> into <code>/Applications</code> (or <code>~/Applications</code> if <code>/Applications</code> is not writable) and opens it. A welcome balloon points at the trash icon in the menu bar — MAC-LIMPO has no Dock icon or main window, it lives there.</li>
 </ol>
+<div class="admonition warning">
+<p class="admonition-title">Don't put <code>sudo</code> in the command</p>
+<p>Run it exactly as above, as your own user. If <code>/Applications</code> already has a copy installed by the <code>.pkg</code>
+(that copy belongs to root), the script calls <code>sudo</code> by itself just to remove it, and asks for <strong>your Mac
+password</strong> once — typing it is expected.</p>
+<p><code>sudo curl … | sh</code> doesn't help: <code>sudo</code> only applies to <code>curl</code>, the download. And <code>curl … | sudo sh</code> would
+build and install everything as root, leaving a root-owned app that the next update can't replace.</p>
+</div>
 <div class="admonition info">
 <p class="admonition-title">Why build instead of download?</p>
 <p>MAC-LIMPO is not signed with a paid Apple Developer ID. macOS checks apps that arrive from the internet

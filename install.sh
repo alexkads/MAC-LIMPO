@@ -247,9 +247,11 @@ run xattr -dr com.apple.quarantine "$DEST/$APP_NAME.app" 2>/dev/null || true
 ok "installed $DEST/$APP_NAME.app"
 
 if [ "$OPEN_AFTER" -eq 1 ]; then
-  run open "$DEST/$APP_NAME.app"
+  # --welcome: the app points at its own menu bar icon (it has no Dock icon or window).
+  run open "$DEST/$APP_NAME.app" --args --welcome
   echo
-  printf '%bMAC-LIMPO is running — look for its icon in the menu bar.%b\n' "$B" "$Z"
+  printf '%bWelcome! MAC-LIMPO is running in the menu bar%b — the trash icon at the top right of the screen.\n' "$B" "$Z"
+  echo "   There's no Dock icon or main window: click that icon to scan and clean."
 fi
 
 echo
