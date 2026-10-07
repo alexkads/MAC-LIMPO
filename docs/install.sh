@@ -53,6 +53,18 @@ warn() { printf "${Y}! %s${Z}\n" "$*"; }
 fail() { printf "${R}✗ %s${Z}\n" "$*" >&2; }
 run()  { if [ "$DRY" -eq 1 ]; then echo "   [dry-run] $*"; else "$@"; fi; }
 
+# A copy installed by the .pkg belongs to root: /Applications is writable by an
+# admin, but the bundle inside it is not — so check the bundle, not its folder.
+remove_app() {
+  [ -e "$1" ] || return 0
+  if [ -w "$(dirname "$1")" ] && [ -z "$(find "$1" ! -user "$(id -un)" -print -quit 2>/dev/null)" ]; then
+    run rm -rf "$1"
+  else
+    warn "$1 belongs to another user (installed by the .pkg?) — sudo will ask for your password"
+    run sudo rm -rf "$1" || { fail "could not remove $1"; exit 1; }
+  fi
+}
+
 # The help text lives here, not read from this file: under `curl | sh` the
 # script is not on disk ($0 is just "sh").
 usage() {
@@ -114,7 +126,7 @@ if [ "$UNINSTALL" -eq 1 ]; then
   step "removing MAC-LIMPO"
   for app in "/Applications/$APP_NAME.app" "$HOME/Applications/$APP_NAME.app" ${DEST:+"$DEST/$APP_NAME.app"}; do
     if [ -d "$app" ]; then
-      if [ -w "$(dirname "$app")" ]; then run rm -rf "$app"; else run sudo rm -rf "$app"; fi
+      remove_app "$app"
       ok "removed $app"
     fi
   done
@@ -217,7 +229,7 @@ fi
 step "installing into $DEST"
 quit_running_app
 run mkdir -p "$DEST"
-run rm -rf "$DEST/$APP_NAME.app"
+remove_app "$DEST/$APP_NAME.app"
 run ditto "$BUILT" "$DEST/$APP_NAME.app"
 # Built here, so there is no quarantine flag — removing it is just belt and braces.
 run xattr -dr com.apple.quarantine "$DEST/$APP_NAME.app" 2>/dev/null || true
