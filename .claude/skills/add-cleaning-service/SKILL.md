@@ -128,6 +128,10 @@ Without this the file compiles nowhere and the app builds using the *old* code w
 
 Run `swift build`. A clean build means all four edits are consistent. If the build "succeeds" but the category doesn't appear, you almost certainly skipped Step 4 (source not listed) — re-check `Package.swift`.
 
-## Step 5 — Update the website
+## Step 6 — Update the website
 
-Regenerate the categories table in `docs/cleaning.md` (one row per category: display name and description, grouped like `CleaningGroup`) so the site lists the new category.
+Regenerate the categories table in `docs/cleaning.md` (one row per category: display name and description, grouped like `CleaningGroup`) so the site lists the new category, then check it with `mkdocs build --strict`.
+
+## Step 7 — Ship it
+
+The new category reaches users only through a GitHub release (the published `install.sh` builds the latest release, not `main`) followed by `make docs-deploy`. Use the `release` skill.
