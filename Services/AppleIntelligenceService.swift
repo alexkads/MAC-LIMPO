@@ -12,15 +12,15 @@ enum AppleIntelligenceAvailability: Equatable, Sendable {
     var message: String {
         switch self {
         case .available:
-            "Apple Intelligence is ready on this Mac."
+            String(localized: "Apple Intelligence is ready on this Mac.")
         case .appleIntelligenceNotEnabled:
-            "Turn on Apple Intelligence in System Settings to generate local insights."
+            String(localized: "Turn on Apple Intelligence in System Settings to generate local insights.")
         case .deviceNotEligible:
-            "This Mac does not support Apple Intelligence."
+            String(localized: "This Mac does not support Apple Intelligence.")
         case .modelNotReady:
-            "The on-device model is still preparing. Try again later."
+            String(localized: "The on-device model is still preparing. Try again later.")
         case .unavailable:
-            "Apple Intelligence is currently unavailable."
+            String(localized: "Apple Intelligence is currently unavailable.")
         }
     }
 }
@@ -63,17 +63,25 @@ actor AppleIntelligenceService {
             .filter { $0.estimatedSize > 0 }
             .sorted { $0.estimatedSize > $1.estimatedSize }
             .prefix(8)
-            .map { "\($0.category.rawValue): \($0.formattedSize)" }
+            .map { "\($0.category.displayName): \($0.formattedSize)" }
             .joined(separator: ", ")
 
         let usedPercent = totalDiskSpace > 0
             ? Int((Double(usedDiskSpace) / Double(totalDiskSpace)) * 100)
             : 0
 
+        // O prompt fica em inglês; o idioma da resposta é dito explicitamente,
+        // com o nome do idioma escrito em inglês ("Portuguese"). Usa o idioma em
+        // que o app está rodando (en ou pt-BR), não o do sistema — num Mac em
+        // francês a interface é inglesa, e a recomendação também deve ser.
+        let appLanguage = Bundle.main.preferredLocalizations.first ?? "en"
+        let languageCode = Locale(identifier: appLanguage).language.languageCode?.identifier ?? "en"
+        let languageName = Locale(identifier: "en").localizedString(forLanguageCode: languageCode) ?? "English"
+
         let session = LanguageModelSession(instructions: """
             You are MAC-LIMPO's on-device storage assistant. Analyze only the aggregate
             storage data provided by the app. Do not invent files, paths, causes or facts.
-            Answer in the user's language when possible. Give one short recommendation,
+            Answer in \(languageName). Give one short recommendation,
             mention the largest category, and remind the user to review before deleting.
             Keep the answer under 80 words and do not use markdown tables.
             """)

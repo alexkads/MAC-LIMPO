@@ -89,21 +89,21 @@ class PermissionsHelper {
     @MainActor
     static func requestFullDiskAccess(onGrant: @escaping @MainActor @Sendable () -> Void) {
         let alert = NSAlert()
-        alert.messageText = "Full Disk Access Necessário"
-        alert.informativeText = """
-        O MAC-LIMPO precisa de Full Disk Access para limpar todas as áreas do sistema e liberar o máximo de espaço possível.
+        alert.messageText = String(localized: "Full Disk Access Required")
+        alert.informativeText = String(localized: """
+        MAC-LIMPO needs Full Disk Access to clean every area of the system and free up as much space as possible.
 
-        Sem essa permissão: ~5-40GB liberados
-        Com essa permissão: ~50-200GB liberados
+        Without this permission: ~5–40 GB freed
+        With this permission: ~50–200 GB freed
 
-        Deseja abrir as configurações para habilitar?
-        """
+        Do you want to open System Settings to enable it?
+        """)
         alert.alertStyle = .informational
-        alert.addButton(withTitle: "Abrir Configurações")
-        alert.addButton(withTitle: "Continuar Sem Permissão")
-        alert.addButton(withTitle: "Cancelar")
+        alert.addButton(withTitle: String(localized: "Open System Settings"))
+        alert.addButton(withTitle: String(localized: "Continue Without Permission"))
+        alert.addButton(withTitle: String(localized: "Cancel"))
 
-        alert.icon = NSImage(systemSymbolName: "lock.shield", accessibilityDescription: "Security")
+        alert.icon = NSImage(systemSymbolName: "lock.shield", accessibilityDescription: String(localized: "Security"))
 
         let response = alert.runModalAboveMenuBarPopover()
 
@@ -131,21 +131,21 @@ class PermissionsHelper {
     @MainActor
     private static func showFollowUpAlert(onGrant: @escaping @MainActor @Sendable () -> Void) {
         let alert = NSAlert()
-        alert.messageText = "Habilite Full Disk Access"
-        alert.informativeText = """
-        Nas configurações que acabaram de abrir:
+        alert.messageText = String(localized: "Enable Full Disk Access")
+        alert.informativeText = String(localized: """
+        In the System Settings window that just opened:
 
-        1. Clique no cadeado e autentique
-        2. Clique no botão "+" 
-        3. Navegue até Applications e selecione MAC-LIMPO
-        4. Marque o checkbox ao lado de MAC-LIMPO
-        5. Clique "Done" neste alerta quando terminar
+        1. Click the lock and authenticate
+        2. Click the “+” button
+        3. Go to Applications and select MAC-LIMPO
+        4. Turn on the switch next to MAC-LIMPO
+        5. Click “Done” in this alert when you’re finished
 
-        Depois disso, o MAC-LIMPO poderá limpar muito mais espaço!
-        """
+        After that, MAC-LIMPO will be able to free up much more space!
+        """)
         alert.alertStyle = .informational
-        alert.addButton(withTitle: "Done - Já Habilitei")
-        alert.addButton(withTitle: "Pular Por Agora")
+        alert.addButton(withTitle: String(localized: "Done — I’ve Enabled It"))
+        alert.addButton(withTitle: String(localized: "Skip for Now"))
 
         let response = alert.runModalAboveMenuBarPopover()
 
@@ -154,22 +154,23 @@ class PermissionsHelper {
             invalidateFullDiskAccessCache()
             if hasFullDiskAccess() {
                 let successAlert = NSAlert()
-                successAlert.messageText = "✅ Full Disk Access Habilitado!"
-                successAlert.informativeText = "Agora você pode limpar muito mais espaço. Execute a limpeza novamente para melhores resultados."
+                successAlert.messageText = String(localized: "✅ Full Disk Access Enabled!")
+                successAlert.informativeText = String(
+                    localized: "You can now free up much more space. Run the cleaning again for better results."
+                )
                 successAlert.alertStyle = .informational
-                successAlert.addButton(withTitle: "OK")
+                successAlert.addButton(withTitle: String(localized: "OK"))
                 successAlert.runModalAboveMenuBarPopover()
             } else {
                 let warningAlert = NSAlert()
-                warningAlert.messageText = "⚠️ Permissão Não Detectada"
-                warningAlert.informativeText = """
-                Não detectamos Full Disk Access ainda. Certifique-se de ter adicionado o \
-                MAC-LIMPO e marcado o checkbox.
+                warningAlert.messageText = String(localized: "⚠️ Permission Not Detected")
+                warningAlert.informativeText = String(localized: """
+                Full Disk Access wasn’t detected yet. Make sure you added MAC-LIMPO and turned on its switch.
 
-                Você pode continuar sem essa permissão, mas liberará menos espaço.
-                """
+                You can continue without this permission, but less space will be freed.
+                """)
                 warningAlert.alertStyle = .warning
-                warningAlert.addButton(withTitle: "OK")
+                warningAlert.addButton(withTitle: String(localized: "OK"))
                 warningAlert.runModalAboveMenuBarPopover()
             }
         }

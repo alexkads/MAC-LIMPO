@@ -1,0 +1,23 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "NSAppleEventsUsageDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MAC-LIMPO needs permission to execute shell commands for cleaning operations."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O MAC-LIMPO precisa de permissão para executar comandos de terminal nas limpezas."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

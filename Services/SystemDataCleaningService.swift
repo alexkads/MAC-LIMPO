@@ -112,7 +112,7 @@ final class SystemDataCleaningService: BaseCleaningService, CleaningService, @un
         var totalSize: Int64 = 0
         var items: [String] = []
 
-        progress?("Scanning \(systemPaths.count) system locations...")
+        progress?(String(localized: "Scanning \(systemPaths.count) system locations…"))
 
         // Expande wildcards antes (expansão rasa, barata) e achata em unidades
         // (índice da entrada, path concreto) para medir TUDO em paralelo — em
@@ -139,7 +139,7 @@ final class SystemDataCleaningService: BaseCleaningService, CleaningService, @un
             }
         }
 
-        progress?("Measuring \(flat.count) paths...")
+        progress?(String(localized: "Measuring \(flat.count) paths…"))
 
         // Uma passada de `du` em lote para todos os paths. Antes era um processo
         // `du` por path — só os globs de container geravam mais de mil — o que
@@ -451,7 +451,7 @@ final class SystemDataCleaningService: BaseCleaningService, CleaningService, @un
             bytesRemoved += toRemove.reduce(0) { $0 + $1.size }
             logger.log("Caches root-owned removidos (\(toRemove.count) paths)", level: .info)
         } else if !result.error.contains("User canceled") {
-            errors.append("Failed to clean root-owned caches")
+            errors.append(String(localized: "Failed to clean root-owned caches"))
         }
     }
 

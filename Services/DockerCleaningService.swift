@@ -221,7 +221,7 @@ class DockerCleaningService: BaseCleaningService, CleaningService, @unchecked Se
             try fileHelper.removeItem(atPath: staged.path)
             return (staged.size, 1)
         } catch {
-            errors.append("Failed to remove stale Docker staged update")
+            errors.append(String(localized: "Failed to remove stale Docker staged update"))
             return (0, 0)
         }
     }
@@ -270,7 +270,7 @@ class DockerCleaningService: BaseCleaningService, CleaningService, @unchecked Se
             return fullCleanupScan(items: items, estimatedSize: estimatedSize, progress: progress)
         }
 
-        progress?("Inspecting Docker...")
+        progress?(String(localized: "Inspecting Docker…"))
 
         let reclaimable = reclaimableByType()
 
@@ -308,7 +308,7 @@ class DockerCleaningService: BaseCleaningService, CleaningService, @unchecked Se
             estimatedSize += buildCache
         }
 
-        progress?("Measuring volumes...")
+        progress?(String(localized: "Measuring volumes…"))
         let volumes = localVolumes()
         let unused = volumes.filter { !$0.inUse }
 
@@ -398,7 +398,7 @@ class DockerCleaningService: BaseCleaningService, CleaningService, @unchecked Se
     ) -> ScanResult {
         var items = items
         var estimatedSize = estimatedSize
-        progress?("Measuring everything in Docker...")
+        progress?(String(localized: "Measuring everything in Docker…"))
 
         let sizes = systemDF(field: "Size")
         let running = lines("docker ps -q").count
@@ -478,7 +478,7 @@ class DockerCleaningService: BaseCleaningService, CleaningService, @unchecked Se
             if !running.isEmpty {
                 let stop = shell.execute("docker stop " + running.joined(separator: " "), timeout: 300)
                 if stop.exitCode != 0 {
-                    errors.append("Failed to stop containers: \(stop.error)")
+                    errors.append(String(localized: "Failed to stop containers: \(stop.error)"))
                 }
             }
         }
@@ -486,7 +486,7 @@ class DockerCleaningService: BaseCleaningService, CleaningService, @unchecked Se
         // 1. Containers parados (sem forçar os que estão de pé).
         let containers = shell.execute("docker container prune -f", timeout: 60)
         if containers.exitCode != 0 {
-            errors.append("Failed to clean containers: \(containers.error)")
+            errors.append(String(localized: "Failed to clean containers: \(containers.error)"))
         } else {
             filesRemoved += containers.output.components(separatedBy: "\n").filter { $0.contains("deleted") }.count
         }
@@ -497,7 +497,7 @@ class DockerCleaningService: BaseCleaningService, CleaningService, @unchecked Se
         let imagePrune = allImages ? "docker image prune -a -f" : "docker image prune -f"
         let images = shell.execute(imagePrune, timeout: 300)
         if images.exitCode != 0 {
-            errors.append("Failed to clean images: \(images.error)")
+            errors.append(String(localized: "Failed to clean images: \(images.error)"))
         } else {
             filesRemoved += images.output.components(separatedBy: "\n").filter { $0.contains("deleted") }.count
         }
@@ -505,13 +505,13 @@ class DockerCleaningService: BaseCleaningService, CleaningService, @unchecked Se
         // 3. Todo o build cache (regenerável, sem risco de perda de dados).
         let buildCache = shell.execute("docker builder prune -a -f", timeout: 300)
         if buildCache.exitCode != 0 {
-            errors.append("Failed to clean build cache: \(buildCache.error)")
+            errors.append(String(localized: "Failed to clean build cache: \(buildCache.error)"))
         }
 
         // 4. Redes sem container anexado. O compose recria a sua no próximo `up`.
         let networks = shell.execute("docker network prune -f", timeout: 60)
         if networks.exitCode != 0 {
-            errors.append("Failed to clean networks: \(networks.error)")
+            errors.append(String(localized: "Failed to clean networks: \(networks.error)"))
         } else {
             filesRemoved += networks.output.components(separatedBy: "\n")
                 .filter { !$0.isEmpty && !$0.hasSuffix(":") }.count
@@ -524,7 +524,7 @@ class DockerCleaningService: BaseCleaningService, CleaningService, @unchecked Se
         if fullCleanup {
             let prune = shell.execute("docker volume prune -a -f", timeout: 300)
             if prune.exitCode != 0 {
-                errors.append("Failed to remove volumes: \(prune.error)")
+                errors.append(String(localized: "Failed to remove volumes: \(prune.error)"))
             }
         }
         for volume in localVolumes() where !fullCleanup && volume.isRemovable {
@@ -533,7 +533,7 @@ class DockerCleaningService: BaseCleaningService, CleaningService, @unchecked Se
                 filesRemoved += 1
                 logger.log("Volume removido: \(volume.name)", level: .info)
             } else {
-                errors.append("Failed to remove volume \(volume.name)")
+                errors.append(String(localized: "Failed to remove volume \(volume.name)"))
             }
         }
 
@@ -573,7 +573,7 @@ class DockerCleaningService: BaseCleaningService, CleaningService, @unchecked Se
             try fileHelper.removeItem(atPath: scoutPath)
             return (scoutSize, 1)
         } catch {
-            errors.append("Failed to clean Docker Scout cache")
+            errors.append(String(localized: "Failed to clean Docker Scout cache"))
             return (0, 0)
         }
     }

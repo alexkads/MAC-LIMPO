@@ -41,7 +41,7 @@ struct AppleIntelligenceInsightView: View {
                     .foregroundColor(themeManager.palette.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
-                Text(status?.message ?? "Generate a private, on-device storage recommendation.")
+                Text(status?.message ?? String(localized: "Generate a private, on-device storage recommendation."))
                     .font(.system(size: 11))
                     .foregroundColor(themeManager.palette.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)

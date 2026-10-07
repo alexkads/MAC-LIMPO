@@ -77,6 +77,8 @@ More in the [installation guide](https://alexkads.github.io/MAC-LIMPO/install/).
 
 **Native look** — the default *Liquid Glass* theme uses only system components; Classic, Cyberpunk and Matrix themes are one click away. Apple Intelligence can write an on-device storage recommendation, and App Intents expose cleaning to Shortcuts and Siri.
 
+**English and Portuguese** — the app follows your Mac's language (English everywhere else); this site does too.
+
 <br clear="right">
 
 ## Contributing

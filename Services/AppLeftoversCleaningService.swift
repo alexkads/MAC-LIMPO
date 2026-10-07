@@ -59,7 +59,7 @@ class AppLeftoversCleaningService: BaseCleaningService, CleaningService, @unchec
 
         // 1. Scan Standard Apps
         for (name, appSupportPath, appPath) in knownApps {
-            progress?("Checking \(name)...")
+            progress?(String(localized: "Checking \(name)…"))
 
             // Handle wildcard paths (e.g. AndroidStudio*)
             let expandedPath = fileHelper.expandPath(appSupportPath)
@@ -97,7 +97,7 @@ class AppLeftoversCleaningService: BaseCleaningService, CleaningService, @unchec
         }
 
         // 2. Scan JetBrains Granularly
-        progress?("Checking JetBrains Products...")
+        progress?(String(localized: "Checking JetBrains Products…"))
         let jetBrainsRoot = fileHelper.expandPath("~/Library/Application Support/JetBrains")
         if fileHelper.fileExists(atPath: jetBrainsRoot) {
             let contents = fileHelper.contentsOfDirectory(atPath: jetBrainsRoot)
@@ -187,7 +187,7 @@ class AppLeftoversCleaningService: BaseCleaningService, CleaningService, @unchec
                             Logger.shared.log("Deleted leftover: \(path)", level: .info)
                         } catch {
                             Logger.shared.log("Failed to delete leftover \(path): \(error)", level: .error)
-                            errors.append("Failed to delete \(name): \(error.localizedDescription)")
+                            errors.append(String(localized: "Failed to delete \(name): \(error.localizedDescription)"))
                         }
                     }
                 }
@@ -222,7 +222,7 @@ class AppLeftoversCleaningService: BaseCleaningService, CleaningService, @unchec
                             Logger.shared.log("Deleted JetBrains leftover: \(item)", level: .info)
                         } catch {
                             Logger.shared.log("Failed to delete JB leftover \(item): \(error)", level: .error)
-                            errors.append("Failed to delete JB \(item): \(error.localizedDescription)")
+                            errors.append(String(localized: "Failed to delete JB \(item): \(error.localizedDescription)"))
                         }
                     }
                 }

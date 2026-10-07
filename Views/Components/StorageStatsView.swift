@@ -94,7 +94,7 @@ struct StorageStatsView: View {
 }
 
 struct StatRow: View {
-    let label: String
+    let label: LocalizedStringKey
     let value: String
     let color: Color
 

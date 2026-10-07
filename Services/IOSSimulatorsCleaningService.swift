@@ -122,7 +122,7 @@ class IOSSimulatorsCleaningService: BaseCleaningService, CleaningService, @unche
         if !plan.delete.isEmpty {
             let result = await runBlocking { self.shell.execute("xcrun simctl delete unavailable", timeout: 120) }
             if result.exitCode != 0 {
-                errors.append("Failed to delete unavailable simulators: \(result.error)")
+                errors.append(String(localized: "Failed to delete unavailable simulators: \(result.error)"))
             }
         }
 
@@ -132,7 +132,7 @@ class IOSSimulatorsCleaningService: BaseCleaningService, CleaningService, @unche
             let udid = device.udid
             let result = await runBlocking { self.shell.run("/usr/bin/xcrun", ["simctl", "erase", udid], timeout: 120) }
             if result.exitCode != 0 {
-                errors.append("Failed to erase \(device.label): \(result.error)")
+                errors.append(String(localized: "Failed to erase \(device.label): \(result.error)"))
             }
         }
 
@@ -169,7 +169,7 @@ class IOSSimulatorsCleaningService: BaseCleaningService, CleaningService, @unche
                         level: .info
                     )
                 } else {
-                    errors.append("Failed to delete runtime \(runtime.platform) \(runtime.version)")
+                    errors.append(String(localized: "Failed to delete runtime \(runtime.platform) \(runtime.version)"))
                 }
             }
         }

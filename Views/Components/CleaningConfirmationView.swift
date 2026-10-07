@@ -41,14 +41,14 @@ struct CleaningConfirmationView: View {
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
 
-                Toggle("Não perguntar de novo nesta sessão", isOn: $dontAskAgain)
+                Toggle("Don't ask again this session", isOn: $dontAskAgain)
                     .toggleStyle(.checkbox)
                     .font(.system(size: 12))
                     .foregroundColor(palette.secondaryText)
 
                 HStack(spacing: 12) {
                     Button(action: onCancel) {
-                        Text("Cancelar")
+                        Text("Cancel")
                             .frame(maxWidth: .infinity)
                     }
                     .keyboardShortcut(.cancelAction)
@@ -56,7 +56,7 @@ struct CleaningConfirmationView: View {
                     .controlSize(.large)
 
                     Button(action: { onConfirm(dontAskAgain) }) {
-                        Text("Limpar")
+                        Text("Clean")
                             .frame(maxWidth: .infinity)
                     }
                     .keyboardShortcut(.defaultAction)

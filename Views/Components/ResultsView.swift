@@ -1,5 +1,14 @@
 import SwiftUI
 
+extension CleaningResult {
+    /// Duração da limpeza formatada conforme o idioma/região ("3.2 sec", "3,2 s").
+    var executionTimeText: String {
+        Duration.seconds(executionTime).formatted(
+            .units(allowed: [.hours, .minutes, .seconds], width: .abbreviated, fractionalPart: .show(length: 1))
+        )
+    }
+}
+
 struct ResultsView: View {
     let result: CleaningResult
     @Binding var isShowing: Bool
@@ -44,14 +53,14 @@ struct ResultsView: View {
                     StatisticRow(
                         icon: "doc.fill",
                         label: "Files Removed",
-                        value: "\(result.filesRemoved)",
+                        value: result.filesRemoved.formatted(),
                         color: .purple
                     )
 
                     StatisticRow(
                         icon: "clock.fill",
                         label: "Time Taken",
-                        value: String(format: "%.1fs", result.executionTime),
+                        value: result.executionTimeText,
                         color: .orange
                     )
                 }
@@ -114,7 +123,7 @@ struct ResultsView: View {
 
 struct StatisticRow: View {
     let icon: String
-    let label: String
+    let label: LocalizedStringKey
     let value: String
     let color: Color
 

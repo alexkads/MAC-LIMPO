@@ -41,6 +41,7 @@ let package = Package(
                 "Makefile",
                 "Installer",
                 "Scripts",
+                "Localization",
                 // Saída de Scripts/bundle-app.sh, Installer/build-installer.sh e
                 // create_installer.sh: o .app, o .pkg, o .dmg e a staging do .dmg
                 // (que tem um symlink para /Applications — sem este exclude o SPM

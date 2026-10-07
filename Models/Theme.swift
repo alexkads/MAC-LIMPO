@@ -66,10 +66,10 @@ enum AppTheme: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .classic: "Classic"
-        case .cyberpunk: "Cyberpunk"
-        case .matrix: "Matrix"
-        case .liquidGlass: "Liquid Glass"
+        case .classic: String(localized: "Classic")
+        case .cyberpunk: String(localized: "Cyberpunk")
+        case .matrix: String(localized: "Matrix")
+        case .liquidGlass: String(localized: "Liquid Glass")
         }
     }
 

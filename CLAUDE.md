@@ -17,6 +17,7 @@ swift test                  # run unit tests (Tests/MACLIMPOTests)
 make app                    # assemble + sign build/app/MAC-LIMPO.app  (Scripts/bundle-app.sh)
 make installer              # → build/MAC-LIMPO-<version>.pkg          (Installer/build-installer.sh)
 make dmg                    # → build/MAC-LIMPO-<version>.dmg          (./create_installer.sh)
+make strings                # refresh Localization/Localizable.xcstrings from the code (then translate pt-BR)
 make docs-deploy            # publish the site + install.sh to gh-pages (release first — see Releasing)
 ./create_xcode_project.sh   # generate an Xcode project if you need the IDE
 swiftformat . && swiftlint  # format + lint (configs: .swiftformat, .swiftlint.yml)
@@ -113,7 +114,7 @@ Users only see published work: the site's `install.sh` (updated by `make docs-de
 
 ### Website
 
-MkDocs Material in `docs/` (+ `overrides/` for Open Graph/JSON-LD), English and Portuguese via suffix files (`page.pt.md`), published to the `gh-pages` branch with `make docs-deploy` (`mkdocs gh-deploy`; `.github/workflows/pages.yml` is a manual alternative). `docs/cleaning.md` lists the categories — regenerate it when categories change. `mkdocs build --strict` must pass.
+MkDocs Material in `docs/` (+ `overrides/` for Open Graph/JSON-LD), English and Portuguese via suffix files (`page.pt.md`) — a first visit from a Portuguese browser is sent to `/pt/` and a pick in the language selector is remembered (script in `overrides/main.html`), published to the `gh-pages` branch with `make docs-deploy` (`mkdocs gh-deploy`; `.github/workflows/pages.yml` is a manual alternative). `docs/cleaning.md` lists the categories — regenerate it when categories change. `mkdocs build --strict` must pass.
 
 ### Development hooks (env vars)
 
@@ -121,6 +122,7 @@ MkDocs Material in `docs/` (+ `overrides/` for Open Graph/JSON-LD), English and 
 
 ## Conventions
 
-- 4-space indentation; UI/user-visible strings in English, log/comments often Portuguese.
+- 4-space indentation; log/comments often Portuguese.
+- **The UI is English + Brazilian Portuguese** (follows the macOS language, English fallback). Source text is English; translations live in `Localization/Localizable.xcstrings` (String Catalog) and `Localization/InfoPlist.xcstrings`. SwiftUI literals (`Text("…")`, `Button`, `Label`, `.help`) are localized automatically; any user-visible `String` must be written as `String(localized: "… \(value) …")` where the literal is — never a dynamic key. Enums show `displayName`/`title` (localized), never `rawValue` (identity: ids, persisted keys, logs). After adding or changing UI text: `make strings` (`Scripts/sync-strings.sh` — the compiler's `-emit-localized-strings` + `xcstringstool sync`, built in `.build/strings`), then fill in `pt-BR`. `LocalizationTests` fails on a missing translation or mismatched placeholders. `bundle-app.sh` compiles the catalogs into `en.lproj`/`pt-BR.lproj` and declares `CFBundleLocalizations`; `swift run` (no bundle) is always English. Check a language with `…/MAC-LIMPO -AppleLanguages '(pt-BR)'`. Number/size formatting follows the region, not the language. In pt-BR use macOS terms ("Lixo", "Ajustes do Sistema", "Acesso Total ao Disco"); "Disk X-Ray" stays as the product name.
 - `Color(hex:)` extension lives in `Models/CleaningCategory.swift`.
 - Design notes for the project live as `Services/*.md` files (excluded from the build) and `docs/`.

@@ -199,7 +199,7 @@ class IDECacheCleaningService: BaseCleaningService, CleaningService, @unchecked 
                 bytesRemoved += size
                 filesRemoved += 1
             } else {
-                errors.append("Falha ao limpar: \((path as NSString).lastPathComponent)")
+                errors.append(String(localized: "Failed to clean \((path as NSString).lastPathComponent)"))
             }
         }
     }
@@ -336,7 +336,7 @@ class IDECacheCleaningService: BaseCleaningService, CleaningService, @unchecked 
                     filesRemoved += 1
                     logger.log("Removido JetBrains \(name): \(fileHelper.formatBytes(size))", level: .debug)
                 } catch {
-                    errors.append("Falha ao limpar: \(name)")
+                    errors.append(String(localized: "Failed to clean \(name)"))
                     logger.log("Falha ao remover: \(expandedPath)", level: .error)
                 }
             }

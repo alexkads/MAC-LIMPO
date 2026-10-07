@@ -14,6 +14,11 @@ description: Frequently asked questions about MAC-LIMPO.
 ??? question "Which macOS versions are supported?"
     macOS 26.6 or later on Apple silicon. Building needs the Command Line Tools or Xcode with Swift 6.4.
 
+??? question "Which languages does it speak?"
+    English and Brazilian Portuguese. The app follows the language of your Mac (System Settings › General ›
+    Language & Region) and uses English for any other language. This site opens in Portuguese for Portuguese
+    browsers; the language selector at the top switches it, and your pick is remembered.
+
 ??? question "Will it delete my files?"
     It targets caches, build output and temporary files that tools recreate. Path-based cleaners move items to
     the Trash. See [Safety](safety.md) for the details and the exceptions.

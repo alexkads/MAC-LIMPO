@@ -52,13 +52,13 @@ class XcodeCacheCleaningService: BaseCleaningService, CleaningService, @unchecke
         var items: [String] = []
 
         logger.log("Iniciando escaneamento do ambiente de desenvolvimento Xcode", level: .info)
-        progress?("Checking Xcode paths...")
+        progress?(String(localized: "Checking Xcode paths…"))
 
         for path in xcodePaths {
             let expandedPath = fileHelper.expandPath(path)
             if fileHelper.fileExists(atPath: expandedPath) {
                 let readablePath = getReadableName(for: path)
-                progress?("Scanning \(readablePath)...")
+                progress?(String(localized: "Scanning \(readablePath)…"))
 
                 let size = fileHelper.sizeOfDirectory(atPath: expandedPath)
                 if size > 0 {
@@ -188,7 +188,7 @@ class XcodeCacheCleaningService: BaseCleaningService, CleaningService, @unchecke
                         filesRemoved += 1
                         logger.log("Removido: \(item)", level: .debug)
                     } catch {
-                        let errorMsg = "Falha ao remover \(item): \(error.localizedDescription)"
+                        let errorMsg = String(localized: "Failed to remove \(item): \(error.localizedDescription)")
                         errors.append(errorMsg)
                         logger.log(errorMsg, level: .error)
                     }
@@ -261,7 +261,7 @@ class XcodeCacheCleaningService: BaseCleaningService, CleaningService, @unchecke
                             filesRemoved += 1
                             logger.log("Simulador antigo removido: \(device)", level: .debug)
                         } catch {
-                            let errorMsg = "Falha ao remover simulador \(device): \(error.localizedDescription)"
+                            let errorMsg = String(localized: "Failed to remove simulator \(device): \(error.localizedDescription)")
                             errors.append(errorMsg)
                             logger.log(errorMsg, level: .error)
                         }
@@ -309,7 +309,7 @@ class XcodeCacheCleaningService: BaseCleaningService, CleaningService, @unchecke
                         filesRemoved += 1
                         logger.log("Removido diretório .build: \(buildDir)", level: .debug)
                     } catch {
-                        let errorMsg = "Falha ao remover \(buildDir): \(error.localizedDescription)"
+                        let errorMsg = String(localized: "Failed to remove \(buildDir): \(error.localizedDescription)")
                         errors.append(errorMsg)
                         logger.log(errorMsg, level: .error)
                     }

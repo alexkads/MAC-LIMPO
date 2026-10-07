@@ -58,7 +58,7 @@ class ProjectCleaningService: BaseCleaningService, CleaningService, @unchecked S
 
                 if safeToDelete {
                     // Calculate size
-                    progress?("Analyzing \(name) in \(url.deletingLastPathComponent().lastPathComponent)...")
+                    progress?(String(localized: "Analyzing \(name) in \(url.deletingLastPathComponent().lastPathComponent)…"))
                     let size = await fileHelper.sizeOfDirectoryAsync(atPath: path)
 
                     if size > 50 * 1024 * 1024 { // Only suggest big folders (> 50MB) to avoid noise
@@ -122,7 +122,7 @@ class ProjectCleaningService: BaseCleaningService, CleaningService, @unchecked S
                             filesRemoved += 1
                             Logger.shared.log("Cleaned project artifact: \(path)", level: .info)
                         } catch {
-                            errors.append("Failed to clean \(name): \(error.localizedDescription)")
+                            errors.append(String(localized: "Failed to clean \(name): \(error.localizedDescription)"))
                             Logger.shared.log("Failed to clean \(path): \(error)", level: .error)
                         }
                     }

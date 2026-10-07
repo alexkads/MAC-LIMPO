@@ -1,4 +1,4 @@
-.PHONY: build release test app installer dmg install uninstall format lint clean help docs docs-serve docs-deploy
+.PHONY: build release test strings app installer dmg install uninstall format lint clean help docs docs-serve docs-deploy
 
 CONFIGURATION ?= release
 VERSION := $(shell tr -d ' \n' < VERSION)
@@ -10,6 +10,7 @@ help:
 	@echo "  make release     Build de release"
 	@echo "  make test        Roda os testes unitários"
 	@echo "  make run         Compila e abre o app (ícone de lixeira na barra de menus)"
+	@echo "  make strings     Atualiza o catálogo de traduções (Localization/Localizable.xcstrings)"
 	@echo "  make app         Monta e assina build/app/MAC-LIMPO.app"
 	@echo "  make installer   Gera build/MAC-LIMPO-$(VERSION).pkg"
 	@echo "  make docs        Gera o site (MkDocs) em build/site/"
@@ -32,6 +33,9 @@ test:
 
 run:
 	swift run
+
+strings:
+	./Scripts/sync-strings.sh
 
 app:
 	./Scripts/bundle-app.sh

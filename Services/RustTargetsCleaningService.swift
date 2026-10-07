@@ -50,7 +50,7 @@ final class RustTargetsCleaningService: BaseCleaningService, CleaningService, @u
 
         var candidates: [Candidate] = []
         for (path, displayName) in found {
-            progress?("Measuring \(displayName)...")
+            progress?(String(localized: "Measuring \(displayName)…"))
             let size = await fileHelper.sizeOfDirectoryAsync(atPath: path)
             guard size >= minimumSize else { continue }
             candidates.append(Candidate(path: path, size: size, displayName: displayName))
@@ -128,7 +128,7 @@ final class RustTargetsCleaningService: BaseCleaningService, CleaningService, @u
 
     func scan(progress: (@Sendable (String) -> Void)?) async -> ScanResult {
         logger.log("Iniciando escaneamento de targets Rust", level: .info)
-        progress?("Scanning Rust projects...")
+        progress?(String(localized: "Scanning Rust projects…"))
 
         let candidates = await findTargets(progress: progress)
         let totalSize = candidates.reduce(Int64(0)) { $0 + $1.size }
@@ -170,7 +170,7 @@ final class RustTargetsCleaningService: BaseCleaningService, CleaningService, @u
 
         for candidate in candidates {
             if isBuildInProgress(targetPath: candidate.path) {
-                errors.append("Skipped \(candidate.displayName): a Cargo build is running")
+                errors.append(String(localized: "Skipped \(candidate.displayName): a Cargo build is running"))
                 logger.log("Pulando \(candidate.path): build do cargo em andamento", level: .warning)
                 continue
             }
@@ -198,7 +198,7 @@ final class RustTargetsCleaningService: BaseCleaningService, CleaningService, @u
                 logger.log("Esvaziado target Rust: \(candidate.path)", level: .info)
             } else {
                 errors.append(
-                    "Partially cleaned \(candidate.displayName): \(failures.count) item(s) could not be removed"
+                    String(localized: "Partially cleaned \(candidate.displayName): \(failures.count) item(s) could not be removed")
                 )
                 for failure in failures {
                     logger.log("Falha ao remover \(failure)", level: .error)

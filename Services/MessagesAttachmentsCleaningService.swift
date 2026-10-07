@@ -55,7 +55,7 @@ class MessagesAttachmentsCleaningService: BaseCleaningService, CleaningService, 
                     try fileHelper.removeItem(atPath: itemPath)
                     filesRemoved += 1
                 } catch {
-                    errors.append("Failed to remove \(item): \(error.localizedDescription)")
+                    errors.append(String(localized: "Failed to remove \(item): \(error.localizedDescription)"))
                 }
             }
 
@@ -63,8 +63,8 @@ class MessagesAttachmentsCleaningService: BaseCleaningService, CleaningService, 
         }
 
         // Nota sobre attachments
-        errors.append("Only Messages cache cleared")
-        errors.append("Original attachments preserved to maintain message history")
+        errors.append(String(localized: "Only Messages cache cleared"))
+        errors.append(String(localized: "Original attachments preserved to maintain message history"))
 
         let executionTime = Date().timeIntervalSince(startTime)
 

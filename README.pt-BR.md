@@ -76,6 +76,8 @@ Mais detalhes no [guia de instalação](https://alexkads.github.io/MAC-LIMPO/pt/
 
 **Visual nativo** — o tema padrão *Liquid Glass* usa só componentes do sistema; os temas Classic, Cyberpunk e Matrix estão a um clique. O Apple Intelligence escreve uma recomendação de armazenamento no próprio Mac, e os App Intents levam a limpeza para o Atalhos e a Siri.
 
+**Inglês e português** — o app segue o idioma do seu Mac (inglês nos demais); este site também.
+
 <br clear="right">
 
 ## Contribuir

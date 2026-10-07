@@ -81,6 +81,59 @@ enum CleaningCategory: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
+    /// Nome na interface, traduzido. O rawValue fica como identidade estável
+    /// (id do ForEach, logs) e não deve aparecer na tela.
+    var displayName: String {
+        switch self {
+        case .docker: String(localized: "Docker")
+        case .devPackages: String(localized: "Dev Packages")
+        case .xcodeCache: String(localized: "Xcode Cache")
+        case .iosSimulators: String(localized: "iOS Simulators")
+        case .ideCache: String(localized: "IDE Cache")
+        case .androidSDK: String(localized: "Android SDK")
+        case .playwright: String(localized: "Playwright")
+        case .cargo: String(localized: "Cargo/Rust")
+        case .homebrew: String(localized: "Homebrew")
+        case .terminalLogs: String(localized: "Terminal Logs")
+        case .tempFiles: String(localized: "Temp Files")
+        case .logs: String(localized: "Logs")
+        case .appCache: String(localized: "App Cache")
+        case .downloads: String(localized: "Old Downloads")
+        case .trash: String(localized: "Trash Bin")
+        case .browserCache: String(localized: "Browser Cache")
+        case .spotifyCache: String(localized: "Spotify Cache")
+        case .slackCache: String(localized: "Slack Cache")
+        case .messagingApps: String(localized: "Messaging Apps")
+        case .adobeCache: String(localized: "Adobe Cache")
+        case .mailAttachments: String(localized: "Mail Attachments")
+        case .messagesAttachments: String(localized: "Messages Attachments")
+        case .systemData: String(localized: "System Data")
+        case .varFolders: String(localized: "Var Folders")
+        case .aiTools: String(localized: "AI Tools")
+        case .creativeApps: String(localized: "Creative Apps")
+        case .podcasts: String(localized: "Podcasts")
+        case .appLeftovers: String(localized: "App Leftovers")
+        case .development: String(localized: "Project Builds")
+        case .rustTargets: String(localized: "Rust Targets")
+        case .pnpm: String(localized: "pnpm Store")
+        case .goCache: String(localized: "Go Cache")
+        case .devApiTools: String(localized: "API Tools")
+        case .notionCache: String(localized: "Notion Cache")
+        case .cypress: String(localized: "Cypress")
+        case .tiktokLiveStudio: String(localized: "TikTok LIVE Studio")
+        case .nugetCache: String(localized: "NuGet Cache")
+        case .bunCache: String(localized: "Bun Cache")
+        case .pubCache: String(localized: "pub Cache")
+        case .googleCache: String(localized: "Google Cache")
+        case .nvmVersions: String(localized: "Node Versions")
+        case .azureTools: String(localized: "Azure Tools")
+        case .expoCache: String(localized: "Expo Cache")
+        case .zedCache: String(localized: "Zed Cache")
+        case .aiModels: String(localized: "AI Models")
+        case .dotnetSdks: String(localized: ".NET SDKs")
+        }
+    }
+
     var id: String {
         rawValue
     }
@@ -198,97 +251,97 @@ enum CleaningCategory: String, CaseIterable, Identifiable, Sendable {
     var description: String {
         switch self {
         case .docker:
-            "Remove unused containers, images, and volumes"
+            String(localized: "Remove unused containers, images, and volumes")
         case .devPackages:
-            "Clear npm, pip, brew, and cargo caches"
+            String(localized: "Clear npm, pip, brew, and cargo caches")
         case .xcodeCache:
-            "Clean DerivedData, Archives, and build caches"
+            String(localized: "Clean DerivedData, Archives, and build caches")
         case .iosSimulators:
-            "Remove old iOS Simulator devices and data"
+            String(localized: "Remove old iOS Simulator devices and data")
         case .ideCache:
-            "Clean JetBrains, VS Code, Cursor caches"
+            String(localized: "Clean JetBrains, VS Code, Cursor caches")
         case .androidSDK:
-            "Clean Gradle cache and old Android SDK data"
+            String(localized: "Clean Gradle cache and old Android SDK data")
         case .playwright:
-            "Remove Playwright browser caches"
+            String(localized: "Remove Playwright browser caches")
         case .cargo:
-            "Clean Rust/Cargo build cache and registry"
+            String(localized: "Clean Rust/Cargo build cache and registry")
         case .homebrew:
-            "Clear Homebrew package download cache"
+            String(localized: "Clear Homebrew package download cache")
         case .terminalLogs:
-            "Remove old terminal log files"
+            String(localized: "Remove old terminal log files")
         case .tempFiles:
-            "Delete temporary files and caches"
+            String(localized: "Delete temporary files and caches")
         case .logs:
-            "Clean up old system and app logs (30+ days)"
+            String(localized: "Clean up old system and app logs (30+ days)")
         case .appCache:
-            "Clear application caches"
+            String(localized: "Clear application caches")
         case .downloads:
-            "Remove downloads older than 30 days"
+            String(localized: "Remove downloads older than 30 days")
         case .trash:
-            "Empty Trash and recover space"
+            String(localized: "Empty Trash and recover space")
         case .browserCache:
-            "Clear Safari, Chrome, Firefox cache"
+            String(localized: "Clear Safari, Chrome, Firefox cache")
         case .spotifyCache:
-            "Clean Spotify offline cache"
+            String(localized: "Clean Spotify offline cache")
         case .slackCache:
-            "Clear Slack cache and temp files"
+            String(localized: "Clear Slack cache and temp files")
         case .messagingApps:
-            "Clean WhatsApp, Teams, Discord caches"
+            String(localized: "Clean WhatsApp, Teams, Discord caches")
         case .adobeCache:
-            "Clear Adobe apps cache and media files"
+            String(localized: "Clear Adobe apps cache and media files")
         case .mailAttachments:
-            "Clean old Mail app attachments"
+            String(localized: "Clean old Mail app attachments")
         case .messagesAttachments:
-            "Remove old Messages attachments"
+            String(localized: "Remove old Messages attachments")
         case .systemData:
-            "Deep clean system caches and temporary data"
+            String(localized: "Deep clean system caches and temporary data")
         case .varFolders:
-            "Clean /var/folders temp caches (Chrome, Metal, clang)"
+            String(localized: "Clean /var/folders temp caches (Chrome, Metal, clang)")
         case .aiTools:
-            "Clear AI tools cache (Claude, Gemini, Cursor, Copilot)"
+            String(localized: "Clear AI tools cache (Claude, Gemini, Cursor, Copilot)")
         case .creativeApps:
-            "Clean Canva, Affinity, Figma caches"
+            String(localized: "Clean Canva, Affinity, Figma caches")
         case .podcasts:
-            "Remove downloaded episodes and caches"
+            String(localized: "Remove downloaded episodes and caches")
         case .appLeftovers:
-            "Remove data from uninstalled apps (JetBrains, Trae, etc)"
+            String(localized: "Remove data from uninstalled apps (JetBrains, Trae, etc)")
         case .development:
-            "Clean node_modules and build artifacts from projects"
+            String(localized: "Clean node_modules and build artifacts from projects")
         case .rustTargets:
-            "Remove Cargo target/ build directories from Rust projects"
+            String(localized: "Remove Cargo target/ build directories from Rust projects")
         case .pnpm:
-            "Clean pnpm package store and dlx/metadata caches"
+            String(localized: "Clean pnpm package store and dlx/metadata caches")
         case .goCache:
-            "Clean Go module cache, build cache, and gopls"
+            String(localized: "Clean Go module cache, build cache, and gopls")
         case .devApiTools:
-            "Clean Postman, Insomnia, Bruno caches and logs"
+            String(localized: "Clean Postman, Insomnia, Bruno caches and logs")
         case .notionCache:
-            "Remove Notion asset cache and GPU caches"
+            String(localized: "Remove Notion asset cache and GPU caches")
         case .cypress:
-            "Clean Cypress test data and browser binary cache"
+            String(localized: "Clean Cypress test data and browser binary cache")
         case .tiktokLiveStudio:
-            "Clean TikTok LIVE Studio browser cache and logs (keeps your effects/assets)"
+            String(localized: "Clean TikTok LIVE Studio browser cache and logs (keeps your effects/assets)")
         case .nugetCache:
-            "Clear the global NuGet package cache (restored on dotnet build)"
+            String(localized: "Clear the global NuGet package cache (restored on dotnet build)")
         case .bunCache:
-            "Clear Bun's global install cache"
+            String(localized: "Clear Bun's global install cache")
         case .pubCache:
-            "Clear downloaded Dart/Flutter pub packages (re-fetched on pub get)"
+            String(localized: "Clear downloaded Dart/Flutter pub packages (re-fetched on pub get)")
         case .googleCache:
-            "Clear Chrome regenerable profile caches and old Google Updater versions"
+            String(localized: "Clear Chrome regenerable profile caches and old Google Updater versions")
         case .nvmVersions:
-            "Remove old nvm Node versions (keeps default and newest per major)"
+            String(localized: "Remove old nvm Node versions (keeps default and newest per major)")
         case .azureTools:
-            "Remove downloaded Azure Functions Core Tools versions"
+            String(localized: "Remove downloaded Azure Functions Core Tools versions")
         case .expoCache:
-            "Clear Expo Go, APK, and simulator app caches"
+            String(localized: "Clear Expo Go, APK, and simulator app caches")
         case .zedCache:
-            "Remove Zed's downloaded runtimes, language servers, and logs"
+            String(localized: "Remove Zed's downloaded runtimes, language servers, and logs")
         case .aiModels:
-            "Remove local AI model caches (Ollama/LM Studio models need aggressive mode)"
+            String(localized: "Remove local AI model caches (Ollama/LM Studio models need aggressive mode)")
         case .dotnetSdks:
-            "Remove superseded .NET SDK and runtime patches (keeps newest of each line; asks admin password)"
+            String(localized: "Remove superseded .NET SDK and runtime patches (keeps newest of each line; asks admin password)")
         }
     }
 }
@@ -299,6 +352,17 @@ enum CleaningGroup: String, CaseIterable, Identifiable {
     case apps = "Apps & Browsers"
     case communication = "Communication"
     case media = "Media"
+
+    /// Nome do grupo na interface, traduzido.
+    var title: String {
+        switch self {
+        case .development: String(localized: "Development")
+        case .system: String(localized: "System")
+        case .apps: String(localized: "Apps & Browsers")
+        case .communication: String(localized: "Communication")
+        case .media: String(localized: "Media")
+        }
+    }
 
     var id: String {
         rawValue

@@ -157,7 +157,7 @@ class MenuBarViewModel: ObservableObject {
 
         await MainActor.run {
             isScanning[category] = true
-            scanningStatus[category] = "Starting..."
+            scanningStatus[category] = String(localized: "Starting…")
         }
 
         let started = Date()
@@ -180,7 +180,7 @@ class MenuBarViewModel: ObservableObject {
                 scanResults[category] = scanned
             } else if scanResults[category] == nil {
                 scanResults[category] = ScanResult(
-                    category: category, estimatedSize: 0, itemCount: 0, items: ["Scan timed out — refresh to retry"]
+                    category: category, estimatedSize: 0, itemCount: 0, items: [String(localized: "Scan timed out — refresh to retry")]
                 )
             }
             isScanning[category] = false
@@ -203,20 +203,20 @@ class MenuBarViewModel: ObservableObject {
         let totalSize = categories.reduce(Int64(0)) { $0 + (scanResults[$1]?.estimatedSize ?? 0) }
         let sizeText = FileSystemHelper.shared.formatBytes(totalSize)
         let title = categories.count == 1
-            ? "Limpar \(categories[0].rawValue)?"
-            : "Limpar \(categories.count) categorias?"
-        var body = """
-        Cerca de \(sizeText) serão liberados. Sempre que possível, os itens vão para a \
-        Lixeira e podem ser restaurados de lá.
-        """
+            ? String(localized: "Clean \(categories[0].displayName)?")
+            : String(localized: "Clean \(categories.count) categories?")
+        var body = String(
+            localized: "About \(sizeText) will be freed. Whenever possible, items go to the Trash and can be restored from there."
+        )
         if CleaningOptions.shared.aggressiveMode {
-            body += "\n\n⚡️ Modo agressivo ligado: também remove caches grandes regeneráveis " +
-                "(modelos de IA do Chrome, imagens Docker não usadas)."
+            body += "\n\n" + String(
+                localized: "⚡️ Aggressive mode is on: also removes large regenerable caches (Chrome AI models, unused Docker images)."
+            )
         }
         if dockerWipe {
-            body += "\n\n⚠️ Limpeza total do Docker ligada: todos os contêineres são parados e " +
-                "removidos, junto com TODAS as imagens e volumes — bancos de dados incluídos. " +
-                "Isso não vai para a Lixeira."
+            body += "\n\n" + String(
+                localized: "⚠️ Docker full cleanup is on: all containers are stopped and removed, along with ALL images and volumes — databases included. This doesn't go to the Trash."
+            )
         }
         confirmationRequest = ConfirmationRequest(title: title, message: body, onConfirm: onConfirm)
     }
@@ -331,7 +331,7 @@ class MenuBarViewModel: ObservableObject {
                 currentCleaningCategory = categories.first
                 showProgress = true
                 cleaningProgress = 0
-                currentOperation = "Cleaning \(total) categories..."
+                currentOperation = String(localized: "Cleaning \(total) categories…")
             }
 
             // Limpa em paralelo com janela deslizante (respeita o teto de concorrência).
@@ -348,7 +348,7 @@ class MenuBarViewModel: ObservableObject {
                     let done = results.count
                     await MainActor.run {
                         cleaningProgress = Double(done) / Double(total)
-                        currentOperation = "Cleaning… \(done)/\(total) categorias"
+                        currentOperation = String(localized: "Cleaning… \(done)/\(total) categories")
                         if let finished { currentCleaningCategory = finished.category }
                     }
                     if next < categories.count {
@@ -376,14 +376,35 @@ class MenuBarViewModel: ObservableObject {
     }
 }
 
+extension CleaningCategory {
+    /// Busca do popover: casa o nome traduzido, a descrição traduzida e o
+    /// rawValue (inglês), para que termos em inglês continuem funcionando.
+    /// Consulta vazia casa tudo.
+    func matchesSearch(_ query: String) -> Bool {
+        guard !query.isEmpty else { return true }
+        return displayName.localizedCaseInsensitiveContains(query)
+            || description.localizedCaseInsensitiveContains(query)
+            || rawValue.localizedCaseInsensitiveContains(query)
+    }
+}
+
+extension Sequence<CleaningCategory> {
+    /// Ordem de exibição: pelo nome traduzido, como o Finder ordena.
+    func sortedForDisplay() -> [CleaningCategory] {
+        sorted { $0.displayName.localizedStandardCompare($1.displayName) == .orderedAscending }
+    }
+}
+
 struct MenuBarView: View {
     /// "Version 1.3.9 (12)", do Info.plist gerado por `Scripts/bundle-app.sh`.
     /// `nil` no `swift run`, que roda o executável solto, sem bundle.
     static let appVersion: String? = {
         let info = Bundle.main.infoDictionary
         guard let short = info?["CFBundleShortVersionString"] as? String, !short.contains("$(") else { return nil }
-        guard let build = info?["CFBundleVersion"] as? String, !build.contains("$(") else { return "Version \(short)" }
-        return "Version \(short) (\(build))"
+        guard let build = info?["CFBundleVersion"] as? String, !build.contains("$(") else {
+            return String(localized: "Version \(short)")
+        }
+        return String(localized: "Version \(short) (\(build))")
     }()
 
     @StateObject private var viewModel = MenuBarViewModel()
@@ -537,11 +558,9 @@ struct MenuBarView: View {
                                     let categoriesInGroup = viewModel.services.keys
                                         .filter {
                                             guard $0.group == group else { return false }
-                                            guard !query.isEmpty else { return true }
-                                            return $0.rawValue.localizedCaseInsensitiveContains(query)
-                                                || $0.description.localizedCaseInsensitiveContains(query)
+                                            return $0.matchesSearch(query)
                                         }
-                                        .sorted { $0.rawValue < $1.rawValue }
+                                        .sortedForDisplay()
 
                                     if !categoriesInGroup.isEmpty {
                                         VStack(alignment: .leading, spacing: 12) {
@@ -550,7 +569,7 @@ struct MenuBarView: View {
                                                 Image(systemName: group.icon)
                                                     .font(.system(size: 14))
                                                     .foregroundColor(themeManager.palette.secondaryText)
-                                                Text(group.rawValue)
+                                                Text(group.title)
                                                     .font(.system(size: 13, weight: .semibold))
                                                     .foregroundColor(themeManager.palette.secondaryText)
 
@@ -590,10 +609,7 @@ struct MenuBarView: View {
                             .padding(.horizontal, 20)
                             .padding(.top, 10)
 
-                            if !query.isEmpty && !viewModel.services.keys.contains(where: {
-                                $0.rawValue.localizedCaseInsensitiveContains(query)
-                                    || $0.description.localizedCaseInsensitiveContains(query)
-                            }) {
+                            if !query.isEmpty && !viewModel.services.keys.contains(where: { $0.matchesSearch(query) }) {
                                 VStack(spacing: 10) {
                                     Image(systemName: "magnifyingglass")
                                         .font(.system(size: 24, weight: .semibold))

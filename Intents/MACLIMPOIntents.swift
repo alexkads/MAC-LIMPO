@@ -23,7 +23,11 @@ struct ScanStorageIntent: AppIntent {
         }
 
         let total = results.reduce(Int64.zero) { $0 + $1.estimatedSize }
-        let message = "MAC-LIMPO found \(FileSystemHelper.shared.formatBytes(total)) of potentially reclaimable space across \(results.filter { $0.estimatedSize > 0 }.count) categories."
+        let size = FileSystemHelper.shared.formatBytes(total)
+        let categories = results.filter { $0.estimatedSize > 0 }.count
+        let message = String(
+            localized: "MAC-LIMPO found \(size) of potentially reclaimable space across \(categories) categories."
+        )
         return .result(value: message, dialog: IntentDialog(stringLiteral: message))
     }
 }
@@ -56,7 +60,8 @@ struct CleanAllStorageIntent: AppIntent {
 
         let bytes = results.reduce(Int64.zero) { $0 + $1.bytesRemoved }
         let files = results.reduce(0) { $0 + $1.filesRemoved }
-        let message = "MAC-LIMPO moved \(FileSystemHelper.shared.formatBytes(bytes)) to the Trash from \(files) items."
+        let size = FileSystemHelper.shared.formatBytes(bytes)
+        let message = String(localized: "MAC-LIMPO moved \(size) to the Trash from \(files) items.")
         return .result(value: message, dialog: IntentDialog(stringLiteral: message))
     }
 }

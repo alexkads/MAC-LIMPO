@@ -301,7 +301,7 @@ final class DotnetSdkCleaningService: BaseCleaningService, CleaningService, @unc
             .filter { Self.band(of: $0.1) == bandKey }
             .max { $0.1.lexicographicallyPrecedes($1.1) }?.0
         guard let sdk else {
-            errors.append("No .NET SDK \(plan.band) left to uninstall workloads \(plan.ids.joined(separator: ", "))")
+            errors.append(String(localized: "No .NET SDK \(plan.band) left to uninstall workloads \(plan.ids.joined(separator: ", "))"))
             return 0
         }
 
@@ -329,7 +329,7 @@ final class DotnetSdkCleaningService: BaseCleaningService, CleaningService, @unc
             if result.error.contains("User canceled") {
                 logger.log("Senha cancelada; workloads .NET mantidos", level: .info)
             } else {
-                errors.append("Failed to uninstall .NET workloads: \(plan.ids.joined(separator: ", "))")
+                errors.append(String(localized: "Failed to uninstall .NET workloads: \(plan.ids.joined(separator: ", "))"))
                 logger.log("dotnet workload uninstall falhou: \(result.error)", level: .error)
             }
             return 0
@@ -373,11 +373,11 @@ final class DotnetSdkCleaningService: BaseCleaningService, CleaningService, @unc
     // MARK: - Scan
 
     func scan(progress: (@Sendable (String) -> Void)?) async -> ScanResult {
-        progress?("Scanning .NET SDKs...")
+        progress?(String(localized: "Scanning .NET SDKs…"))
         logger.log("Iniciando escaneamento de SDKs .NET", level: .info)
 
         let aggressive = CleaningOptions.shared.aggressiveMode
-        progress?("Reading .NET projects...")
+        progress?(String(localized: "Reading .NET projects…"))
         let usage = projectUsage()
         let found = candidates(aggressive: aggressive, usage: usage)
         var items: [String] = []
@@ -462,7 +462,7 @@ final class DotnetSdkCleaningService: BaseCleaningService, CleaningService, @unc
                 bytesRemoved += candidate.size
                 filesRemoved += 1
             } catch {
-                errors.append("Failed to remove \(candidate.label)")
+                errors.append(String(localized: "Failed to remove \(candidate.label)"))
                 logger.log("Falha ao remover: \(candidate.path)", level: .error)
             }
         }
@@ -485,7 +485,7 @@ final class DotnetSdkCleaningService: BaseCleaningService, CleaningService, @unc
             } else if result.error.contains("User canceled") {
                 logger.log("Usuário cancelou o pedido de senha; SDKs do sistema mantidos", level: .info)
             } else {
-                errors.append("Failed to remove system-wide .NET SDKs")
+                errors.append(String(localized: "Failed to remove system-wide .NET SDKs"))
                 logger.log("osascript falhou: \(result.error)", level: .error)
             }
         }

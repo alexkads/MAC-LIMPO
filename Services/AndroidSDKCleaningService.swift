@@ -121,7 +121,7 @@ class AndroidSDKCleaningService: BaseCleaningService, CleaningService, @unchecke
                 filesRemoved += 1
                 logger.log("Removido System Images: \(fileHelper.formatBytes(size))", level: .debug)
             } catch {
-                errors.append("Falha ao limpar System Images")
+                errors.append(String(localized: "Failed to clean System Images"))
                 logger.log("Falha ao remover System Images: \(error.localizedDescription)", level: .error)
             }
         }
@@ -136,7 +136,7 @@ class AndroidSDKCleaningService: BaseCleaningService, CleaningService, @unchecke
                 filesRemoved += 1
                 logger.log("Removido AVDs: \(fileHelper.formatBytes(size))", level: .debug)
             } catch {
-                errors.append("Falha ao limpar AVDs")
+                errors.append(String(localized: "Failed to clean AVDs"))
                 logger.log("Falha ao remover AVDs: \(error.localizedDescription)", level: .error)
             }
         }
@@ -153,7 +153,7 @@ class AndroidSDKCleaningService: BaseCleaningService, CleaningService, @unchecke
                     filesRemoved += 1
                     logger.log("Removido Gradle: \(path) (\(fileHelper.formatBytes(size)))", level: .debug)
                 } catch {
-                    errors.append("Falha ao limpar: \(path)")
+                    errors.append(String(localized: "Failed to clean \(path)"))
                 }
             }
         }
@@ -220,7 +220,7 @@ class AndroidSDKCleaningService: BaseCleaningService, CleaningService, @unchecke
                 filesRemoved += 1
                 logger.log("Removido NDK antigo: \(version) (\(fileHelper.formatBytes(size)))", level: .debug)
             } catch {
-                errors.append("Falha ao limpar NDK \(version)")
+                errors.append(String(localized: "Failed to clean NDK \(version)"))
             }
         }
     }

@@ -1,0 +1,3541 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "" : {},
+    "%@\n%@ — you can restore it from the Trash." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@\n%2$@ — you can restore it from the Trash."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@\n%2$@ — dá para restaurar pelo Lixo."
+          }
+        }
+      }
+    },
+    "%@ file" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arquivo %@"
+          }
+        }
+      }
+    },
+    "%@ files" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ arquivos"
+          }
+        }
+      }
+    },
+    "%@ in %@ files" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ in %2$@ files"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ em %2$@ arquivos"
+          }
+        }
+      }
+    },
+    "%@ items · %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ items · %2$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ itens · %2$@"
+          }
+        }
+      }
+    },
+    "%@ items · scanned in %llds" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ items · scanned in %2$llds"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ itens · escaneado em %2$lld s"
+          }
+        }
+      }
+    },
+    "%@ theme" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tema %@"
+          }
+        }
+      }
+    },
+    "%@ used · %@ free of %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ used · %2$@ free of %3$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ usados · %2$@ livres de %3$@"
+          }
+        }
+      }
+    },
+    "%@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "%@: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@: %2$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: %2$@"
+          }
+        }
+      }
+    },
+    "%@: %@ files — click to highlight in the map" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@: %2$@ files — click to highlight in the map"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: %2$@ arquivos — clique para destacar no mapa"
+          }
+        }
+      }
+    },
+    "%lld" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld"
+          }
+        }
+      }
+    },
+    "%lld%%" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld%%"
+          }
+        }
+      }
+    },
+    ".NET SDKs" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SDKs do .NET"
+          }
+        }
+      }
+    },
+    "3D" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3D"
+          }
+        }
+      }
+    },
+    "3D map: cushion relief lit on the GPU (Metal) — folders show as creases. Off: the flat 2D map." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mapa 3D: relevo de almofadas iluminado pela GPU (Metal) — as pastas aparecem como vincos. Desligado: o mapa 2D plano."
+          }
+        }
+      }
+    },
+    "AI Models" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modelos de IA"
+          }
+        }
+      }
+    },
+    "AI Tools" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ferramentas de IA"
+          }
+        }
+      }
+    },
+    "API Tools" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ferramentas de API"
+          }
+        }
+      }
+    },
+    "About %@ will be freed. Whenever possible, items go to the Trash and can be restored from there." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerca de %@ serão liberados. Sempre que possível, os itens vão para o Lixo e podem ser restaurados de lá."
+          }
+        }
+      }
+    },
+    "Actual Size" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamanho Real"
+          }
+        }
+      }
+    },
+    "Actual Size (⌘0)" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamanho Real (⌘0)"
+          }
+        }
+      }
+    },
+    "Adobe Cache" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache da Adobe"
+          }
+        }
+      }
+    },
+    "Aggressive cleaning" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpeza agressiva"
+          }
+        }
+      }
+    },
+    "Also clears large regenerable caches (Chrome AI models, all unused Docker images)" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Também limpa caches grandes que se regeneram (modelos de IA do Chrome, todas as imagens Docker sem uso)"
+          }
+        }
+      }
+    },
+    "Analyze" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analisar"
+          }
+        }
+      }
+    },
+    "Analyzing %@ in %@…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Analyzing %1$@ in %2$@…"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analisando %1$@ em %2$@…"
+          }
+        }
+      }
+    },
+    "Android SDK" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Android SDK"
+          }
+        }
+      }
+    },
+    "App Cache" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache de Apps"
+          }
+        }
+      }
+    },
+    "App Leftovers" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restos de Apps"
+          }
+        }
+      }
+    },
+    "Apple Intelligence" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Intelligence"
+          }
+        }
+      }
+    },
+    "Apple Intelligence is currently unavailable." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A Apple Intelligence não está disponível no momento."
+          }
+        }
+      }
+    },
+    "Apple Intelligence is ready on this Mac." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A Apple Intelligence está pronta neste Mac."
+          }
+        }
+      }
+    },
+    "Apps & Browsers" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps e Navegadores"
+          }
+        }
+      }
+    },
+    "Archives & Installers" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compactados e Instaladores"
+          }
+        }
+      }
+    },
+    "Attachments in Mail database preserved" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anexos no banco de dados do Mail preservados"
+          }
+        }
+      }
+    },
+    "Audio" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Áudio"
+          }
+        }
+      }
+    },
+    "Azure Tools" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ferramentas do Azure"
+          }
+        }
+      }
+    },
+    "Back to Top" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voltar à Raiz"
+          }
+        }
+      }
+    },
+    "Browser Cache" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache de Navegadores"
+          }
+        }
+      }
+    },
+    "Builds & Libraries" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Builds e Bibliotecas"
+          }
+        }
+      }
+    },
+    "Bun Cache" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache do Bun"
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelar"
+          }
+        }
+      }
+    },
+    "Cargo/Rust" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cargo/Rust"
+          }
+        }
+      }
+    },
+    "Checking %@…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verificando %@…"
+          }
+        }
+      }
+    },
+    "Checking Homebrew…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verificando o Homebrew…"
+          }
+        }
+      }
+    },
+    "Checking JetBrains Products…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verificando produtos JetBrains…"
+          }
+        }
+      }
+    },
+    "Checking Xcode paths…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verificando caminhos do Xcode…"
+          }
+        }
+      }
+    },
+    "Choose Folder…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolher Pasta…"
+          }
+        }
+      }
+    },
+    "Choose what to scan" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolha o que escanear"
+          }
+        }
+      }
+    },
+    "Classic" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clássico"
+          }
+        }
+      }
+    },
+    "Clean" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpar"
+          }
+        }
+      }
+    },
+    "Clean %@?" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpar %@?"
+          }
+        }
+      }
+    },
+    "Clean %lld categories?" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpar %lld categorias?"
+          }
+        }
+      }
+    },
+    "Clean /var/folders temp caches (Chrome, Metal, clang)" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa caches temporários em /var/folders (Chrome, Metal, clang)"
+          }
+        }
+      }
+    },
+    "Clean All" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpar Tudo"
+          }
+        }
+      }
+    },
+    "Clean Canva, Affinity, Figma caches" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa os caches do Canva, Affinity e Figma"
+          }
+        }
+      }
+    },
+    "Clean Cypress test data and browser binary cache" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa dados de teste do Cypress e o cache de binários de navegador"
+          }
+        }
+      }
+    },
+    "Clean DerivedData, Archives, and build caches" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa DerivedData, Archives e caches de build"
+          }
+        }
+      }
+    },
+    "Clean Go module cache, build cache, and gopls" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa o cache de módulos, o cache de build e o gopls do Go"
+          }
+        }
+      }
+    },
+    "Clean Gradle cache and old Android SDK data" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa o cache do Gradle e dados antigos do Android SDK"
+          }
+        }
+      }
+    },
+    "Clean JetBrains, VS Code, Cursor caches" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa os caches do JetBrains, VS Code e Cursor"
+          }
+        }
+      }
+    },
+    "Clean Mac Storage" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpar o Armazenamento do Mac"
+          }
+        }
+      }
+    },
+    "Clean Postman, Insomnia, Bruno caches and logs" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa caches e logs do Postman, Insomnia e Bruno"
+          }
+        }
+      }
+    },
+    "Clean Rust/Cargo build cache and registry" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa o cache de build e o registry do Rust/Cargo"
+          }
+        }
+      }
+    },
+    "Clean Spotify offline cache" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa o cache offline do Spotify"
+          }
+        }
+      }
+    },
+    "Clean TikTok LIVE Studio browser cache and logs (keeps your effects/assets)" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa o cache de navegador e os logs do TikTok LIVE Studio (mantém seus efeitos e arquivos)"
+          }
+        }
+      }
+    },
+    "Clean WhatsApp, Teams, Discord caches" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa os caches do WhatsApp, Teams e Discord"
+          }
+        }
+      }
+    },
+    "Clean node_modules and build artifacts from projects" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa node_modules e artefatos de build dos projetos"
+          }
+        }
+      }
+    },
+    "Clean old Mail app attachments" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa anexos antigos do app Mail"
+          }
+        }
+      }
+    },
+    "Clean pnpm package store and dlx/metadata caches" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa a store de pacotes do pnpm e os caches de dlx/metadados"
+          }
+        }
+      }
+    },
+    "Clean storage" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpar armazenamento"
+          }
+        }
+      }
+    },
+    "Clean up old system and app logs (30+ days)" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa logs antigos do sistema e dos apps (mais de 30 dias)"
+          }
+        }
+      }
+    },
+    "Cleaning %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpando %@"
+          }
+        }
+      }
+    },
+    "Cleaning %lld categories…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpando %lld categorias…"
+          }
+        }
+      }
+    },
+    "Cleaning Complete" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpeza Concluída"
+          }
+        }
+      }
+    },
+    "Cleaning Complete!" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpeza Concluída!"
+          }
+        }
+      }
+    },
+    "Cleaning Failed" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A Limpeza Falhou"
+          }
+        }
+      }
+    },
+    "Cleaning Finished with Errors" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpeza Concluída com Erros"
+          }
+        }
+      }
+    },
+    "Cleaning…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpando…"
+          }
+        }
+      }
+    },
+    "Cleaning… %lld/%lld categories" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Cleaning… %1$lld/%2$lld categories"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpando… %1$lld/%2$lld categorias"
+          }
+        }
+      }
+    },
+    "Cleans %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa %@"
+          }
+        }
+      }
+    },
+    "Clear AI tools cache (Claude, Gemini, Cursor, Copilot)" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa o cache de ferramentas de IA (Claude, Gemini, Cursor, Copilot)"
+          }
+        }
+      }
+    },
+    "Clear Adobe apps cache and media files" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa o cache e os arquivos de mídia dos apps da Adobe"
+          }
+        }
+      }
+    },
+    "Clear Bun's global install cache" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa o cache global de instalação do Bun"
+          }
+        }
+      }
+    },
+    "Clear Chrome regenerable profile caches and old Google Updater versions" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa caches regeneráveis do perfil do Chrome e versões antigas do Google Updater"
+          }
+        }
+      }
+    },
+    "Clear Expo Go, APK, and simulator app caches" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa os caches do Expo Go, de APKs e de apps do simulador"
+          }
+        }
+      }
+    },
+    "Clear Homebrew package download cache" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa o cache de downloads de pacotes do Homebrew"
+          }
+        }
+      }
+    },
+    "Clear Safari, Chrome, Firefox cache" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa o cache do Safari, Chrome e Firefox"
+          }
+        }
+      }
+    },
+    "Clear Slack cache and temp files" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa o cache e os arquivos temporários do Slack"
+          }
+        }
+      }
+    },
+    "Clear application caches" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa os caches dos aplicativos"
+          }
+        }
+      }
+    },
+    "Clear downloaded Dart/Flutter pub packages (re-fetched on pub get)" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa pacotes pub baixados do Dart/Flutter (baixados de novo no pub get)"
+          }
+        }
+      }
+    },
+    "Clear npm, pip, brew, and cargo caches" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa os caches do npm, pip, brew e cargo"
+          }
+        }
+      }
+    },
+    "Clear search" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpar busca"
+          }
+        }
+      }
+    },
+    "Clear the global NuGet package cache (restored on dotnet build)" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpa o cache global de pacotes do NuGet (restaurado no dotnet build)"
+          }
+        }
+      }
+    },
+    "Communication" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comunicação"
+          }
+        }
+      }
+    },
+    "Continue Without Permission" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuar Sem Permissão"
+          }
+        }
+      }
+    },
+    "Copy Path" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copiar Caminho"
+          }
+        }
+      }
+    },
+    "Could not move %@ to the Trash." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível mover %@ para o Lixo."
+          }
+        }
+      }
+    },
+    "Could not read %@." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível ler %@."
+          }
+        }
+      }
+    },
+    "Creative Apps" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps Criativos"
+          }
+        }
+      }
+    },
+    "Cyberpunk" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cyberpunk"
+          }
+        }
+      }
+    },
+    "Cypress" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cypress"
+          }
+        }
+      }
+    },
+    "Data & Databases" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dados e Bancos de Dados"
+          }
+        }
+      }
+    },
+    "Deep clean system caches and temporary data" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpeza profunda de caches do sistema e dados temporários"
+          }
+        }
+      }
+    },
+    "Delete temporary files and caches" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apaga arquivos temporários e caches"
+          }
+        }
+      }
+    },
+    "Dev Packages" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pacotes de Desenvolvimento"
+          }
+        }
+      }
+    },
+    "Development" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desenvolvimento"
+          }
+        }
+      }
+    },
+    "Disk Images & VMs" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imagens de Disco e VMs"
+          }
+        }
+      }
+    },
+    "Disk X-Ray" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disk X-Ray"
+          }
+        }
+      }
+    },
+    "Disk X-Ray — MAC-LIMPO" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disk X-Ray — MAC-LIMPO"
+          }
+        }
+      }
+    },
+    "Disk used" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disco usado"
+          }
+        }
+      }
+    },
+    "Docker" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Docker"
+          }
+        }
+      }
+    },
+    "Docker full cleanup" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpeza total do Docker"
+          }
+        }
+      }
+    },
+    "Documents" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Documentos"
+          }
+        }
+      }
+    },
+    "Don't ask again this session" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não perguntar de novo nesta sessão"
+          }
+        }
+      }
+    },
+    "Done" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
+    },
+    "Done — I’ve Enabled It" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pronto — Já Ativei"
+          }
+        }
+      }
+    },
+    "Double-click to zoom in · pinch to magnify" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clique duplo para entrar · pinça para ampliar"
+          }
+        }
+      }
+    },
+    "Drag or scroll to pan" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arraste ou role para mover"
+          }
+        }
+      }
+    },
+    "Empty Trash and recover space" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esvazia o Lixo e recupera espaço"
+          }
+        }
+      }
+    },
+    "Enable Full Disk Access" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ative o Acesso Total ao Disco"
+          }
+        }
+      }
+    },
+    "Errors:" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erros:"
+          }
+        }
+      }
+    },
+    "Expo Cache" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache do Expo"
+          }
+        }
+      }
+    },
+    "Failed to clean %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao limpar %@"
+          }
+        }
+      }
+    },
+    "Failed to clean %@ cache: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Failed to clean %1$@ cache: %2$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao limpar o cache de %1$@: %2$@"
+          }
+        }
+      }
+    },
+    "Failed to clean %@: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Failed to clean %1$@: %2$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao limpar %1$@: %2$@"
+          }
+        }
+      }
+    },
+    "Failed to clean AVDs" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao limpar os AVDs"
+          }
+        }
+      }
+    },
+    "Failed to clean Docker Scout cache" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao limpar o cache do Docker Scout"
+          }
+        }
+      }
+    },
+    "Failed to clean NDK %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao limpar o NDK %@"
+          }
+        }
+      }
+    },
+    "Failed to clean System Images" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao limpar as System Images"
+          }
+        }
+      }
+    },
+    "Failed to clean build cache: %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao limpar o cache de build: %@"
+          }
+        }
+      }
+    },
+    "Failed to clean cache: %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao limpar o cache: %@"
+          }
+        }
+      }
+    },
+    "Failed to clean containers: %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao limpar os contêineres: %@"
+          }
+        }
+      }
+    },
+    "Failed to clean images: %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao limpar as imagens: %@"
+          }
+        }
+      }
+    },
+    "Failed to clean log %@: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Failed to clean log %1$@: %2$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao limpar o log %1$@: %2$@"
+          }
+        }
+      }
+    },
+    "Failed to clean networks: %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao limpar as redes: %@"
+          }
+        }
+      }
+    },
+    "Failed to clean root-owned caches" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao limpar caches do root"
+          }
+        }
+      }
+    },
+    "Failed to delete %@: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Failed to delete %1$@: %2$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao apagar %1$@: %2$@"
+          }
+        }
+      }
+    },
+    "Failed to delete JB %@: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Failed to delete JB %1$@: %2$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao apagar JB %1$@: %2$@"
+          }
+        }
+      }
+    },
+    "Failed to delete runtime %@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Failed to delete runtime %1$@ %2$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao apagar o runtime %1$@ %2$@"
+          }
+        }
+      }
+    },
+    "Failed to delete unavailable simulators: %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao apagar simuladores indisponíveis: %@"
+          }
+        }
+      }
+    },
+    "Failed to empty trash: %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao esvaziar o Lixo: %@"
+          }
+        }
+      }
+    },
+    "Failed to erase %@: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Failed to erase %1$@: %2$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao apagar o conteúdo de %1$@: %2$@"
+          }
+        }
+      }
+    },
+    "Failed to remove %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao remover %@"
+          }
+        }
+      }
+    },
+    "Failed to remove %@: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Failed to remove %1$@: %2$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao remover %1$@: %2$@"
+          }
+        }
+      }
+    },
+    "Failed to remove simulator %@: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Failed to remove simulator %1$@: %2$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao remover o simulador %1$@: %2$@"
+          }
+        }
+      }
+    },
+    "Failed to remove stale Docker staged update" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao remover uma atualização pendente antiga do Docker"
+          }
+        }
+      }
+    },
+    "Failed to remove system-wide .NET SDKs" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao remover SDKs do .NET instalados para todo o sistema"
+          }
+        }
+      }
+    },
+    "Failed to remove volume %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao remover o volume %@"
+          }
+        }
+      }
+    },
+    "Failed to remove volumes: %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao remover os volumes: %@"
+          }
+        }
+      }
+    },
+    "Failed to stop containers: %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao parar os contêineres: %@"
+          }
+        }
+      }
+    },
+    "Failed to uninstall .NET workloads: %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha ao desinstalar workloads do .NET: %@"
+          }
+        }
+      }
+    },
+    "Files" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arquivos"
+          }
+        }
+      }
+    },
+    "Files Removed" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arquivos Removidos"
+          }
+        }
+      }
+    },
+    "Files without an extension" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arquivos sem extensão"
+          }
+        }
+      }
+    },
+    "Folders" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pastas"
+          }
+        }
+      }
+    },
+    "Free" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Livre"
+          }
+        }
+      }
+    },
+    "Free Space" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espaço Livre"
+          }
+        }
+      }
+    },
+    "Free: %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Livre: %@"
+          }
+        }
+      }
+    },
+    "Full Disk Access Required" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Acesso Total ao Disco Necessário"
+          }
+        }
+      }
+    },
+    "Full Disk Access wasn’t detected yet. Make sure you added MAC-LIMPO and turned on its switch.\n\nYou can continue without this permission, but less space will be freed." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Acesso Total ao Disco ainda não foi detectado. Confira se você adicionou o MAC-LIMPO e ligou a chave dele.\n\nDá para continuar sem essa permissão, mas menos espaço será liberado."
+          }
+        }
+      }
+    },
+    "Generate a private, on-device storage recommendation." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gere uma recomendação de armazenamento privada, feita no próprio Mac."
+          }
+        }
+      }
+    },
+    "Generate storage recommendation" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerar recomendação de armazenamento"
+          }
+        }
+      }
+    },
+    "Generating recommendation" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gerando recomendação"
+          }
+        }
+      }
+    },
+    "Go Cache" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache do Go"
+          }
+        }
+      }
+    },
+    "Google Cache" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache do Google"
+          }
+        }
+      }
+    },
+    "Got It" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entendi"
+          }
+        }
+      }
+    },
+    "Hide" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar"
+          }
+        }
+      }
+    },
+    "Hide progress" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar progresso"
+          }
+        }
+      }
+    },
+    "Homebrew" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Homebrew"
+          }
+        }
+      }
+    },
+    "IDE Cache" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache de IDEs"
+          }
+        }
+      }
+    },
+    "Images" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imagens"
+          }
+        }
+      }
+    },
+    "In the System Settings window that just opened:\n\n1. Click the lock and authenticate\n2. Click the “+” button\n3. Go to Applications and select MAC-LIMPO\n4. Turn on the switch next to MAC-LIMPO\n5. Click “Done” in this alert when you’re finished\n\nAfter that, MAC-LIMPO will be able to free up much more space!" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Na janela de Ajustes do Sistema que acabou de abrir:\n\n1. Clique no cadeado e autentique\n2. Clique no botão “+”\n3. Vá em Aplicativos e selecione o MAC-LIMPO\n4. Ligue a chave ao lado do MAC-LIMPO\n5. Clique em “Pronto” neste alerta quando terminar\n\nDepois disso, o MAC-LIMPO vai conseguir liberar muito mais espaço!"
+          }
+        }
+      }
+    },
+    "Inspecting Docker…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspecionando o Docker…"
+          }
+        }
+      }
+    },
+    "Installed and running" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalado e em execução"
+          }
+        }
+      }
+    },
+    "Labels" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nomes"
+          }
+        }
+      }
+    },
+    "Largest Files" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maiores Arquivos"
+          }
+        }
+      }
+    },
+    "Launch at Login" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir ao Iniciar Sessão"
+          }
+        }
+      }
+    },
+    "Liquid Glass" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liquid Glass"
+          }
+        }
+      }
+    },
+    "Logical" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lógico"
+          }
+        }
+      }
+    },
+    "Logical Size" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamanho Lógico"
+          }
+        }
+      }
+    },
+    "Logs" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logs"
+          }
+        }
+      }
+    },
+    "MAC-LIMPO" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MAC-LIMPO"
+          }
+        }
+      }
+    },
+    "MAC-LIMPO found %@ of potentially reclaimable space across %lld categories." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "MAC-LIMPO found %1$@ of potentially reclaimable space across %2$lld categories."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O MAC-LIMPO encontrou %1$@ de espaço possivelmente recuperável em %2$lld categorias."
+          }
+        }
+      }
+    },
+    "MAC-LIMPO lives here in the menu bar — there's no Dock icon or main window. Click this icon anytime to scan your Mac and free up space." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O MAC-LIMPO mora aqui na barra de menus — não há ícone no Dock nem janela principal. Clique neste ícone quando quiser para escanear o Mac e liberar espaço."
+          }
+        }
+      }
+    },
+    "MAC-LIMPO lives in the menu bar — look for the trash icon at the top right of the screen. There's no Dock icon or main window.\n\nDon't see it? The menu bar may be full or the icon hidden by the notch: hold ⌘ and drag other icons aside, or allow MAC-LIMPO in System Settings › Menu Bar." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O MAC-LIMPO mora na barra de menus — procure o ícone de lixeira no canto superior direito da tela. Não há ícone no Dock nem janela principal.\n\nNão está vendo? A barra de menus pode estar cheia ou o ícone escondido pelo notch: segure ⌘ e arraste outros ícones para o lado, ou permita o MAC-LIMPO em Ajustes do Sistema › Barra de Menus."
+          }
+        }
+      }
+    },
+    "MAC-LIMPO moved %@ to the Trash from %lld items." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "MAC-LIMPO moved %1$@ to the Trash from %2$lld items."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O MAC-LIMPO moveu %1$@ para o Lixo, de %2$lld itens."
+          }
+        }
+      }
+    },
+    "MAC-LIMPO needs Full Disk Access to clean every area of the system and free up as much space as possible.\n\nWithout this permission: ~5–40 GB freed\nWith this permission: ~50–200 GB freed\n\nDo you want to open System Settings to enable it?" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O MAC-LIMPO precisa do Acesso Total ao Disco para limpar todas as áreas do sistema e liberar o máximo de espaço.\n\nSem essa permissão: ~5–40 GB liberados\nCom essa permissão: ~50–200 GB liberados\n\nQuer abrir os Ajustes do Sistema para ativá-la?"
+          }
+        }
+      }
+    },
+    "Magnify In (⌘+) — or pinch on the trackpad, scroll the mouse wheel" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ampliar (⌘+) — ou faça pinça no trackpad, role a roda do mouse"
+          }
+        }
+      }
+    },
+    "Magnify Map to Fit" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustar o Mapa à Janela"
+          }
+        }
+      }
+    },
+    "Magnify Out (⌘−)" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reduzir (⌘−)"
+          }
+        }
+      }
+    },
+    "Magnify to Fit" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustar à Janela"
+          }
+        }
+      }
+    },
+    "Magnify to Selection (⌘↩) — down to a 1 KB file" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ampliar até a Seleção (⌘↩) — até um arquivo de 1 KB"
+          }
+        }
+      }
+    },
+    "Mail Attachments" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anexos do Mail"
+          }
+        }
+      }
+    },
+    "Matrix" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Matrix"
+          }
+        }
+      }
+    },
+    "Measuring %@…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medindo %@…"
+          }
+        }
+      }
+    },
+    "Measuring %lld paths…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medindo %lld caminhos…"
+          }
+        }
+      }
+    },
+    "Measuring Homebrew formulae…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medindo as fórmulas do Homebrew…"
+          }
+        }
+      }
+    },
+    "Measuring everything in Docker…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medindo tudo no Docker…"
+          }
+        }
+      }
+    },
+    "Measuring volumes…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medindo os volumes…"
+          }
+        }
+      }
+    },
+    "Media" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mídia"
+          }
+        }
+      }
+    },
+    "Messages Attachments" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anexos do Mensagens"
+          }
+        }
+      }
+    },
+    "Messaging Apps" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apps de Mensagens"
+          }
+        }
+      }
+    },
+    "Modified" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modificado"
+          }
+        }
+      }
+    },
+    "Move to Trash" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mover para o Lixo"
+          }
+        }
+      }
+    },
+    "Move to Trash (⌘⌫)" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mover para o Lixo (⌘⌫)"
+          }
+        }
+      }
+    },
+    "Move to Trash?" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mover para o Lixo?"
+          }
+        }
+      }
+    },
+    "Move to Trash…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mover para o Lixo…"
+          }
+        }
+      }
+    },
+    "Moves eligible MAC-LIMPO items to the Trash after confirmation." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move para o Lixo os itens elegíveis do MAC-LIMPO, depois de confirmar."
+          }
+        }
+      }
+    },
+    "Name" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nome"
+          }
+        }
+      }
+    },
+    "Names on the blocks and folder headers. Off: a clean map — rest the pointer on a block to see its name." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nomes nos blocos e cabeçalhos das pastas. Desligado: um mapa limpo — pare o ponteiro sobre um bloco para ver o nome."
+          }
+        }
+      }
+    },
+    "No .NET SDK %@ left to uninstall workloads %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "No .NET SDK %1$@ left to uninstall workloads %2$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não sobrou nenhum SDK %1$@ do .NET para desinstalar os workloads %2$@"
+          }
+        }
+      }
+    },
+    "No categories found" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhuma categoria encontrada"
+          }
+        }
+      }
+    },
+    "No extension" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sem extensão"
+          }
+        }
+      }
+    },
+    "Node Versions" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versões do Node"
+          }
+        }
+      }
+    },
+    "Notion Cache" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache do Notion"
+          }
+        }
+      }
+    },
+    "NuGet Cache" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache do NuGet"
+          }
+        }
+      }
+    },
+    "OK" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
+    },
+    "Old Downloads" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloads Antigos"
+          }
+        }
+      }
+    },
+    "On Disk" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Disco"
+          }
+        }
+      }
+    },
+    "On Disk: space actually used. Logical: size the files report (sparse files, compression)." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Disco: espaço realmente ocupado. Lógico: tamanho que os arquivos informam (arquivos esparsos, compressão)."
+          }
+        }
+      }
+    },
+    "Only Mail Downloads cleared for safety" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Por segurança, só os Downloads do Mail foram limpos"
+          }
+        }
+      }
+    },
+    "Only Messages cache cleared" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Só o cache do Mensagens foi limpo"
+          }
+        }
+      }
+    },
+    "Open" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir"
+          }
+        }
+      }
+    },
+    "Open Disk X-Ray" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir o Disk X-Ray"
+          }
+        }
+      }
+    },
+    "Open MAC-LIMPO" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir o MAC-LIMPO"
+          }
+        }
+      }
+    },
+    "Open System Settings" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir Ajustes do Sistema"
+          }
+        }
+      }
+    },
+    "Original attachments preserved to maintain message history" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anexos originais preservados para manter o histórico de mensagens"
+          }
+        }
+      }
+    },
+    "Other" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outros"
+          }
+        }
+      }
+    },
+    "Partially cleaned %@: %lld item(s) could not be removed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Partially cleaned %1$@: %2$lld item(s) could not be removed"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ limpo em parte: %2$lld item(ns) não puderam ser removidos"
+          }
+        }
+      }
+    },
+    "Playwright" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Playwright"
+          }
+        }
+      }
+    },
+    "Podcasts" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Podcasts"
+          }
+        }
+      }
+    },
+    "Preparing…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparando…"
+          }
+        }
+      }
+    },
+    "Project Builds" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Builds de Projetos"
+          }
+        }
+      }
+    },
+    "Quick Look" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visualização Rápida"
+          }
+        }
+      }
+    },
+    "Quick Look (Space)" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visualização Rápida (Espaço)"
+          }
+        }
+      }
+    },
+    "Quit MAC-LIMPO" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encerrar o MAC-LIMPO"
+          }
+        }
+      }
+    },
+    "Reading .NET projects…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lendo os projetos .NET…"
+          }
+        }
+      }
+    },
+    "Ready" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pronto"
+          }
+        }
+      }
+    },
+    "Refresh" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Atualizar"
+          }
+        }
+      }
+    },
+    "Refresh scan" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escanear de novo"
+          }
+        }
+      }
+    },
+    "Remove Cargo target/ build directories from Rust projects" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove as pastas de build target/ do Cargo em projetos Rust"
+          }
+        }
+      }
+    },
+    "Remove Notion asset cache and GPU caches" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove o cache de arquivos e os caches de GPU do Notion"
+          }
+        }
+      }
+    },
+    "Remove Playwright browser caches" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove os caches de navegadores do Playwright"
+          }
+        }
+      }
+    },
+    "Remove Zed's downloaded runtimes, language servers, and logs" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove runtimes, language servers e logs baixados pelo Zed"
+          }
+        }
+      }
+    },
+    "Remove data from uninstalled apps (JetBrains, Trae, etc)" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove dados de apps desinstalados (JetBrains, Trae etc.)"
+          }
+        }
+      }
+    },
+    "Remove downloaded Azure Functions Core Tools versions" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove versões baixadas do Azure Functions Core Tools"
+          }
+        }
+      }
+    },
+    "Remove downloaded episodes and caches" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove episódios baixados e caches"
+          }
+        }
+      }
+    },
+    "Remove downloads older than 30 days" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove downloads com mais de 30 dias"
+          }
+        }
+      }
+    },
+    "Remove local AI model caches (Ollama/LM Studio models need aggressive mode)" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove caches locais de modelos de IA (modelos do Ollama/LM Studio exigem o modo agressivo)"
+          }
+        }
+      }
+    },
+    "Remove old Messages attachments" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove anexos antigos do Mensagens"
+          }
+        }
+      }
+    },
+    "Remove old iOS Simulator devices and data" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove dispositivos e dados antigos do Simulador iOS"
+          }
+        }
+      }
+    },
+    "Remove old nvm Node versions (keeps default and newest per major)" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove versões antigas do Node no nvm (mantém a padrão e a mais nova de cada major)"
+          }
+        }
+      }
+    },
+    "Remove old terminal log files" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove arquivos de log antigos do terminal"
+          }
+        }
+      }
+    },
+    "Remove superseded .NET SDK and runtime patches (keeps newest of each line; asks admin password)" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove patches superados de SDK e runtime do .NET (mantém o mais novo de cada linha; pede a senha de administrador)"
+          }
+        }
+      }
+    },
+    "Remove unused containers, images, and volumes" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove contêineres, imagens e volumes sem uso"
+          }
+        }
+      }
+    },
+    "Rescan" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escanear de Novo"
+          }
+        }
+      }
+    },
+    "Rust Targets" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Targets do Rust"
+          }
+        }
+      }
+    },
+    "Scan" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escanear"
+          }
+        }
+      }
+    },
+    "Scan %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escanear %@"
+          }
+        }
+      }
+    },
+    "Scan Mac Storage" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escanear o Armazenamento do Mac"
+          }
+        }
+      }
+    },
+    "Scan Target" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alvo do Escaneamento"
+          }
+        }
+      }
+    },
+    "Scan again (⌘R)" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escanear de novo (⌘R)"
+          }
+        }
+      }
+    },
+    "Scan storage" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escanear armazenamento"
+          }
+        }
+      }
+    },
+    "Scan timed out — refresh to retry" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O escaneamento demorou demais — atualize para tentar de novo"
+          }
+        }
+      }
+    },
+    "Scanning %@…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escaneando %@…"
+          }
+        }
+      }
+    },
+    "Scanning %lld system locations…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escaneando %lld locais do sistema…"
+          }
+        }
+      }
+    },
+    "Scanning .NET SDKs…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escaneando os SDKs do .NET…"
+          }
+        }
+      }
+    },
+    "Scanning Adobe: %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escaneando a Adobe: %@"
+          }
+        }
+      }
+    },
+    "Scanning Rust projects…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escaneando projetos Rust…"
+          }
+        }
+      }
+    },
+    "Scanning browser caches…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escaneando caches de navegadores…"
+          }
+        }
+      }
+    },
+    "Scanning…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escaneando…"
+          }
+        }
+      }
+    },
+    "Scans MAC-LIMPO cleaning categories and reports reclaimable space." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escaneia as categorias de limpeza do MAC-LIMPO e informa o espaço recuperável."
+          }
+        }
+      }
+    },
+    "Search cleaning categories" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buscar categorias de limpeza"
+          }
+        }
+      }
+    },
+    "Security" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segurança"
+          }
+        }
+      }
+    },
+    "Settings" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes"
+          }
+        }
+      }
+    },
+    "Share" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fatia"
+          }
+        }
+      }
+    },
+    "Show free space in the map" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar o espaço livre no mapa"
+          }
+        }
+      }
+    },
+    "Show in Finder" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar no Finder"
+          }
+        }
+      }
+    },
+    "Show space used by macOS and protected areas that the scan cannot read" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mostrar o espaço usado pelo macOS e por áreas protegidas que o escaneamento não consegue ler"
+          }
+        }
+      }
+    },
+    "Size" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamanho"
+          }
+        }
+      }
+    },
+    "Skip for Now" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pular por Enquanto"
+          }
+        }
+      }
+    },
+    "Skipped %@: a Cargo build is running" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ignorado: há um build do Cargo em andamento"
+          }
+        }
+      }
+    },
+    "Slack Cache" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache do Slack"
+          }
+        }
+      }
+    },
+    "Source Code" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Código-Fonte"
+          }
+        }
+      }
+    },
+    "Space Freed" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espaço Liberado"
+          }
+        }
+      }
+    },
+    "Spotify Cache" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache do Spotify"
+          }
+        }
+      }
+    },
+    "Starting…" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciando…"
+          }
+        }
+      }
+    },
+    "Stop" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parar"
+          }
+        }
+      }
+    },
+    "Stop scanning" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parar o escaneamento"
+          }
+        }
+      }
+    },
+    "Stops all containers and deletes every container, image and volume — databases included" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Para todos os contêineres e apaga todos os contêineres, imagens e volumes — bancos de dados incluídos"
+          }
+        }
+      }
+    },
+    "Storage" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Armazenamento"
+          }
+        }
+      }
+    },
+    "System" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sistema"
+          }
+        }
+      }
+    },
+    "System & Unaccounted" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sistema e Não Contabilizado"
+          }
+        }
+      }
+    },
+    "System & Unaccounted: %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sistema e Não Contabilizado: %@"
+          }
+        }
+      }
+    },
+    "System Cleaner" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Limpeza do Sistema"
+          }
+        }
+      }
+    },
+    "System Data" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dados do Sistema"
+          }
+        }
+      }
+    },
+    "Temp Files" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arquivos Temporários"
+          }
+        }
+      }
+    },
+    "Terminal Logs" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logs do Terminal"
+          }
+        }
+      }
+    },
+    "The on-device model is still preparing. Try again later." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O modelo no dispositivo ainda está sendo preparado. Tente de novo mais tarde."
+          }
+        }
+      }
+    },
+    "Theme" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tema"
+          }
+        }
+      }
+    },
+    "This Mac does not support Apple Intelligence." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este Mac não é compatível com a Apple Intelligence."
+          }
+        }
+      }
+    },
+    "This will move eligible cleaning targets to the Trash. Continue?" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Isto vai mover para o Lixo os alvos de limpeza elegíveis. Continuar?"
+          }
+        }
+      }
+    },
+    "TikTok LIVE Studio" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TikTok LIVE Studio"
+          }
+        }
+      }
+    },
+    "Time Taken" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tempo Gasto"
+          }
+        }
+      }
+    },
+    "Total" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total"
+          }
+        }
+      }
+    },
+    "Trash Bin" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lixo"
+          }
+        }
+      }
+    },
+    "Try another search term" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tente outro termo de busca"
+          }
+        }
+      }
+    },
+    "Turn on Apple Intelligence in System Settings to generate local insights." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ative a Apple Intelligence nos Ajustes do Sistema para gerar análises locais."
+          }
+        }
+      }
+    },
+    "Up one level" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subir um nível"
+          }
+        }
+      }
+    },
+    "Used" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usado"
+          }
+        }
+      }
+    },
+    "Var Folders" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pastas /var"
+          }
+        }
+      }
+    },
+    "Version %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versão %@"
+          }
+        }
+      }
+    },
+    "Version %@ (%@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Version %1$@ (%2$@)"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versão %1$@ (%2$@)"
+          }
+        }
+      }
+    },
+    "Video" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vídeo"
+          }
+        }
+      }
+    },
+    "Welcome to MAC-LIMPO" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Boas-vindas ao MAC-LIMPO"
+          }
+        }
+      }
+    },
+    "Xcode Cache" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache do Xcode"
+          }
+        }
+      }
+    },
+    "You can now free up much more space. Run the cleaning again for better results." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agora dá para liberar muito mais espaço. Rode a limpeza de novo para um resultado melhor."
+          }
+        }
+      }
+    },
+    "Zed Cache" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache do Zed"
+          }
+        }
+      }
+    },
+    "Zoom In" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrar na Pasta"
+          }
+        }
+      }
+    },
+    "Zoom Map Here" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ampliar o Mapa Aqui"
+          }
+        }
+      }
+    },
+    "Zoom Out" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subir um Nível"
+          }
+        }
+      }
+    },
+    "brew autoremove failed: %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "brew autoremove falhou: %@"
+          }
+        }
+      }
+    },
+    "brew cleanup failed: %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "brew cleanup falhou: %@"
+          }
+        }
+      }
+    },
+    "cleaning" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "limpando"
+          }
+        }
+      }
+    },
+    "go clean failed: %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "go clean falhou: %@"
+          }
+        }
+      }
+    },
+    "iOS Simulators" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simuladores iOS"
+          }
+        }
+      }
+    },
+    "npm cache clean failed: %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "npm cache clean falhou: %@"
+          }
+        }
+      }
+    },
+    "pnpm Store" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Store do pnpm"
+          }
+        }
+      }
+    },
+    "pub Cache" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache do pub"
+          }
+        }
+      }
+    },
+    "scanning" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "escaneando"
+          }
+        }
+      }
+    },
+    "used" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "usado"
+          }
+        }
+      }
+    },
+    "yarn cache clean failed: %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "yarn cache clean falhou: %@"
+          }
+        }
+      }
+    },
+    "• %@" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "• %@"
+          }
+        }
+      }
+    },
+    "⚠️ Docker full cleanup is on: all containers are stopped and removed, along with ALL images and volumes — databases included. This doesn't go to the Trash." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ A limpeza total do Docker está ligada: todos os contêineres são parados e removidos, junto com TODAS as imagens e volumes — bancos de dados incluídos. Isso não vai para o Lixo."
+          }
+        }
+      }
+    },
+    "⚠️ Permission Not Detected" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚠️ Permissão Não Detectada"
+          }
+        }
+      }
+    },
+    "⚡️ Aggressive mode is on: also removes large regenerable caches (Chrome AI models, unused Docker images)." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⚡️ O modo agressivo está ligado: também remove caches grandes que se regeneram (modelos de IA do Chrome, imagens Docker sem uso)."
+          }
+        }
+      }
+    },
+    "✅ Full Disk Access Enabled!" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "✅ Acesso Total ao Disco Ativado!"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

@@ -45,7 +45,7 @@ struct CleaningCategoryCard: View {
                 .scaleEffect(isHovered && !reduceMotion ? 1.05 : 1.0)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(category.rawValue)
+                    Text(category.displayName)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(palette.primaryText)
 
@@ -119,7 +119,9 @@ struct CleaningCategoryCard: View {
                 isHovered = hovering
             }
         }
-        .accessibilityLabel("\(category.rawValue), \(isCleaning ? "cleaning" : isScanning ? "scanning" : estimatedSize)")
-        .accessibilityHint("Cleans \(category.rawValue)")
+        .accessibilityLabel(
+            "\(category.displayName), \(isCleaning ? String(localized: "cleaning") : isScanning ? String(localized: "scanning") : estimatedSize)"
+        )
+        .accessibilityHint("Cleans \(category.displayName)")
     }
 }

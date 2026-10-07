@@ -20,7 +20,13 @@ final class DiskXRayViewModel: ObservableObject {
     @Published var errorMessage: String?
     private var scanCancel: CancelFlag?
     private let firmlinks = Firmlinks.system()
-    private var volumeName = "Macintosh HD"
+    /// Nome do volume de inicialização (o que o Finder mostra); "Macintosh HD" se não der para ler.
+    @Published private(set) var volumeName = DiskXRayViewModel.startupVolumeName()
+
+    nonisolated private static func startupVolumeName() -> String {
+        (try? URL(fileURLWithPath: "/").resourceValues(forKeys: [.volumeLocalizedNameKey]))?
+            .volumeLocalizedName ?? "Macintosh HD"
+    }
 
     /// O volume inteiro, não uma pasta: só ele tem espaço livre e o "resto do sistema".
     var isDriveScan: Bool { scanRoot == DiskXRayService.dataRoot }
@@ -63,13 +69,13 @@ final class DiskXRayViewModel: ObservableObject {
 
         var title: String {
             switch self {
-            case .name: "Name"
-            case .size: "Size"
-            case .share: "Share"
-            case .files: "Files"
-            case .folders: "Folders"
-            case .logicalSize: "Logical Size"
-            case .modified: "Modified"
+            case .name: String(localized: "Name")
+            case .size: String(localized: "Size")
+            case .share: String(localized: "Share")
+            case .files: String(localized: "Files")
+            case .folders: String(localized: "Folders")
+            case .logicalSize: String(localized: "Logical Size")
+            case .modified: String(localized: "Modified")
             }
         }
 
@@ -103,6 +109,13 @@ final class DiskXRayViewModel: ObservableObject {
         case folders = "Folders"
         case largestFiles = "Largest Files"
         var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .folders: String(localized: "Folders")
+            case .largestFiles: String(localized: "Largest Files")
+            }
+        }
     }
 
     @Published var tab: Tab = .folders
@@ -216,12 +229,11 @@ final class DiskXRayViewModel: ObservableObject {
             guard !cancel.isSet else { return }
             isScanning = false
             guard let scanned else {
-                errorMessage = "Could not read \(firmlinks.displayPath(root))."
+                errorMessage = String(localized: "Could not read \(firmlinks.displayPath(root)).")
                 return
             }
             scanDuration = Date().timeIntervalSince(started)
-            volumeName = (try? URL(fileURLWithPath: "/").resourceValues(forKeys: [.volumeLocalizedNameKey]))?
-                .volumeLocalizedName ?? "Macintosh HD"
+            volumeName = Self.startupVolumeName()
             index = scanned
             zoomItem = scanned.root
             viewport = TreemapRenderer.fullViewport
@@ -270,7 +282,7 @@ final class DiskXRayViewModel: ObservableObject {
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
-        panel.prompt = "Scan"
+        panel.prompt = String(localized: "Scan")
         panel.directoryURL = URL(fileURLWithPath: NSHomeDirectory())
         guard panel.runModal() == .OK, let url = panel.url else { return }
         startScan(root: url.path)
@@ -340,8 +352,8 @@ final class DiskXRayViewModel: ObservableObject {
 
     func name(_ item: Int32) -> String {
         switch item {
-        case Self.unaccountedItem: return "System & Unaccounted"
-        case Self.freeSpaceItem: return "Free Space"
+        case Self.unaccountedItem: return String(localized: "System & Unaccounted")
+        case Self.freeSpaceItem: return String(localized: "Free Space")
         default:
             guard let index else { return "" }
             guard item == index.root else { return index.name(item) }
@@ -497,7 +509,7 @@ final class DiskXRayViewModel: ObservableObject {
 
     func extensionName(_ ext: Int32) -> String {
         let key = index?.extensions[Int(ext)] ?? ""
-        return key.isEmpty ? "No extension" : key
+        return key.isEmpty ? String(localized: "No extension") : key
     }
 
     func extensionBytes(_ ext: Int32) -> Int64 {
@@ -509,10 +521,10 @@ final class DiskXRayViewModel: ObservableObject {
 
     func extensionDescription(_ ext: Int32) -> String {
         let key = index?.extensions[Int(ext)] ?? ""
-        guard !key.isEmpty else { return "Files without an extension" }
+        guard !key.isEmpty else { return String(localized: "Files without an extension") }
         if let cached = descriptions[key] { return cached }
         let bare = String(key.dropFirst())
-        let text = UTType(filenameExtension: bare)?.localizedDescription ?? "\(bare.uppercased()) file"
+        let text = UTType(filenameExtension: bare)?.localizedDescription ?? String(localized: "\(bare.uppercased()) file")
         descriptions[key] = text
         return text
     }
@@ -992,7 +1004,7 @@ final class DiskXRayViewModel: ObservableObject {
     // MARK: - Barra de status
 
     func statusText(hovered: Int32?) -> String {
-        guard let item = hovered ?? selected else { return isScanning ? "Scanning…" : "Ready" }
+        guard let item = hovered ?? selected else { return isScanning ? String(localized: "Scanning…") : String(localized: "Ready") }
         return item >= 0 ? path(item) : name(item)
     }
 
@@ -1051,7 +1063,7 @@ final class DiskXRayViewModel: ObservableObject {
         Task {
             let ok = await runBlocking { DiskXRayService.shared.trash(path: target) }
             guard ok else {
-                errorMessage = "Could not move \(index.name(item)) to the Trash."
+                errorMessage = String(localized: "Could not move \(index.name(item)) to the Trash.")
                 return
             }
             renderCancel?.set()

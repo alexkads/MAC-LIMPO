@@ -19,7 +19,7 @@ So a fix in `docs/install.sh` reaches users after `make docs-deploy`; a fix in t
 
 ## Steps
 
-1. **Verify** — `swift build`, `swift test`, `shellcheck docs/install.sh` (if touched), `mkdocs build --strict -d <scratch dir>` (if docs touched).
+1. **Verify** — `make strings` (no key may be left without `pt-BR`), `swift build`, `swift test` (includes `LocalizationTests`), `shellcheck docs/install.sh` (if touched), `mkdocs build --strict -d <scratch dir>` (if docs touched).
 2. **Version** — `VERSION` holds `x.y.z`; bump the patch (`printf '1.3.21\n' > VERSION`). `Makefile`, `Scripts/bundle-app.sh` and `Installer/build-installer.sh` read it.
 3. **CHANGELOG.md** — releases since 1.1.0 accumulate under `## [Unreleased]` (Portuguese, `- **Title**: explanation.`), in the sections `### ✨ Adicionado`, `### 🐛 Corrigido`, `### 🔄 Alterado`, `### ⚡️ Desempenho`. Headings like `### 🐛 Corrigido` **repeat in older versions** — when editing by script, insert after the *first* occurrence, never assert a single match. Make the edit and the commit one `&&` chain, so a failed edit doesn't commit a half-done release.
 4. **Commit + tag** — `chore: versão x.y.z (<resumo>)`, then `git tag vx.y.z`. Commit messages are Portuguese, no attribution lines.

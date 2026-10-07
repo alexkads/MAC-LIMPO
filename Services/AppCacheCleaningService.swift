@@ -77,7 +77,7 @@ class AppCacheCleaningService: BaseCleaningService, CleaningService, @unchecked 
                             filesRemoved += 1
                         } catch {
                             let displayName = path.contains("*") ? (resolvedPath as NSString).lastPathComponent : name
-                            errors.append("Failed to clean \(displayName) cache: \(error.localizedDescription)")
+                            errors.append(String(localized: "Failed to clean \(displayName) cache: \(error.localizedDescription)"))
                         }
                     }
 

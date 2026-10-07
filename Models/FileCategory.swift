@@ -12,16 +12,16 @@ enum FileCategory: Int, CaseIterable, Identifiable, Sendable {
 
     var title: String {
         switch self {
-        case .video: "Video"
-        case .images: "Images"
-        case .audio: "Audio"
-        case .documents: "Documents"
-        case .archives: "Archives & Installers"
-        case .code: "Source Code"
-        case .build: "Builds & Libraries"
-        case .virtualDisks: "Disk Images & VMs"
-        case .data: "Data & Databases"
-        case .other: "Other"
+        case .video: String(localized: "Video")
+        case .images: String(localized: "Images")
+        case .audio: String(localized: "Audio")
+        case .documents: String(localized: "Documents")
+        case .archives: String(localized: "Archives & Installers")
+        case .code: String(localized: "Source Code")
+        case .build: String(localized: "Builds & Libraries")
+        case .virtualDisks: String(localized: "Disk Images & VMs")
+        case .data: String(localized: "Data & Databases")
+        case .other: String(localized: "Other")
         }
     }
 

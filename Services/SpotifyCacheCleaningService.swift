@@ -94,7 +94,7 @@ class SpotifyCacheCleaningService: BaseCleaningService, CleaningService, @unchec
 
                         bytesRemoved += size
                     } catch {
-                        errors.append("Failed to clean cache: \(error.localizedDescription)")
+                        errors.append(String(localized: "Failed to clean cache: \(error.localizedDescription)"))
                     }
                 }
             }

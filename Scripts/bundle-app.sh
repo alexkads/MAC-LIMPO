@@ -103,6 +103,13 @@ cat > "$APP/Contents/Info.plist" << EOF
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>en</string>
+        <string>pt-BR</string>
+    </array>
     <key>CFBundleExecutable</key>
     <string>$APP_NAME</string>
     <key>CFBundleIdentifier</key>
@@ -151,6 +158,17 @@ if [ -d "Assets.xcassets" ]; then
 else
     echo "warning: Assets.xcassets não encontrado — seguindo sem ícone customizado."
 fi
+
+# ---------------------------------------------------------------- idiomas
+
+# Inglês (base) e português do Brasil. Os catálogos viram en.lproj/ e
+# pt-BR.lproj/ dentro de Resources; o app segue o idioma do macOS e cai no
+# inglês para o que não tiver tradução. Textos novos: make strings.
+echo "==> Compilando traduções"
+for catalog in Localization/*.xcstrings; do
+    [ -f "$catalog" ] || continue
+    xcrun xcstringstool compile "$catalog" --output-directory "$APP/Contents/Resources" > /dev/null
+done
 
 # ---------------------------------------------------------------- assinatura
 

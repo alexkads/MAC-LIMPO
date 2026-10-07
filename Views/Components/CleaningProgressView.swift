@@ -30,7 +30,7 @@ struct CleaningProgressView: View {
                     }
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Cleaning \(category.rawValue)")
+                        Text("Cleaning \(category.displayName)")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(palette.primaryText)
                             .lineLimit(1)

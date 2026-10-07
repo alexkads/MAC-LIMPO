@@ -355,14 +355,14 @@ struct FileTreeOutline: NSViewRepresentable {
                 item.isEnabled = enabled
                 menu.addItem(item)
             }
-            add("Quick Look") { [weak self] in self?.model.quickLook(id) }
-            add("Open") { [weak self] in self?.model.open(id) }
-            add("Show in Finder") { [weak self] in self?.model.revealInFinder(id) }
-            add("Copy Path") { [weak self] in self?.model.copyPath(id) }
+            add(String(localized: "Quick Look")) { [weak self] in self?.model.quickLook(id) }
+            add(String(localized: "Open")) { [weak self] in self?.model.open(id) }
+            add(String(localized: "Show in Finder")) { [weak self] in self?.model.revealInFinder(id) }
+            add(String(localized: "Copy Path")) { [weak self] in self?.model.copyPath(id) }
             menu.addItem(.separator())
-            add("Zoom Map Here") { [weak self] in self?.model.zoom(into: id) }
+            add(String(localized: "Zoom Map Here")) { [weak self] in self?.model.zoom(into: id) }
             menu.addItem(.separator())
-            add("Move to Trash…", enabled: model.canTrash(id)) { [weak self] in self?.pendingTrash?.wrappedValue = id }
+            add(String(localized: "Move to Trash…"), enabled: model.canTrash(id)) { [weak self] in self?.pendingTrash?.wrappedValue = id }
         }
     }
 }

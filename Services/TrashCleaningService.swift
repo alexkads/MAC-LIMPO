@@ -48,7 +48,7 @@ class TrashCleaningService: BaseCleaningService, CleaningService, @unchecked Sen
                     try FileManager.default.removeItem(at: itemURL)
                 }
             } catch {
-                errors.append("Failed to empty trash: \(error.localizedDescription)")
+                errors.append(String(localized: "Failed to empty trash: \(error.localizedDescription)"))
             }
             return errors
         }

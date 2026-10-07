@@ -71,7 +71,7 @@ class DevPackagesCleaningService: BaseCleaningService, CleaningService, @uncheck
                     bytesRemoved += sizeBeforeRemoval
                     filesRemoved += fileCount
                 } catch {
-                    errors.append("Failed to clean \(name): \(error.localizedDescription)")
+                    errors.append(String(localized: "Failed to clean \(name): \(error.localizedDescription)"))
                 }
             }
         }
@@ -80,7 +80,7 @@ class DevPackagesCleaningService: BaseCleaningService, CleaningService, @uncheck
         if shell.checkCommandExists("npm") {
             let npmResult = shell.execute("npm cache clean --force")
             if npmResult.exitCode != 0 {
-                errors.append("npm cache clean failed: \(npmResult.error)")
+                errors.append(String(localized: "npm cache clean failed: \(npmResult.error)"))
             }
         }
 
@@ -88,7 +88,7 @@ class DevPackagesCleaningService: BaseCleaningService, CleaningService, @uncheck
         if shell.checkCommandExists("yarn") {
             let yarnResult = shell.execute("yarn cache clean")
             if yarnResult.exitCode != 0 {
-                errors.append("yarn cache clean failed: \(yarnResult.error)")
+                errors.append(String(localized: "yarn cache clean failed: \(yarnResult.error)"))
             }
         }
 
@@ -96,7 +96,7 @@ class DevPackagesCleaningService: BaseCleaningService, CleaningService, @uncheck
         if shell.checkCommandExists("go") {
             let goResult = shell.execute("go clean -cache -modcache")
             if goResult.exitCode != 0 {
-                errors.append("go clean failed: \(goResult.error)")
+                errors.append(String(localized: "go clean failed: \(goResult.error)"))
             }
         }
 

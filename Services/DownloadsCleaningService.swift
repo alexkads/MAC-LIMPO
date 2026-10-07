@@ -67,7 +67,7 @@ class DownloadsCleaningService: BaseCleaningService, CleaningService, @unchecked
                     }
                 }
             } catch {
-                errors.append("Failed to remove \(item): \(error.localizedDescription)")
+                errors.append(String(localized: "Failed to remove \(item): \(error.localizedDescription)"))
             }
         }
 

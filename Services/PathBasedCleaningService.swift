@@ -71,7 +71,7 @@ class PathBasedCleaningService: BaseCleaningService, CleaningService, @unchecked
     // MARK: - Scan
 
     func scan(progress: (@Sendable (String) -> Void)?) async -> ScanResult {
-        progress?("Scanning \(category.rawValue)...")
+        progress?(String(localized: "Scanning \(category.displayName)…"))
 
         // Mede todos os alvos em paralelo (um por core disponível). Preserva a
         // ordem original via índice para um relatório estável.
@@ -131,7 +131,7 @@ class PathBasedCleaningService: BaseCleaningService, CleaningService, @unchecked
                     bytesRemoved += size
                     filesRemoved += 1
                 } catch {
-                    errors.append("Falha ao limpar: \(itemPath)")
+                    errors.append(String(localized: "Failed to clean \(itemPath)"))
                     logger.log("Falha ao remover: \(itemPath)", level: .error)
                 }
             }

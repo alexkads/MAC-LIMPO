@@ -250,7 +250,7 @@ class TempFilesCleaningService: BaseCleaningService, CleaningService, @unchecked
                     skipped += 1
                 } else {
                     // Erro real - reporta ao usuário
-                    let errorMsg = "Failed to remove \(itemName): \(error.localizedDescription)"
+                    let errorMsg = String(localized: "Failed to remove \(itemName): \(error.localizedDescription)")
                     errors.append(errorMsg)
                     Logger.shared.warning(errorMsg)
                     skipped += 1

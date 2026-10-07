@@ -109,7 +109,7 @@ class LogsCleaningService: BaseCleaningService, CleaningService, @unchecked Send
                             }
                         }
                     } catch {
-                        errors.append("Failed to clean log \(item): \(error.localizedDescription)")
+                        errors.append(String(localized: "Failed to clean log \(item): \(error.localizedDescription)"))
                     }
                 }
             }

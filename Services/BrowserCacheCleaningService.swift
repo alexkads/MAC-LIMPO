@@ -126,7 +126,7 @@ final class BrowserCacheCleaningService: BaseCleaningService, CleaningService, @
         var totalSize: Int64 = 0
         var items: [String] = []
 
-        progress?("Scanning browser caches...")
+        progress?(String(localized: "Scanning browser caches…"))
         for entry in collectCachePaths() {
             let size = fileHelper.sizeOfDirectory(atPath: entry.path)
             if size > 0 {
@@ -163,7 +163,7 @@ final class BrowserCacheCleaningService: BaseCleaningService, CleaningService, @
                     bytesRemoved += size
                     filesRemoved += 1
                 } catch {
-                    errors.append("Failed to clean \(entry.name): \(error.localizedDescription)")
+                    errors.append(String(localized: "Failed to clean \(entry.name): \(error.localizedDescription)"))
                 }
             }
         }

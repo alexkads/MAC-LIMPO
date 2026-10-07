@@ -102,11 +102,14 @@ Conventions: log messages/comments are Portuguese, UI-facing strings (items, des
 ## Step 2 — Extend the enum in `Models/CleaningCategory.swift`
 
 The enum is `CaseIterable` and every `switch` over it is exhaustive, so a new case that isn't handled in **all** of these fails to compile:
-1. Add `case <caseName> = "<Display Name>"` in the right section.
-2. `group` switch — add `<caseName>` to the chosen group's case list.
-3. `icon` switch — `case .<caseName>: return "<sf.symbol>"`.
-4. `color` switch — `case .<caseName>: return Color(hex: "<hex>")`.
-5. `description` switch — `case .<caseName>: return "<one sentence>"`.
+1. Add `case <caseName> = "<Display Name>"` in the right section. The rawValue is the stable identity — the UI never shows it.
+2. `displayName` switch — `case .<caseName>: String(localized: "<Display Name>")`.
+3. `group` switch — add `<caseName>` to the chosen group's case list.
+4. `icon` switch — `case .<caseName>: return "<sf.symbol>"`.
+5. `color` switch — `case .<caseName>: return Color(hex: "<hex>")`.
+6. `description` switch — `case .<caseName>: String(localized: "<one sentence>")`.
+
+Any message the service shows (`progress?(…)`, `CleaningResult.errors`) is `String(localized: "…")` too, in English, with interpolation for the variable parts.
 
 ## Step 3 — Register in `Services/CleaningServiceRegistry.swift`
 
@@ -128,10 +131,14 @@ Without this the file compiles nowhere and the app builds using the *old* code w
 
 Run `swift build`. A clean build means all four edits are consistent. If the build "succeeds" but the category doesn't appear, you almost certainly skipped Step 4 (source not listed) — re-check `Package.swift`.
 
-## Step 6 — Update the website
+## Step 6 — Translate
+
+The app is English + Brazilian Portuguese. Run `make strings` (extracts every localizable string into `Localization/Localizable.xcstrings`), then add the `pt-BR` value for each new key — name, description and messages. `swift test` fails (`LocalizationTests`) while any key lacks Portuguese or a translation changes its `%@`/`%lld` placeholders.
+
+## Step 7 — Update the website
 
 Regenerate the categories table in `docs/cleaning.md` (one row per category: display name and description, grouped like `CleaningGroup`) so the site lists the new category, then check it with `mkdocs build --strict`.
 
-## Step 7 — Ship it
+## Step 8 — Ship it
 
 The new category reaches users only through a GitHub release (the published `install.sh` builds the latest release, not `main`) followed by `make docs-deploy`. Use the `release` skill.

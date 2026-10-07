@@ -14,6 +14,11 @@ description: Perguntas frequentes sobre o MAC-LIMPO.
 ??? question "Quais versões do macOS são suportadas?"
     macOS 26.6 ou mais novo, em Apple silicon. Compilar exige as Command Line Tools ou o Xcode com Swift 6.4.
 
+??? question "Em quais idiomas ele funciona?"
+    Inglês e português do Brasil. O app segue o idioma do seu Mac (Ajustes do Sistema › Geral › Idioma e
+    Região) e usa inglês para qualquer outro idioma. Este site abre em português para navegadores em português;
+    o seletor de idioma no topo troca, e a sua escolha fica guardada.
+
 ??? question "Ele vai apagar meus arquivos?"
     Ele mira caches, saídas de compilação e temporários que as ferramentas recriam. As limpezas por caminho
     movem para a Lixeira. Veja [Segurança](safety.md) para os detalhes e as exceções.

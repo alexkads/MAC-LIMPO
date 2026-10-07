@@ -49,7 +49,7 @@ class AdobeCleaningService: BaseCleaningService, CleaningService, @unchecked Sen
         logger.log("Iniciando scan de caches da Adobe", level: .info)
 
         for path in adobePaths {
-            progress?("Scanning Adobe: \(path)")
+            progress?(String(localized: "Scanning Adobe: \(path)"))
 
             for resolvedPath in resolvePaths(path) {
                 if fileHelper.fileExists(atPath: resolvedPath) {
@@ -113,7 +113,7 @@ class AdobeCleaningService: BaseCleaningService, CleaningService, @unchecked Sen
                         bytesRemoved += size
                         logger.log("Removido: \(resolvedPath) - \(fileHelper.formatBytes(size))", level: .debug)
                     } catch {
-                        let errorMsg = "Failed to clean \(resolvedPath): \(error.localizedDescription)"
+                        let errorMsg = String(localized: "Failed to clean \(resolvedPath): \(error.localizedDescription)")
                         errors.append(errorMsg)
                         logger.log(errorMsg, level: .error)
                     }

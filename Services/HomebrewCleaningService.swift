@@ -89,7 +89,7 @@ final class HomebrewCleaningService: BaseCleaningService, CleaningService, @unch
             return ScanResult(category: category, estimatedSize: estimated, itemCount: items.count, items: items)
         }
 
-        progress?("Checking Homebrew...")
+        progress?(String(localized: "Checking Homebrew…"))
         let cleanup = await runBlocking { self.brew("cleanup --prune=all -n", timeout: 300).output }
         let cleanupBytes = Self.freedBytes(fromCleanupOutput: cleanup)
         if cleanupBytes > 0 {
@@ -108,7 +108,7 @@ final class HomebrewCleaningService: BaseCleaningService, CleaningService, @unch
             estimated += bytes
         }
 
-        progress?("Measuring Homebrew formulae...")
+        progress?(String(localized: "Measuring Homebrew formulae…"))
         let leaves = await runBlocking { self.largeLeaves() }
         if !leaves.isEmpty {
             items.append("ℹ︎ Large tools you installed that nothing depends on — kept; remove the ones you don't use:")
@@ -142,7 +142,7 @@ final class HomebrewCleaningService: BaseCleaningService, CleaningService, @unch
             bytesRemoved += Self.freedBytes(fromCleanupOutput: preview)
             filesRemoved += preview.split(whereSeparator: \.isNewline).filter { $0.hasPrefix("Would remove") }.count
         } else {
-            errors.append("brew cleanup failed: \(cleanup.error.prefix(200))")
+            errors.append(String(localized: "brew cleanup failed: \(String(cleanup.error.prefix(200)))"))
         }
 
         let orphans = await runBlocking { Self.autoremovable(fromOutput: self.brew("autoremove -n", timeout: 120).output) }
@@ -156,7 +156,7 @@ final class HomebrewCleaningService: BaseCleaningService, CleaningService, @unch
                 bytesRemoved += bytes
                 filesRemoved += orphans.count
             } else {
-                errors.append("brew autoremove failed: \(removal.error.prefix(200))")
+                errors.append(String(localized: "brew autoremove failed: \(String(removal.error.prefix(200)))"))
             }
         }
 

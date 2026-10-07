@@ -39,7 +39,7 @@ struct DiskXRayWindowView: View {
         .frame(minWidth: 980, minHeight: 640)
         .background(Color(nsColor: .windowBackgroundColor))
         .navigationTitle("Disk X-Ray")
-        .navigationSubtitle(model.isDriveScan ? "Macintosh HD" : model.name(model.index?.root ?? 0))
+        .navigationSubtitle(model.isDriveScan ? model.volumeName : model.name(model.index?.root ?? 0))
         .toolbar { XRayToolbar(model: model, pendingTrash: $pendingTrash) }
         .onAppear {
             applyColors()
@@ -142,7 +142,7 @@ private struct XRayToolbar: ToolbarContent {
         ToolbarItemGroup(placement: .navigation) {
             Menu {
                 Button { model.startScan(root: DiskXRayService.dataRoot) } label: {
-                    Label("Macintosh HD", systemImage: "internaldrive")
+                    Label(model.volumeName, systemImage: "internaldrive")
                 }
                 Button { model.chooseFolderAndScan() } label: { Label("Choose Folder…", systemImage: "folder") }
             } label: {
@@ -335,7 +335,7 @@ private struct ScanProgressView: View {
                     Text("Preparing…").foregroundStyle(.secondary)
                 }
             } else {
-                Button("Scan Macintosh HD") { model.startScan(root: DiskXRayService.dataRoot) }
+                Button("Scan \(model.volumeName)") { model.startScan(root: DiskXRayService.dataRoot) }
                     .buttonStyle(.borderedProminent)
             }
             Spacer()
@@ -354,7 +354,7 @@ private struct BrowserPane: View {
         VStack(spacing: 0) {
             HStack {
                 Picker("", selection: $model.tab) {
-                    ForEach(DiskXRayViewModel.Tab.allCases) { Text($0.rawValue).tag($0) }
+                    ForEach(DiskXRayViewModel.Tab.allCases) { Text($0.title).tag($0) }
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
@@ -622,7 +622,7 @@ private struct MapPane: View {
             }
             Spacer()
             if model.isRendering { ProgressView().controlSize(.mini) }
-            Text(model.isMagnified ? "Drag or scroll to pan" : "Double-click to zoom in · pinch to magnify")
+            (model.isMagnified ? Text("Drag or scroll to pan") : Text("Double-click to zoom in · pinch to magnify"))
                 .font(.caption)
                 .foregroundStyle(.tertiary)
             magnifierControls
@@ -882,20 +882,20 @@ private struct MapPane: View {
         }
         guard let selected = model.selected else { return menu }
         if selected >= 0 {
-            add("Quick Look") { model.quickLook(selected) }
-            add("Open") { model.open(selected) }
-            add("Show in Finder") { model.revealInFinder(selected) }
-            add("Copy Path") { model.copyPath(selected) }
+            add(String(localized: "Quick Look")) { model.quickLook(selected) }
+            add(String(localized: "Open")) { model.open(selected) }
+            add(String(localized: "Show in Finder")) { model.revealInFinder(selected) }
+            add(String(localized: "Copy Path")) { model.copyPath(selected) }
             menu.addItem(.separator())
         }
-        add("Zoom In") { model.zoomIn() }
-        add("Zoom Out", enabled: model.isZoomed) { model.zoomOut() }
-        add("Back to Top", enabled: model.isZoomed) { model.zoomReset() }
-        add("Magnify to Fit") { model.magnifyToSelection() }
-        add("Actual Size", enabled: model.isMagnified) { model.resetMagnification() }
+        add(String(localized: "Zoom In")) { model.zoomIn() }
+        add(String(localized: "Zoom Out"), enabled: model.isZoomed) { model.zoomOut() }
+        add(String(localized: "Back to Top"), enabled: model.isZoomed) { model.zoomReset() }
+        add(String(localized: "Magnify to Fit")) { model.magnifyToSelection() }
+        add(String(localized: "Actual Size"), enabled: model.isMagnified) { model.resetMagnification() }
         if selected >= 0 {
             menu.addItem(.separator())
-            add("Move to Trash…", enabled: model.canTrash(selected)) { pendingTrash = selected }
+            add(String(localized: "Move to Trash…"), enabled: model.canTrash(selected)) { pendingTrash = selected }
         }
         return menu
     }

@@ -109,7 +109,7 @@ struct NativeMenuBarContent: View {
     private var intelligenceSection: some View {
         Section {
             VStack(alignment: .leading, spacing: 8) {
-                Text(insight ?? insightStatus?.message ?? "Generate a private, on-device storage recommendation.")
+                Text(insight ?? insightStatus?.message ?? String(localized: "Generate a private, on-device storage recommendation."))
                     .font(.callout)
                     .foregroundStyle(insight == nil ? .secondary : .primary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -140,11 +140,9 @@ struct NativeMenuBarContent: View {
         viewModel.services.keys
             .filter { category in
                 guard category.group == group else { return false }
-                guard !query.isEmpty else { return true }
-                return category.rawValue.localizedCaseInsensitiveContains(query)
-                    || category.description.localizedCaseInsensitiveContains(query)
+                return category.matchesSearch(query)
             }
-            .sorted { $0.rawValue < $1.rawValue }
+            .sortedForDisplay()
     }
 
     @ViewBuilder
@@ -162,7 +160,7 @@ struct NativeMenuBarContent: View {
                 }
             } header: {
                 HStack {
-                    Label(group.rawValue, systemImage: group.icon)
+                    Label(group.title, systemImage: group.icon)
                     Spacer()
                     Text("\(categories.count)").monospacedDigit()
                 }
@@ -184,7 +182,7 @@ struct NativeMenuBarContent: View {
                     .font(.title3)
                     .frame(width: 28)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(category.rawValue)
+                    Text(category.displayName)
                     Text(category.description)
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -192,7 +190,7 @@ struct NativeMenuBarContent: View {
                 }
                 Spacer(minLength: 8)
                 if isCleaning || isScanning {
-                    if let status = isCleaning ? "Cleaning…" : viewModel.scanningStatus[category] {
+                    if let status = isCleaning ? String(localized: "Cleaning…") : viewModel.scanningStatus[category] {
                         Text(status).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                     }
                     ProgressView().controlSize(.small)
@@ -205,8 +203,10 @@ struct NativeMenuBarContent: View {
         .buttonStyle(.plain)
         .disabled(isCleaning)
         .help(category.description)
-        .accessibilityLabel("\(category.rawValue), \(isCleaning ? "cleaning" : isScanning ? "scanning" : size)")
-        .accessibilityHint("Cleans \(category.rawValue)")
+        .accessibilityLabel(
+            "\(category.displayName), \(isCleaning ? String(localized: "cleaning") : isScanning ? String(localized: "scanning") : size)"
+        )
+        .accessibilityHint("Cleans \(category.displayName)")
     }
 
     // MARK: - Ajustes
@@ -325,7 +325,7 @@ struct NativeProgressPanel: View {
         GlassPanel {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Label(category.rawValue, systemImage: category.icon).font(.headline)
+                    Label(category.displayName, systemImage: category.icon).font(.headline)
                     Spacer()
                     Button {
                         isShowing = false
@@ -337,7 +337,7 @@ struct NativeProgressPanel: View {
                     .accessibilityLabel("Hide progress")
                 }
                 ProgressView(value: progress) {
-                    Text(currentOperation.isEmpty ? "Cleaning…" : currentOperation).lineLimit(1)
+                    Text(currentOperation.isEmpty ? String(localized: "Cleaning…") : currentOperation).lineLimit(1)
                 } currentValueLabel: {
                     Text(progress.formatted(.percent.precision(.fractionLength(0)))).monospacedDigit()
                 }
@@ -363,7 +363,7 @@ struct NativeResultsPanel: View {
                 VStack(spacing: 4) {
                     LabeledContent("Space Freed", value: result.formattedSize)
                     LabeledContent("Files Removed", value: result.filesRemoved.formatted())
-                    LabeledContent("Time Taken", value: result.executionTime.formatted(.number.precision(.fractionLength(1))) + " s")
+                    LabeledContent("Time Taken", value: result.executionTimeText)
                 }
                 .monospacedDigit()
 
@@ -394,13 +394,13 @@ struct NativeResultsPanel: View {
 /// o popover não tem.
 struct NativeSearchField: NSViewRepresentable {
     @Binding var text: String
-    let prompt: String
+    let prompt: LocalizedStringResource
 
     func makeCoordinator() -> Coordinator { Coordinator(text: $text) }
 
     func makeNSView(context: Context) -> NSSearchField {
         let field = NSSearchField()
-        field.placeholderString = prompt
+        field.placeholderString = String(localized: prompt)
         field.delegate = context.coordinator
         field.sendsSearchStringImmediately = true
         field.controlSize = .large

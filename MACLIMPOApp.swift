@@ -141,15 +141,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func showWelcomeAlert() {
         let alert = NSAlert()
-        alert.messageText = "Welcome to MAC-LIMPO"
-        alert.informativeText = """
+        alert.messageText = String(localized: "Welcome to MAC-LIMPO")
+        alert.informativeText = String(localized: """
         MAC-LIMPO lives in the menu bar — look for the trash icon at the top right of the screen. \
         There's no Dock icon or main window.
 
         Don't see it? The menu bar may be full or the icon hidden by the notch: hold ⌘ and drag \
         other icons aside, or allow MAC-LIMPO in System Settings › Menu Bar.
-        """
-        alert.addButton(withTitle: "Got It")
+        """)
+        alert.addButton(withTitle: String(localized: "Got It"))
         // Aberto em segundo plano, o pedido de ativação pode ser ignorado pelo
         // macOS; sem isto o alerta ficaria atrás da janela em uso.
         alert.window.level = .floating
@@ -235,7 +235,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             defer: false
         )
 
-        window.title = "Disk X-Ray — MAC-LIMPO"
+        window.title = String(localized: "Disk X-Ray — MAC-LIMPO")
         window.isReleasedWhenClosed = false
         window.toolbarStyle = .unified
 

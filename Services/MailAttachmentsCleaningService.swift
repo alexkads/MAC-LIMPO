@@ -82,7 +82,7 @@ class MailAttachmentsCleaningService: BaseCleaningService, CleaningService, @unc
                     try fileHelper.removeItem(atPath: itemPath)
                     filesRemoved += 1
                 } catch {
-                    errors.append("Failed to remove \(item): \(error.localizedDescription)")
+                    errors.append(String(localized: "Failed to remove \(item): \(error.localizedDescription)"))
                 }
             }
 
@@ -91,8 +91,8 @@ class MailAttachmentsCleaningService: BaseCleaningService, CleaningService, @unc
 
         // Nota: Não limpa attachments da pasta Mail/MailData pois
         // pode quebrar referências de emails
-        errors.append("Only Mail Downloads cleared for safety")
-        errors.append("Attachments in Mail database preserved")
+        errors.append(String(localized: "Only Mail Downloads cleared for safety"))
+        errors.append(String(localized: "Attachments in Mail database preserved"))
 
         let executionTime = Date().timeIntervalSince(startTime)
 
