@@ -31,7 +31,8 @@ OWNER="alexkads"
 REPO="MAC-LIMPO"
 APP_NAME="MAC-LIMPO"
 SITE="https://alexkads.github.io/MAC-LIMPO/"
-MIN_MACOS=27
+MIN_MACOS_MAJOR=26
+MIN_MACOS_MINOR=6
 MIN_SWIFT_MAJOR=6
 MIN_SWIFT_MINOR=4
 
@@ -53,6 +54,18 @@ warn() { printf "${Y}! %s${Z}\n" "$*"; }
 fail() { printf "${R}✗ %s${Z}\n" "$*" >&2; }
 run()  { if [ "$DRY" -eq 1 ]; then echo "   [dry-run] $*"; else "$@"; fi; }
 
+# A copy installed by the .pkg belongs to root: /Applications is writable by an
+# admin, but the bundle inside it is not — so check the bundle, not its folder.
+remove_app() {
+  [ -e "$1" ] || return 0
+  if [ -w "$(dirname "$1")" ] && [ -z "$(find "$1" ! -user "$(id -un)" -print -quit 2>/dev/null)" ]; then
+    run rm -rf "$1"
+  else
+    warn "$1 belongs to another user (installed by the .pkg?) — sudo will ask for your password"
+    run sudo rm -rf "$1" || { fail "could not remove $1"; exit 1; }
+  fi
+}
+
 # The help text lives here, not read from this file: under `curl | sh` the
 # script is not on disk ($0 is just "sh").
 usage() {
@@ -73,7 +86,7 @@ Options (with curl | sh, pass them after \`sh -s --\`):
   --uninstall       remove the app and the build cache
   --help            this text
 
-Needs macOS ${MIN_MACOS}+, the Command Line Tools (or Xcode) with Swift ${MIN_SWIFT_MAJOR}.${MIN_SWIFT_MINOR}+,
+Needs macOS ${MIN_MACOS_MAJOR}.${MIN_MACOS_MINOR}+ on Apple silicon, the Command Line Tools (or Xcode) with Swift ${MIN_SWIFT_MAJOR}.${MIN_SWIFT_MINOR}+,
 an internet connection and ~2 GB free. Takes 2–5 minutes the first time.
 HELP
 }
@@ -114,7 +127,7 @@ if [ "$UNINSTALL" -eq 1 ]; then
   step "removing MAC-LIMPO"
   for app in "/Applications/$APP_NAME.app" "$HOME/Applications/$APP_NAME.app" ${DEST:+"$DEST/$APP_NAME.app"}; do
     if [ -d "$app" ]; then
-      if [ -w "$(dirname "$app")" ]; then run rm -rf "$app"; else run sudo rm -rf "$app"; fi
+      remove_app "$app"
       ok "removed $app"
     fi
   done
@@ -128,8 +141,18 @@ step "checking this Mac"
 
 MACOS="$(sw_vers -productVersion)"
 MACOS_MAJOR="${MACOS%%.*}"
-if [ "$MACOS_MAJOR" -lt "$MIN_MACOS" ]; then
-  fail "MAC-LIMPO needs macOS ${MIN_MACOS} or later — this Mac has ${MACOS}."
+MACOS_MINOR=0
+case "$MACOS" in *.*) MACOS_MINOR="${MACOS#*.}"; MACOS_MINOR="${MACOS_MINOR%%.*}" ;; esac
+# Xcode 27 (Swift 6.4) itself needs macOS 26.6, so that is the floor for building here.
+if [ "$MACOS_MAJOR" -lt "$MIN_MACOS_MAJOR" ] ||
+   { [ "$MACOS_MAJOR" -eq "$MIN_MACOS_MAJOR" ] && [ "$MACOS_MINOR" -lt "$MIN_MACOS_MINOR" ]; }; then
+  fail "MAC-LIMPO needs macOS ${MIN_MACOS_MAJOR}.${MIN_MACOS_MINOR} or later — this Mac has ${MACOS}."
+  [ "$MACOS_MAJOR" -eq "$MIN_MACOS_MAJOR" ] && echo "   It is a free update: System Settings › General › Software Update."
+  exit 1
+fi
+# sysctl, not uname -m: a Terminal running under Rosetta reports x86_64.
+if [ "$(sysctl -n hw.optional.arm64 2>/dev/null)" != "1" ]; then
+  fail "MAC-LIMPO needs a Mac with Apple silicon (Xcode 27 does not run on Intel)."
   exit 1
 fi
 ok "macOS ${MACOS}"
@@ -217,7 +240,7 @@ fi
 step "installing into $DEST"
 quit_running_app
 run mkdir -p "$DEST"
-run rm -rf "$DEST/$APP_NAME.app"
+remove_app "$DEST/$APP_NAME.app"
 run ditto "$BUILT" "$DEST/$APP_NAME.app"
 # Built here, so there is no quarantine flag — removing it is just belt and braces.
 run xattr -dr com.apple.quarantine "$DEST/$APP_NAME.app" 2>/dev/null || true

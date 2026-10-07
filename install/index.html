@@ -859,7 +859,7 @@
 </code></pre></div>
 <p>What it does, in order:</p>
 <ol>
-<li>Checks the Mac: macOS 27+, the Command Line Tools (or Xcode) with Swift 6.4, ~2 GB free.</li>
+<li>Checks the Mac: macOS 26.6+, the Command Line Tools (or Xcode) with Swift 6.4, ~2 GB free.</li>
 <li>Downloads the source of the <a href="https://github.com/alexkads/MAC-LIMPO/releases/latest">latest release</a> (or <code>main</code> if there is none yet).</li>
 <li>Builds the app with <code>Scripts/bundle-app.sh</code> — 2–5 minutes the first time; updates reuse the build cache in <code>~/Library/Caches/MAC-LIMPO-build</code>.</li>
 <li>Installs <code>MAC-LIMPO.app</code> into <code>/Applications</code> (or <code>~/Applications</code> if <code>/Applications</code> is not writable) and opens it.</li>

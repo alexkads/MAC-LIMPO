@@ -661,6 +661,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#alterado" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔄 Alterado
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#desempenho" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1067,6 +1078,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#alterado" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        🔄 Alterado
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#desempenho" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1458,6 +1480,7 @@ e este projeto adere ao <a href="https://semver.org/lang/pt-BR/">Semantic Versio
 </ul>
 <h3 id="corrigido">🐛 Corrigido<a class="headerlink" href="#corrigido" title="Permanent link">&para;</a></h3>
 <ul>
+<li><strong>Instalador (<code>install.sh</code>) sobre uma cópia do <code>.pkg</code></strong>: o app instalado pelo <code>.pkg</code> pertence ao root, e o script tentava apagá-lo sem <code>sudo</code> (só olhava se <code>/Applications</code> era gravável), parando em <code>Permission denied</code>. Agora confere o dono do bundle e pede a senha só nesse caso; o <code>--uninstall</code> tinha o mesmo defeito.</li>
 <li><strong>Disk X-Ray — caixas pretas no mapa</strong>: pastas com milhares de arquivos minúsculos (<code>node_modules</code>, caches, <code>.git/objects</code>) deixavam a área deles vazia; agora ela é pintada com a cor do maior deles.</li>
 <li><strong>Disk X-Ray — caixa azul fora do lugar com zoom</strong>: com arquivos de tamanho idêntico, o layout ampliado podia diferir do calculado (até ~300 px num disco inteiro); empates no squarified agora são decididos sempre igual e a área ampliada tem exatamente a escala do mapa a 1×.</li>
 <li><strong>iOS Simulators — runtimes órfãos</strong>: o comando para a Recuperação usa o nome real do volume de dados (<code>Macintosh HD - Data</code> na instalação padrão, mas pode ser outro).</li>
@@ -1475,6 +1498,10 @@ e este projeto adere ao <a href="https://semver.org/lang/pt-BR/">Semantic Versio
 <li><strong>Docker — volumes de cache de build</strong>: desde a 1.3.5 todo volume nomeado não usado era preservado, inclusive caches reconstruíveis como <code>cargo-target</code>, <code>node-modules</code> e <code>next-cache</code> de projetos compose (um único <code>cargo-target</code> chegava a 53 GB, invisível ao Rust Targets por viver dentro do <code>Docker.raw</code>). Volumes não usados com esses nomes voltam a ser limpos; bancos, uploads e demais volumes de dados continuam preservados.</li>
 <li><strong>Pedidos de permissão em loop</strong>: sem Full Disk Access, os scans de System Data, Logs e dos apps em containers (WhatsApp, Teams, Podcasts, apps criativos) abriam um diálogo do macOS por container em <code>~/Library/Containers</code> e <code>~/Library/Group Containers</code> — centenas deles — e os cards ficavam girando para sempre. Essas áreas agora são puladas sem a permissão, e o System Data informa quantas ficaram de fora.</li>
 <li><strong>Detecção de Full Disk Access</strong>: passa a sondar o <code>TCC.db</code> do usuário; o probe antigo (<code>Safari/History.db</code>) não existe em quem nunca abriu o Safari, e o app se achava sem permissão para sempre.</li>
+</ul>
+<h3 id="alterado">🔄 Alterado<a class="headerlink" href="#alterado" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Requisito baixou para macOS 26.6+</strong> (Apple silicon), o mínimo do Xcode 27/Swift 6.4 — o app não usa nada exclusivo do macOS 27. O <code>install.sh</code> confere versão principal e secundária, aponta a atualização gratuita para quem está no 26.0–26.5 e recusa Macs Intel com uma mensagem clara.</li>
 </ul>
 <h3 id="desempenho">⚡️ Desempenho<a class="headerlink" href="#desempenho" title="Permanent link">&para;</a></h3>
 <ul>
