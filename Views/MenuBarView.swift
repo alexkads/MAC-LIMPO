@@ -201,23 +201,15 @@ class MenuBarViewModel: ObservableObject {
         }
 
         let totalSize = categories.reduce(Int64(0)) { $0 + (scanResults[$1]?.estimatedSize ?? 0) }
-        let sizeText = FileSystemHelper.shared.formatBytes(totalSize)
         let title = categories.count == 1
             ? String(localized: "Clean \(categories[0].displayName)?")
             : String(localized: "Clean \(categories.count) categories?")
-        var body = String(
-            localized: "About \(sizeText) will be freed. Whenever possible, items go to the Trash and can be restored from there."
+        let body = CleaningCategory.confirmationMessage(
+            for: categories,
+            sizeText: FileSystemHelper.shared.formatBytes(totalSize),
+            aggressiveMode: CleaningOptions.shared.aggressiveMode,
+            dockerWipe: dockerWipe
         )
-        if CleaningOptions.shared.aggressiveMode {
-            body += "\n\n" + String(
-                localized: "⚡️ Aggressive mode is on: also removes large regenerable caches (Chrome AI models, unused Docker images)."
-            )
-        }
-        if dockerWipe {
-            body += "\n\n" + String(
-                localized: "⚠️ Docker full cleanup is on: all containers are stopped and removed, along with ALL images and volumes — databases included. This doesn't go to the Trash."
-            )
-        }
         confirmationRequest = ConfirmationRequest(title: title, message: body, onConfirm: onConfirm)
     }
 
@@ -312,7 +304,7 @@ class MenuBarViewModel: ObservableObject {
     private let maxConcurrentCleans = min(4, max(2, ProcessInfo.processInfo.activeProcessorCount))
 
     func cleanAll() {
-        requestConfirmation(Array(services.keys)) { [weak self] in
+        requestConfirmation(services.keys.filter(\.includedInCleanAll)) { [weak self] in
             self?.startCleanAll()
         }
     }
@@ -321,7 +313,7 @@ class MenuBarViewModel: ObservableObject {
         // Exclui categorias que já estão sendo limpas individualmente agora —
         // limpar o mesmo alvo duas vezes ao mesmo tempo só gera erros benignos.
         let categories = services.keys
-            .filter { !cleaningCategories.contains($0) }
+            .filter { $0.includedInCleanAll && !cleaningCategories.contains($0) }
             .sorted { $0.rawValue < $1.rawValue }
         let total = categories.count
 

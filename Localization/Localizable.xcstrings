@@ -240,6 +240,16 @@
         }
       }
     },
+    "About %@ will be freed. Emptying the Trash deletes its items for good — they can't be restored." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cerca de %@ serão liberados. Esvaziar o Lixo apaga os itens de vez — não dá para restaurá-los."
+          }
+        }
+      }
+    },
     "About %@ will be freed. Whenever possible, items go to the Trash and can be restored from there." : {
       "localizations" : {
         "pt-BR" : {
@@ -306,22 +316,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Analisar"
-          }
-        }
-      }
-    },
-    "Analyzing %@ in %@…" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Analyzing %1$@ in %2$@…"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Analisando %1$@ em %2$@…"
           }
         }
       }
@@ -516,32 +510,12 @@
         }
       }
     },
-    "Checking %@…" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verificando %@…"
-          }
-        }
-      }
-    },
     "Checking Homebrew…" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verificando o Homebrew…"
-          }
-        }
-      }
-    },
-    "Checking JetBrains Products…" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verificando produtos JetBrains…"
           }
         }
       }
@@ -656,12 +630,12 @@
         }
       }
     },
-    "Clean DerivedData, Archives, and build caches" : {
+    "Clean DerivedData, device support, and build caches (keeps Archives)" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Limpa DerivedData, Archives e caches de build"
+            "value" : "Limpa DerivedData, suporte a dispositivos e caches de build (mantém os Archives)"
           }
         }
       }
@@ -1322,12 +1296,12 @@
         }
       }
     },
-    "Empty Trash and recover space" : {
+    "Empty the Trash for good (not part of Clean All)" : {
       "localizations" : {
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Esvazia o Lixo e recupera espaço"
+            "value" : "Esvazia o Lixo de vez (fora do Limpar Tudo)"
           }
         }
       }
@@ -1516,38 +1490,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Falha ao limpar caches do root"
-          }
-        }
-      }
-    },
-    "Failed to delete %@: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Failed to delete %1$@: %2$@"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Falha ao apagar %1$@: %2$@"
-          }
-        }
-      }
-    },
-    "Failed to delete JB %@: %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Failed to delete JB %1$@: %2$@"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Falha ao apagar JB %1$@: %2$@"
           }
         }
       }
@@ -2348,6 +2290,16 @@
         }
       }
     },
+    "Move downloads untouched for 30+ days to the Trash" : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move para o Lixo downloads parados há mais de 30 dias"
+          }
+        }
+      }
+    },
     "Move to Trash" : {
       "localizations" : {
         "pt-BR" : {
@@ -2826,16 +2778,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Remove episódios baixados e caches"
-          }
-        }
-      }
-    },
-    "Remove downloads older than 30 days" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove downloads com mais de 30 dias"
           }
         }
       }
@@ -3350,6 +3292,16 @@
         }
       }
     },
+    "System Data also deletes the Time Machine local snapshots (asks for your administrator password)." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dados do Sistema também apaga os snapshots locais do Time Machine (pede a senha de administrador)."
+          }
+        }
+      }
+    },
     "Temp Files" : {
       "localizations" : {
         "pt-BR" : {
@@ -3366,6 +3318,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Logs do Terminal"
+          }
+        }
+      }
+    },
+    "The Trash isn't emptied — empty it afterwards to reclaim that space." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Lixo não é esvaziado — esvazie depois para recuperar esse espaço."
           }
         }
       }

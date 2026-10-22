@@ -3,7 +3,7 @@
 MAC-LIMPO ships **46 cleaning categories**. Each one is scanned first — the popover shows how much it would free — and only cleaned when you click it (or *Clean All*), after a confirmation.
 
 !!! tip "Aggressive mode"
-    Some categories hold back large caches that are expensive to rebuild (local AI models, all unused Docker images, old simulator runtimes). Turn on **Aggressive cleaning** in the popover settings to include them.
+    Some categories hold back large caches that are expensive to rebuild (local AI models, all unused Docker images, old simulator runtimes, Time Machine local snapshots). Turn on **Aggressive cleaning** in the popover settings to include them.
 
 ## Development
 
@@ -33,7 +33,7 @@ MAC-LIMPO ships **46 cleaning categories**. Each one is scanned first — the po
 | **pub Cache** | Clear downloaded Dart/Flutter pub packages (re-fetched on pub get) |
 | **Rust Targets** | Remove Cargo target/ build directories from Rust projects |
 | **Terminal Logs** | Remove old terminal log files |
-| **Xcode Cache** | Clean DerivedData, Archives, and build caches |
+| **Xcode Cache** | Clean DerivedData, device support, and build caches (keeps Archives) |
 | **Zed Cache** | Remove Zed's downloaded runtimes, language servers, and logs |
 
 ## System
@@ -44,7 +44,7 @@ MAC-LIMPO ships **46 cleaning categories**. Each one is scanned first — the po
 | **Logs** | Clean up old system and app logs (30+ days) |
 | **System Data** | Deep clean system caches and temporary data |
 | **Temp Files** | Delete temporary files and caches |
-| **Trash Bin** | Empty Trash and recover space |
+| **Trash Bin** | Empty the Trash for good (not part of Clean All) |
 | **Var Folders** | Clean /var/folders temp caches (Chrome, Metal, clang) |
 
 ## Apps & Browsers
@@ -57,7 +57,7 @@ MAC-LIMPO ships **46 cleaning categories**. Each one is scanned first — the po
 | **Creative Apps** | Clean Canva, Affinity, Figma caches |
 | **Google Cache** | Clear Chrome regenerable profile caches and old Google Updater versions |
 | **Notion Cache** | Remove Notion asset cache and GPU caches |
-| **Old Downloads** | Remove downloads older than 30 days |
+| **Old Downloads** | Move downloads untouched for 30+ days to the Trash |
 
 ## Communication
 

@@ -207,6 +207,41 @@ final class FileSystemHelper: @unchecked Sendable {
         }
     }
 
+    /// `true` se o item, ou qualquer coisa dentro dele, foi modificado em `cutoff`
+    /// ou depois. Para na primeira modificação recente. Na dúvida (atributos ou
+    /// subpastas ilegíveis) responde `true`: quem pergunta só apaga o que prova
+    /// estar parado. Não segue links simbólicos.
+    func hasModifications(since cutoff: Date, atPath path: String) -> Bool {
+        let url = URL(fileURLWithPath: path)
+        let keys: Set<URLResourceKey> = [.contentModificationDateKey, .isDirectoryKey, .isSymbolicLinkKey]
+        guard let values = try? url.resourceValues(forKeys: keys),
+              let modified = values.contentModificationDate else { return true }
+        if modified >= cutoff { return true }
+        guard values.isDirectory == true, values.isSymbolicLink != true else { return false }
+
+        var unreadable = false
+        guard let enumerator = fileManager.enumerator(
+            at: url,
+            includingPropertiesForKeys: [.contentModificationDateKey],
+            errorHandler: { _, _ in
+                unreadable = true
+                return false
+            }
+        ) else { return true }
+        while let child = enumerator.nextObject() as? URL {
+            guard let date = try? child.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate,
+                  date < cutoff else { return true }
+        }
+        return unreadable
+    }
+
+    /// Quando o item entrou na pasta onde está (a "Data de Adição" do Finder);
+    /// sem esse atributo, a data de criação.
+    func dateAdded(atPath path: String) -> Date? {
+        let values = try? URL(fileURLWithPath: path).resourceValues(forKeys: [.addedToDirectoryDateKey, .creationDateKey])
+        return values?.addedToDirectoryDate ?? values?.creationDate
+    }
+
     /// Lista conteúdo de diretório
     func contentsOfDirectory(atPath path: String) -> [String] {
         do {

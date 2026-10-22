@@ -145,4 +145,39 @@ final class FileSystemHelperTests: XCTestCase {
     func testSizesOfDirectoriesEmptyInput() {
         XCTAssertTrue(FileSystemHelper.shared.sizesOfDirectories(atPaths: []).isEmpty)
     }
+
+    // MARK: - hasModifications / dateAdded
+
+    /// Base de quem só apaga o que está parado: olha a árvore inteira, não só o topo.
+    func testHasModificationsLooksInsideFolders() throws {
+        let fm = FileManager.default
+        let dir = fm.temporaryDirectory.appendingPathComponent("maclimpo-age-\(UUID().uuidString)")
+        defer { try? fm.removeItem(at: dir) }
+        let deep = dir.appendingPathComponent("a/b/file.txt")
+        try fm.createDirectory(at: deep.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data("x".utf8).write(to: deep)
+
+        let helper = FileSystemHelper.shared
+        let future = Date().addingTimeInterval(30 * 86400)
+        XCTAssertFalse(helper.hasModifications(since: future, atPath: dir.path))
+        XCTAssertTrue(helper.hasModifications(since: Date().addingTimeInterval(-86400), atPath: dir.path))
+
+        // Só o arquivo lá no fundo "muda daqui a 40 dias": a pasta inteira conta como mexida.
+        try fm.setAttributes([.modificationDate: future.addingTimeInterval(10 * 86400)], ofItemAtPath: deep.path)
+        XCTAssertTrue(helper.hasModifications(since: future, atPath: dir.path))
+    }
+
+    /// Sem conseguir ler, não dá para provar que está parado.
+    func testHasModificationsIsTrueWhenUnknown() {
+        XCTAssertTrue(FileSystemHelper.shared.hasModifications(since: Date(), atPath: "/nonexistent/\(UUID().uuidString)"))
+    }
+
+    func testDateAddedOfNewFileIsNow() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("maclimpo-added-\(UUID().uuidString)")
+        try Data("x".utf8).write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let added = try XCTUnwrap(FileSystemHelper.shared.dateAdded(atPath: url.path))
+        XCTAssertLessThan(abs(added.timeIntervalSinceNow), 60)
+    }
 }

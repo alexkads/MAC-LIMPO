@@ -52,10 +52,9 @@ class IDECacheCleaningService: BaseCleaningService, CleaningService, @unchecked 
         return paths
     }
 
-    /// VS Code - workspaceStorage pode crescer muito
+    /// VS Code. O workspaceStorage não entra aqui: tem regra própria
+    /// (`orphanedWorkspaceStorage`).
     private let vscodePaths = [
-        // WorkspaceStorage - pode acumular dados de projetos antigos (CUIDADO: 10GB+)
-        "~/Library/Application Support/Code/User/workspaceStorage",
         // Cache de extensões antigas
         "~/Library/Application Support/Code/CachedExtensionVSIXs",
         // Cache de dados
@@ -73,7 +72,6 @@ class IDECacheCleaningService: BaseCleaningService, CleaningService, @unchecked 
 
     /// Cursor - similar ao VS Code
     private let cursorPaths = [
-        "~/Library/Application Support/Cursor/User/workspaceStorage",
         "~/Library/Application Support/Cursor/CachedExtensionVSIXs",
         "~/Library/Application Support/Cursor/Cache",
         "~/Library/Application Support/Cursor/CachedData",
@@ -126,6 +124,59 @@ class IDECacheCleaningService: BaseCleaningService, CleaningService, @unchecked 
     ]
 
     static let localHistoryMaxAgeDays = 90
+
+    /// Estado por projeto (histórico de chat, buscas, layout). Antes era apagado
+    /// inteiro, de vez; agora só sai o de projeto que não existe mais.
+    private let workspaceStorageDirs = [
+        "~/Library/Application Support/Code/User/workspaceStorage",
+        "~/Library/Application Support/Cursor/User/workspaceStorage"
+    ]
+
+    static let workspaceStorageMaxAgeDays = 60
+
+    /// Entradas de `storageDir` cujo `workspace.json` aponta para uma pasta ou
+    /// `.code-workspace` local que não existe mais e que estão paradas há
+    /// `maxAgeDays`. Remoto, sem `workspace.json`, ilegível ou num volume
+    /// desmontado fica: sem prova de que o projeto sumiu, o estado é do usuário.
+    static func orphanedWorkspaceStorage(
+        in storageDir: String,
+        maxAgeDays: Int = workspaceStorageMaxAgeDays,
+        now: Date = Date()
+    ) -> [String] {
+        let helper = FileSystemHelper.shared
+        let expanded = helper.expandPath(storageDir)
+        let cutoff = now.addingTimeInterval(-Double(maxAgeDays) * 86400)
+        return helper.contentsOfDirectory(atPath: expanded)
+            .map { (expanded as NSString).appendingPathComponent($0) }
+            .filter { entry in
+                guard let project = workspaceProjectPath(entry), !helper.fileExists(atPath: project) else { return false }
+                return !isOnUnmountedVolume(project) && !helper.hasModifications(since: cutoff, atPath: entry)
+            }
+            .sorted()
+    }
+
+    /// O projeto local de uma entrada do workspaceStorage (`folder` ou
+    /// `workspace` em file://), ou `nil` se não houver um.
+    private static func workspaceProjectPath(_ entry: String) -> String? {
+        let manifest = (entry as NSString).appendingPathComponent("workspace.json")
+        guard let data = FileManager.default.contents(atPath: manifest),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let uri = (json["folder"] ?? json["workspace"]) as? String,
+              let url = URL(string: uri), url.isFileURL
+        else { return nil }
+        return url.path
+    }
+
+    /// `/Volumes/<disco>/…` com o disco fora — o projeto pode voltar com ele.
+    private static func isOnUnmountedVolume(_ path: String) -> Bool {
+        let components = (path as NSString).pathComponents
+        guard components.count > 2, components[1] == "Volumes" else { return false }
+        return !FileManager.default.fileExists(atPath: "/Volumes/\(components[2])")
+    }
+
+    private func orphanedWorkspaceStorage() -> [String] {
+        workspaceStorageDirs.flatMap { Self.orphanedWorkspaceStorage(in: $0) }
+    }
 
     /// Extensões marcadas em `.obsolete` que ainda existem em disco. Só o que o
     /// editor já decidiu descartar — nunca inferimos por versão.
@@ -204,6 +255,29 @@ class IDECacheCleaningService: BaseCleaningService, CleaningService, @unchecked 
         }
     }
 
+    /// Mede o workspaceStorage órfão para o relatório.
+    private func scanOrphanedWorkspaceStorage() -> (size: Int64, items: [String]) {
+        let orphans = orphanedWorkspaceStorage()
+        let size = orphans.reduce(Int64(0)) { $0 + fileHelper.sizeOfDirectory(atPath: $1) }
+        guard size > 0 else { return (0, []) }
+        return (size, ["Orphaned workspace storage: \(orphans.count) (\(fileHelper.formatBytes(size)))"])
+    }
+
+    /// Só Lixeira, nunca de vez: o workspaceStorage guarda histórico de chat.
+    private func cleanOrphanedWorkspaceStorage(
+        bytesRemoved: inout Int64, filesRemoved: inout Int, errors: inout [String]
+    ) {
+        for path in orphanedWorkspaceStorage() {
+            let size = fileHelper.sizeOfDirectory(atPath: path)
+            if fileHelper.trashItem(atPath: path) {
+                bytesRemoved += size
+                filesRemoved += 1
+            } else {
+                errors.append(String(localized: "Could not move \((path as NSString).lastPathComponent) to the Trash."))
+            }
+        }
+    }
+
     /// Lixeira primeiro (reversível); remoção direta só se a Lixeira recusar.
     private func trashOrRemove(_ path: String) -> Bool {
         if fileHelper.trashItem(atPath: path) { return true }
@@ -226,6 +300,11 @@ class IDECacheCleaningService: BaseCleaningService, CleaningService, @unchecked 
         let extras = scanObsoleteExtensionsAndHistory()
         totalSize += extras.size
         items.append(contentsOf: extras.items)
+
+        // workspaceStorage de projetos que não existem mais
+        let orphans = scanOrphanedWorkspaceStorage()
+        totalSize += orphans.size
+        items.append(contentsOf: orphans.items)
 
         // JetBrains - versões antigas
         let jetBrainsPaths = getJetBrainsPaths()
@@ -322,6 +401,9 @@ class IDECacheCleaningService: BaseCleaningService, CleaningService, @unchecked 
         // Extensões obsoletas e histórico local antigo (Lixeira)
         cleanObsoleteExtensionsAndHistory(bytesRemoved: &bytesRemoved, filesRemoved: &filesRemoved, errors: &errors)
 
+        // workspaceStorage de projetos que não existem mais (Lixeira)
+        cleanOrphanedWorkspaceStorage(bytesRemoved: &bytesRemoved, filesRemoved: &filesRemoved, errors: &errors)
+
         // Limpar JetBrains (versões antigas e caches)
         let jetBrainsPaths = getJetBrainsPaths()
         for path in jetBrainsPaths {
@@ -400,61 +482,5 @@ class IDECacheCleaningService: BaseCleaningService, CleaningService, @unchecked 
             executionTime: executionTime,
             success: errors.isEmpty
         )
-    }
-
-    /// Limpar workspaceStorage antigos (projetos que não existem mais ou não foram acessados há muito tempo)
-    private func cleanOldWorkspaceStorage(
-        basePath: String,
-        bytesRemoved: inout Int64,
-        filesRemoved: inout Int,
-        errors _: inout [String]
-    ) async {
-        let expandedPath = fileHelper.expandPath(basePath)
-        guard fileHelper.fileExists(atPath: expandedPath) else { return }
-
-        let contents = fileHelper.contentsOfDirectory(atPath: expandedPath)
-        let cutoffDate = Calendar.current.date(byAdding: .day, value: -60, to: Date())!
-
-        for dir in contents {
-            let workspacePath = (expandedPath as NSString).appendingPathComponent(dir)
-            let workspaceJsonPath = (workspacePath as NSString).appendingPathComponent("workspace.json")
-
-            // Verificar se foi acessado recentemente
-            if let attrs = try? FileManager.default.attributesOfItem(atPath: workspacePath),
-               let modDate = attrs[.modificationDate] as? Date
-            {
-                if modDate < cutoffDate {
-                    // Verificar se o projeto original ainda existe
-                    var projectStillExists = false
-
-                    if fileHelper.fileExists(atPath: workspaceJsonPath),
-                       let data = try? Data(contentsOf: URL(fileURLWithPath: workspaceJsonPath)),
-                       let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                       let folder = json["folder"] as? String
-                    {
-                        // Converter URI para path e verificar
-                        let projectPath = folder.replacingOccurrences(of: "file://", with: "")
-                            .removingPercentEncoding ?? folder
-                        projectStillExists = fileHelper.fileExists(atPath: projectPath)
-                    }
-
-                    // Se o projeto não existe mais ou é muito antigo, remover
-                    if !projectStillExists {
-                        let size = fileHelper.sizeOfDirectory(atPath: workspacePath)
-                        do {
-                            try fileHelper.removeItem(atPath: workspacePath)
-                            bytesRemoved += size
-                            filesRemoved += 1
-                            logger.log(
-                                "Removido workspace antigo: \(dir) (\(fileHelper.formatBytes(size)))",
-                                level: .debug
-                            )
-                        } catch {
-                            // Ignorar erros
-                        }
-                    }
-                }
-            }
-        }
     }
 }

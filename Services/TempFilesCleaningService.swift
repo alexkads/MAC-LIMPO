@@ -3,8 +3,9 @@ import Foundation
 class TempFilesCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .tempFiles
 
+    /// O /tmp não entra aqui: tem regra própria (`staleTemporaryItems`). Nesta
+    /// lista ele era esvaziado inteiro, anulando o filtro de idade.
     private let tempPaths = [
-        "/tmp",
         "~/Library/Caches/com.apple.bird", // iCloud
         "~/Library/Caches/CloudKit",
         "~/Library/Caches/com.apple.Safari/Webpage Previews"
@@ -46,14 +47,12 @@ class TempFilesCleaningService: BaseCleaningService, CleaningService, @unchecked
             }
         }
 
-        // Adiciona /tmp separadamente
-        let tmpPath = "/tmp"
-        if fileHelper.fileExists(atPath: tmpPath) {
-            let size = fileHelper.sizeOfDirectory(atPath: tmpPath)
-            if size > 0 {
-                totalSize += size
-                items.append("tmp: \(fileHelper.formatBytes(size))")
-            }
+        // /tmp: só o que a limpeza de fato leva
+        let staleTmp = Self.staleTemporaryItems()
+        let tmpSize = await fileHelper.sizesOfDirectoriesAsync(atPaths: staleTmp).values.reduce(0, +)
+        if tmpSize > 0 {
+            totalSize += tmpSize
+            items.append("tmp: \(fileHelper.formatBytes(tmpSize))")
         }
 
         Logger.shared.scan(
@@ -126,62 +125,68 @@ class TempFilesCleaningService: BaseCleaningService, CleaningService, @unchecked
         )
     }
 
-    private func cleanTmpDirectory(bytesRemoved: inout Int64, filesRemoved: inout Int, errors _: inout [String]) async {
-        let tmpPath = "/tmp"
-        let contents = fileHelper.contentsOfDirectory(atPath: tmpPath)
+    static let tmpMaxAgeDays = 7
 
-        Logger.shared.debug("Found \(contents.count) items in /tmp")
-
-        // Limpa apenas arquivos/pastas antigas em /tmp (mais de 7 dias)
-        let calendar = Calendar.current
-        let cutoffDate = calendar.date(byAdding: .day, value: -7, to: Date()) ?? Date()
-
-        var skipped = 0
-        var removed = 0
-
-        for item in contents {
-            // Pula itens do sistema
-            if item.hasPrefix(".") || item.hasPrefix("com.apple.") {
-                skipped += 1
-                continue
+    /// Itens de `folder` (o /tmp) que podem ir para a Lixeira: do usuário,
+    /// arquivos ou pastas comuns, sem nada modificado dentro há mais de 7 dias e
+    /// sem socket ou FIFO — é por eles que processos vivos conversam (ssh-agent,
+    /// tmux, IDEs), e tirá-los derruba essas sessões. Ocultos e `com.apple.*`
+    /// ficam.
+    static func staleTemporaryItems(
+        in folder: String = "/tmp",
+        olderThanDays days: Int = tmpMaxAgeDays,
+        now: Date = Date(),
+        owner: uid_t = getuid()
+    ) -> [String] {
+        let helper = FileSystemHelper.shared
+        let cutoff = now.addingTimeInterval(-Double(days) * 86400)
+        return helper.contentsOfDirectory(atPath: folder)
+            .filter { !$0.hasPrefix(".") && !$0.hasPrefix("com.apple.") }
+            .map { (folder as NSString).appendingPathComponent($0) }
+            .filter { path in
+                guard let attributes = try? FileManager.default.attributesOfItem(atPath: path),
+                      (attributes[.ownerAccountID] as? NSNumber)?.uint32Value == owner,
+                      let type = attributes[.type] as? FileAttributeType,
+                      type == .typeRegular || type == .typeDirectory
+                else { return false }
+                return !helper.hasModifications(since: cutoff, atPath: path)
+                    && !(type == .typeDirectory && containsSocketOrPipe(atPath: path))
             }
+            .sorted()
+    }
 
-            let itemPath = (tmpPath as NSString).appendingPathComponent(item)
+    /// Há socket ou FIFO dentro da pasta `path`? Na dúvida (pasta ilegível), sim.
+    static func containsSocketOrPipe(atPath path: String) -> Bool {
+        var unreadable = false
+        guard let enumerator = FileManager.default.enumerator(
+            at: URL(fileURLWithPath: path),
+            includingPropertiesForKeys: [.fileResourceTypeKey],
+            errorHandler: { _, _ in
+                unreadable = true
+                return false
+            }
+        ) else { return true }
+        while let child = enumerator.nextObject() as? URL {
+            let type = try? child.resourceValues(forKeys: [.fileResourceTypeKey]).fileResourceType
+            if type == .socket || type == .namedPipe { return true }
+        }
+        return unreadable
+    }
 
-            do {
-                let attributes = try FileManager.default.attributesOfItem(atPath: itemPath)
-
-                // Verifica data de modificação
-                if let modificationDate = attributes[.modificationDate] as? Date {
-                    if modificationDate < cutoffDate {
-                        let size = fileHelper.sizeOfDirectory(atPath: itemPath)
-
-                        try fileHelper.removeItem(atPath: itemPath)
-                        bytesRemoved += size
-                        filesRemoved += 1
-                        removed += 1
-
-                        Logger.shared.debug("Removed from /tmp: \(item) (\(fileHelper.formatBytes(size)))")
-                    } else {
-                        skipped += 1
-                    }
-                }
-            } catch let error as NSError {
-                // Para /tmp, ignora TODOS os erros de permissão silenciosamente
-                // pois é esperado ter arquivos protegidos aqui
-                if (error.domain == NSCocoaErrorDomain && (error.code == 513 || error.code == 257)) ||
-                    (error.domain == NSPOSIXErrorDomain && (error.code == 1 || error.code == 13))
-                {
-                    Logger.shared.debug("Permission denied (expected) in /tmp: \(item)")
-                } else {
-                    Logger.shared.debug("Could not process /tmp item: \(item) - \(error.localizedDescription)")
-                }
-                skipped += 1
-                continue
+    /// /tmp vai para a Lixeira, não é apagado de vez: o que alguém guardou ali
+    /// ainda pode voltar.
+    private func cleanTmpDirectory(bytesRemoved: inout Int64, filesRemoved: inout Int, errors: inout [String]) async {
+        let stale = Self.staleTemporaryItems()
+        for itemPath in stale {
+            let size = fileHelper.sizeOfDirectory(atPath: itemPath)
+            if fileHelper.trashItem(atPath: itemPath) {
+                bytesRemoved += size
+                filesRemoved += 1
+            } else {
+                errors.append(String(localized: "Could not move \((itemPath as NSString).lastPathComponent) to the Trash."))
             }
         }
-
-        Logger.shared.info("/tmp cleanup: removed \(removed), skipped \(skipped)")
+        Logger.shared.info("/tmp cleanup: \(stale.count) stale items")
     }
 
     private func cleanDirectory(

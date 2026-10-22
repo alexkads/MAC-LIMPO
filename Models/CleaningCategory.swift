@@ -81,6 +81,13 @@ enum CleaningCategory: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
+    /// Entra no Clean All. A Lixeira fica de fora: as outras categorias mandam
+    /// itens para ela, e esvaziá-la na mesma passada apagava de vez o que tinha
+    /// acabado de chegar — a confirmação promete que dá para restaurar.
+    var includedInCleanAll: Bool {
+        self != .trash
+    }
+
     /// Nome na interface, traduzido. O rawValue fica como identidade estável
     /// (id do ForEach, logs) e não deve aparecer na tela.
     var displayName: String {
@@ -255,7 +262,7 @@ enum CleaningCategory: String, CaseIterable, Identifiable, Sendable {
         case .devPackages:
             String(localized: "Clear npm, pip, brew, and cargo caches")
         case .xcodeCache:
-            String(localized: "Clean DerivedData, Archives, and build caches")
+            String(localized: "Clean DerivedData, device support, and build caches (keeps Archives)")
         case .iosSimulators:
             String(localized: "Remove old iOS Simulator devices and data")
         case .ideCache:
@@ -277,9 +284,9 @@ enum CleaningCategory: String, CaseIterable, Identifiable, Sendable {
         case .appCache:
             String(localized: "Clear application caches")
         case .downloads:
-            String(localized: "Remove downloads older than 30 days")
+            String(localized: "Move downloads untouched for 30+ days to the Trash")
         case .trash:
-            String(localized: "Empty Trash and recover space")
+            String(localized: "Empty the Trash for good (not part of Clean All)")
         case .browserCache:
             String(localized: "Clear Safari, Chrome, Firefox cache")
         case .spotifyCache:
@@ -343,6 +350,47 @@ enum CleaningCategory: String, CaseIterable, Identifiable, Sendable {
         case .dotnetSdks:
             String(localized: "Remove superseded .NET SDK and runtime patches (keeps newest of each line; asks admin password)")
         }
+    }
+}
+
+extension CleaningCategory {
+    /// Texto da confirmação antes de limpar `categories`: o que vai para a
+    /// Lixeira, o que sai de vez e o que só o modo agressivo leva.
+    static func confirmationMessage(
+        for categories: [CleaningCategory],
+        sizeText: String,
+        aggressiveMode: Bool,
+        dockerWipe: Bool
+    ) -> String {
+        var body: String
+        if categories == [.trash] {
+            body = String(
+                localized: "About \(sizeText) will be freed. Emptying the Trash deletes its items for good — they can't be restored."
+            )
+        } else {
+            body = String(
+                localized: "About \(sizeText) will be freed. Whenever possible, items go to the Trash and can be restored from there."
+            )
+            if categories.count > 1 {
+                body += " " + String(localized: "The Trash isn't emptied — empty it afterwards to reclaim that space.")
+            }
+        }
+        if aggressiveMode {
+            body += "\n\n" + String(
+                localized: "⚡️ Aggressive mode is on: also removes large regenerable caches (Chrome AI models, unused Docker images)."
+            )
+            if categories.contains(.systemData) {
+                body += " " + String(
+                    localized: "System Data also deletes the Time Machine local snapshots (asks for your administrator password)."
+                )
+            }
+        }
+        if dockerWipe {
+            body += "\n\n" + String(
+                localized: "⚠️ Docker full cleanup is on: all containers are stopped and removed, along with ALL images and volumes — databases included. This doesn't go to the Trash."
+            )
+        }
+        return body
     }
 }
 

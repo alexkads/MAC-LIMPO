@@ -45,7 +45,9 @@ struct CleanAllStorageIntent: AppIntent {
             dialog: IntentDialog("This will move eligible cleaning targets to the Trash. Continue?")
         )
 
-        let services = CleaningServiceRegistry.shared.services
+        // Como no Clean All do popover, a Lixeira fica de fora: esvaziá-la aqui
+        // apagaria de vez o que as outras categorias acabaram de mandar para lá.
+        let services = CleaningServiceRegistry.shared.services.filter { $0.key.includedInCleanAll }
         let results = await withTaskGroup(of: CleaningResult.self, returning: [CleaningResult].self) { group in
             for service in services.values {
                 group.addTask { await service.clean() }

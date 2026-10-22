@@ -1,6 +1,7 @@
-import AppKit
 import Foundation
 
+/// Esvazia a Lixeira — a única categoria que apaga de vez o que o usuário já
+/// mandou para lá. Por isso fica fora do Clean All (`includedInCleanAll`).
 class TrashCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .trash
 
@@ -28,40 +29,40 @@ class TrashCleaningService: BaseCleaningService, CleaningService, @unchecked Sen
         let startTime = Date()
         var bytesRemoved: Int64 = 0
         var filesRemoved = 0
+        var errors: [String] = []
 
+        // Item por item, fora da MainActor (apagar GBs travava a interface), e um
+        // item preso não impede os demais. Sem Acesso Total ao Disco a listagem
+        // falha — isso vira erro visível, não uma Lixeira "vazia".
         let expandedPath = fileHelper.expandPath(trashPath)
-
-        // Obtém tamanho antes de esvaziar
-        if fileHelper.fileExists(atPath: expandedPath) {
-            bytesRemoved = fileHelper.sizeOfDirectory(atPath: expandedPath)
-            filesRemoved = fileHelper.contentsOfDirectory(atPath: expandedPath).count
+        let contents: [String]
+        do {
+            contents = fileHelper.fileExists(atPath: expandedPath)
+                ? try FileManager.default.contentsOfDirectory(atPath: expandedPath)
+                : []
+        } catch {
+            contents = []
+            errors.append(String(localized: "Failed to empty trash: \(error.localizedDescription)"))
         }
-
-        // Usa NSWorkspace para esvaziar a lixeira de forma segura
-        let cleaningErrors = await MainActor.run { () -> [String] in
-            var errors: [String] = []
+        for item in contents {
+            let itemPath = (expandedPath as NSString).appendingPathComponent(item)
+            let size = fileHelper.sizeOfDirectory(atPath: itemPath)
             do {
-                let url = URL(fileURLWithPath: expandedPath)
-                let contents = try FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil)
-
-                for itemURL in contents {
-                    try FileManager.default.removeItem(at: itemURL)
-                }
+                try fileHelper.removeItem(atPath: itemPath)
+                bytesRemoved += size
+                filesRemoved += 1
             } catch {
-                errors.append(String(localized: "Failed to empty trash: \(error.localizedDescription)"))
+                errors.append(String(localized: "Failed to remove \(item): \(error.localizedDescription)"))
             }
-            return errors
         }
-
-        let executionTime = Date().timeIntervalSince(startTime)
 
         return CleaningResult(
             category: category,
             bytesRemoved: bytesRemoved,
             filesRemoved: filesRemoved,
-            errors: cleaningErrors,
-            executionTime: executionTime,
-            success: cleaningErrors.isEmpty
+            errors: errors,
+            executionTime: Date().timeIntervalSince(startTime),
+            success: errors.isEmpty
         )
     }
 }

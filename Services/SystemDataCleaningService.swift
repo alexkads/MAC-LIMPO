@@ -180,7 +180,8 @@ final class SystemDataCleaningService: BaseCleaningService, CleaningService, @un
 
         // Adiciona informação sobre Time Machine snapshots
         if let snapshots = getTimeMachineSnapshots() {
-            items.append("Time Machine Snapshots: \(snapshots)")
+            let note = CleaningOptions.shared.aggressiveMode ? "" : " (aggressive mode only)"
+            items.append("Time Machine Snapshots: \(snapshots)\(note)")
         }
 
         return ScanResult(
@@ -406,8 +407,8 @@ final class SystemDataCleaningService: BaseCleaningService, CleaningService, @un
         // 4. Limpa caches específicos via find e rm (mais agressivo)
         cleanCachesViaShell(errors: &errors, bytesRemoved: &bytesRemoved)
 
-        // 5. Time Machine snapshots (ALTO IMPACTO) - COM SUDO
-        cleanTimeMachineSnapshotsWithSudo(errors: &errors, bytesRemoved: &bytesRemoved)
+        // 5. Snapshots locais do Time Machine — só no modo agressivo, com senha
+        cleanTimeMachineSnapshotsWithSudo()
 
         // 6. node_modules antigos
         cleanNodeModules(errors: &errors, bytesRemoved: &bytesRemoved)
@@ -548,41 +549,43 @@ final class SystemDataCleaningService: BaseCleaningService, CleaningService, @un
 
     // MARK: - Time Machine with Sudo
 
-    private func cleanTimeMachineSnapshotsWithSudo(errors _: inout [String], bytesRemoved _: inout Int64) {
-        // Lista snapshots primeiro (não precisa sudo)
-        let listResult = shell.execute("tmutil listlocalsnapshots /")
-        if listResult.exitCode != 0 || listResult.output.isEmpty {
-            return
-        }
-
-        let snapshots = listResult.output.components(separatedBy: "\n")
-            .filter { !$0.isEmpty }
+    /// AppleScript que apaga os snapshots locais listados por `tmutil
+    /// listlocalsnapshots /`, ou `nil` se não houver o que apagar ou o modo
+    /// agressivo estiver desligado. Snapshots são pontos de restauração, não
+    /// cache: o macOS já os descarta sozinho quando falta espaço, e apagar pede a
+    /// senha de administrador — por isso nunca numa limpeza comum.
+    static func timeMachineDeletionScript(listing: String, aggressiveMode: Bool) -> String? {
+        guard aggressiveMode else { return nil }
+        // Só datas no formato do tmutil (2026-10-21-101010) chegam ao shell.
+        let dates = listing.components(separatedBy: "\n")
             .filter { $0.contains("com.apple.TimeMachine") }
+            .compactMap { snapshot -> String? in
+                let components = snapshot.components(separatedBy: ".")
+                guard components.count >= 4 else { return nil }
+                return components[3]
+            }
+            .filter { $0.range(of: #"^\d{4}-\d{2}-\d{2}-\d{6}$"#, options: .regularExpression) != nil }
+        guard !dates.isEmpty else { return nil }
 
-        if snapshots.isEmpty {
-            return
-        }
-
-        // Extrai as datas e apaga TODAS num único `do shell script` — um só
-        // pedido de senha, em vez do prompt por snapshot que havia antes.
-        // O espaço liberado entra pelo delta de espaço livre no clean().
-        let dates = snapshots.compactMap { snapshot -> String? in
-            let components = snapshot.components(separatedBy: ".")
-            guard components.count >= 4 else { return nil }
-            return components[3]
-        }
-        guard !dates.isEmpty else { return }
-
+        // Todas num único `do shell script` — um só pedido de senha.
         let deleteCommands = dates
             .map { "tmutil deletelocalsnapshots \($0)" }
             .joined(separator: "; ")
-        let appleScript = """
-        do shell script "\(deleteCommands)" with administrator privileges
-        """
+        return #"do shell script "\#(deleteCommands)" with administrator privileges"#
+    }
 
-        let result = shell.execute("osascript -e '\(appleScript)'")
+    /// O espaço liberado entra pelo delta de espaço livre no clean().
+    private func cleanTimeMachineSnapshotsWithSudo() {
+        let aggressiveMode = CleaningOptions.shared.aggressiveMode
+        guard aggressiveMode else { return }
+        let listResult = shell.execute("tmutil listlocalsnapshots /")
+        guard listResult.exitCode == 0,
+              let script = Self.timeMachineDeletionScript(listing: listResult.output, aggressiveMode: aggressiveMode)
+        else { return }
+
+        let result = shell.execute("osascript -e '\(script)'")
         if result.exitCode == 0 {
-            logger.log("Removidos \(dates.count) snapshots do Time Machine", level: .info)
+            logger.log("Snapshots locais do Time Machine removidos", level: .info)
         }
     }
 

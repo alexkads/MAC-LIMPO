@@ -3,13 +3,14 @@ import Foundation
 class XcodeCacheCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .xcodeCache
 
-    /// Caches e dados derivados do Xcode
-    private let xcodePaths = [
+    /// Caches e dados derivados do Xcode. Ficam de fora de propósito:
+    /// `Archives` — os dSYMs das versões publicadas, sem eles não dá para ler
+    /// crash reports; quem apaga é o Organizer do Xcode — e
+    /// `~/Library/org.swift.swiftpm`, que é configuração e confiança de pacotes
+    /// do SwiftPM, não cache.
+    static let xcodePaths = [
         // DerivedData - arquivos de build temporários
         "~/Library/Developer/Xcode/DerivedData",
-
-        // Archives - builds arquivados (geralmente muito grandes)
-        "~/Library/Developer/Xcode/Archives",
 
         // Device Support - símbolos de debug de dispositivos físicos
         "~/Library/Developer/Xcode/iOS DeviceSupport",
@@ -29,7 +30,6 @@ class XcodeCacheCleaningService: BaseCleaningService, CleaningService, @unchecke
 
         // Swift Package Manager caches
         "~/Library/Caches/org.swift.swiftpm",
-        "~/Library/org.swift.swiftpm",
 
         // Index e precompiled modules
         "~/Library/Developer/Xcode/UserData/PreviewDevices",
@@ -54,7 +54,7 @@ class XcodeCacheCleaningService: BaseCleaningService, CleaningService, @unchecke
         logger.log("Iniciando escaneamento do ambiente de desenvolvimento Xcode", level: .info)
         progress?(String(localized: "Checking Xcode paths…"))
 
-        for path in xcodePaths {
+        for path in Self.xcodePaths {
             let expandedPath = fileHelper.expandPath(path)
             if fileHelper.fileExists(atPath: expandedPath) {
                 let readablePath = getReadableName(for: path)
@@ -94,8 +94,6 @@ class XcodeCacheCleaningService: BaseCleaningService, CleaningService, @unchecke
         switch path {
         case let p where p.contains("DerivedData"):
             "DerivedData (builds temporários)"
-        case let p where p.contains("Archives"):
-            "Archives (builds arquivados)"
         case let p where p.contains("iOS DeviceSupport"):
             "iOS DeviceSupport (símbolos)"
         case let p where p.contains("watchOS DeviceSupport"):
@@ -171,7 +169,7 @@ class XcodeCacheCleaningService: BaseCleaningService, CleaningService, @unchecke
         logger.log("Iniciando limpeza do ambiente de desenvolvimento Xcode", level: .info)
 
         // 1. Limpar caches e derived data
-        for path in xcodePaths {
+        for path in Self.xcodePaths {
             let expandedPath = fileHelper.expandPath(path)
             if fileHelper.fileExists(atPath: expandedPath) {
                 let size = fileHelper.sizeOfDirectory(atPath: expandedPath)
