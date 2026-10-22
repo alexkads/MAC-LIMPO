@@ -809,20 +809,20 @@
 
 
 <h1 id="safety">Safety<a class="headerlink" href="#safety" title="Permanent link">&para;</a></h1>
-<p>MAC-LIMPO removes <strong>caches, build output, logs and temporary files</strong> that tools recreate by themselves. It never targets your documents, photos, projects' source code or app settings.</p>
+<p>MAC-LIMPO removes <strong>caches, build output, logs and temporary files</strong> that tools recreate by themselves. Your own files are never deleted for good: the categories that touch them — <em>Old Downloads</em> and <em>App Leftovers</em> — only move to the Trash what has sat untouched for a long time.</p>
 <h2 id="how-a-cleanup-works">How a cleanup works<a class="headerlink" href="#how-a-cleanup-works" title="Permanent link">&para;</a></h2>
 <ol>
 <li><strong>Scan first.</strong> Every category measures what it would remove; nothing is deleted during a scan.</li>
 <li><strong>Confirm.</strong> Cleaning a category or <em>Clean All</em> asks for confirmation (you can skip it for the session).</li>
-<li><strong>Trash, when possible.</strong> Path-based cleaners move items to the <strong>Trash</strong>, so you can restore them until the Trash is emptied.</li>
+<li><strong>Trash, when possible.</strong> Path-based cleaners move items to the <strong>Trash</strong>, so you can restore them until the Trash is emptied. <em>Clean All</em> never empties it — only the <em>Trash Bin</em> category does, and its confirmation says that's permanent.</li>
 <li><strong>Report.</strong> You see how much was freed and any item that could not be removed.</li>
 </ol>
 <div class="admonition warning">
 <p class="admonition-title">Some removals are permanent</p>
 <p>Categories that delegate to the tool that owns the data — <code>docker … prune</code>, <code>brew cleanup</code>, <code>xcrun simctl</code>
 — and some system areas remove items directly, because there is no Trash on that path. Their descriptions
-say so, and the larger or riskier ones (local AI models, all unused Docker images, old simulator runtimes)
-only run in <strong>Aggressive cleaning</strong> mode.</p>
+say so, and the larger or riskier ones (local AI models, all unused Docker images, old simulator runtimes,
+Time Machine local snapshots) only run in <strong>Aggressive cleaning</strong> mode.</p>
 </div>
 <h2 id="what-it-never-does">What it never does<a class="headerlink" href="#what-it-never-does" title="Permanent link">&para;</a></h2>
 <ul>
@@ -832,12 +832,20 @@ only run in <strong>Aggressive cleaning</strong> mode.</p>
 <li>Remove the toolchains you rely on: the rustup default, <code>rustup override</code> and channel toolchains
   (stable/beta/nightly), the nvm <code>default</code> alias and the newest Node of each major version stay.</li>
 <li>Remove a Cargo <code>target/</code> while a build is running.</li>
+<li>Delete Xcode <strong>Archives</strong> (the dSYMs of your shipped builds) or the SwiftPM configuration.</li>
+<li>Take a <code>build/</code> or <code>dist/</code> folder without proof that a build tool made it: a Gradle or Flutter project
+  for <code>build/</code>, a Python package for <code>dist/</code>. JavaScript <code>build/</code> and <code>dist/</code> folders stay.</li>
+<li>Take anything from <code>/tmp</code> that a running program may still use — sockets, pipes, anything touched in the
+  last 7 days — or that belongs to another user.</li>
+<li>Call an app uninstalled just because it isn't in /Applications: it is looked up by bundle id anywhere on the
+  Mac, and its data must have been idle for 90 days. VS Code and Cursor workspace state only goes when its
+  project no longer exists.</li>
 <li>Send anything off your Mac. There is no telemetry; Apple Intelligence recommendations run on-device.</li>
 </ul>
 <h2 id="permissions">Permissions<a class="headerlink" href="#permissions" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Full Disk Access</strong> — needed to measure and clean protected caches (Mail, Messages, Safari, app containers). Without it those areas are skipped, never forced.</li>
-<li><strong>Administrator password</strong> — asked only for root-owned caches (e.g. superseded .NET SDKs) and only in the categories that need it.</li>
+<li><strong>Administrator password</strong> — asked only for root-owned caches (e.g. superseded .NET SDKs) and Time Machine local snapshots in Aggressive mode, and only in the categories that need it.</li>
 </ul>
 <h2 id="disk-x-ray">Disk X-Ray<a class="headerlink" href="#disk-x-ray" title="Permanent link">&para;</a></h2>
 <p>The Disk X-Ray only reads. <em>Move to Trash</em> works on one item at a time, after confirmation, and refuses your home folder and its top-level folders (Documents, Desktop, Library…).</p>

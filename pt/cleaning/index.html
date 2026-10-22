@@ -814,7 +814,7 @@
 <p>MAC-LIMPO ships <strong>46 cleaning categories</strong>. Each one is scanned first — the popover shows how much it would free — and only cleaned when you click it (or <em>Clean All</em>), after a confirmation.</p>
 <div class="admonition tip">
 <p class="admonition-title">Aggressive mode</p>
-<p>Some categories hold back large caches that are expensive to rebuild (local AI models, all unused Docker images, old simulator runtimes). Turn on <strong>Aggressive cleaning</strong> in the popover settings to include them.</p>
+<p>Some categories hold back large caches that are expensive to rebuild (local AI models, all unused Docker images, old simulator runtimes, Time Machine local snapshots). Turn on <strong>Aggressive cleaning</strong> in the popover settings to include them.</p>
 </div>
 <h2 id="development">Development<a class="headerlink" href="#development" title="Permanent link">&para;</a></h2>
 <table>
@@ -923,7 +923,7 @@
 </tr>
 <tr>
 <td><strong>Xcode Cache</strong></td>
-<td>Clean DerivedData, Archives, and build caches</td>
+<td>Clean DerivedData, device support, and build caches (keeps Archives)</td>
 </tr>
 <tr>
 <td><strong>Zed Cache</strong></td>
@@ -958,7 +958,7 @@
 </tr>
 <tr>
 <td><strong>Trash Bin</strong></td>
-<td>Empty Trash and recover space</td>
+<td>Empty the Trash for good (not part of Clean All)</td>
 </tr>
 <tr>
 <td><strong>Var Folders</strong></td>
@@ -1001,7 +1001,7 @@
 </tr>
 <tr>
 <td><strong>Old Downloads</strong></td>
-<td>Remove downloads older than 30 days</td>
+<td>Move downloads untouched for 30+ days to the Trash</td>
 </tr>
 </tbody>
 </table>

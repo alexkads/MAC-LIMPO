@@ -1,24 +1,26 @@
 {
-  "version": "1.3.27",
-  "date": "2026-10-07",
-  "important": false,
-  "url": "https://github.com/alexkads/MAC-LIMPO/releases/tag/v1.3.27",
+  "version": "1.3.28",
+  "date": "2026-10-21",
+  "important": true,
+  "url": "https://github.com/alexkads/MAC-LIMPO/releases/tag/v1.3.28",
   "notes": {
     "en": {
-      "title": "Update checks always get the latest announcement",
+      "title": "Cleanups no longer delete your own files for good",
       "changes": [
-        "Right after a release, Check for Updates no longer says you're up to date because of a cached answer.",
-        "Second test of the automatic update: if you're reading this in MAC-LIMPO, it's working."
+        "Clean All leaves the Trash alone, so what it moves there can really be restored. Emptying the Trash is its own step and says it's permanent.",
+        "Old downloads, /tmp, app leftovers and VS Code/Cursor project state go to the Trash, and only after sitting untouched for a long time.",
+        "Xcode Archives, JavaScript build/dist folders and Time Machine local snapshots are kept — snapshots only go in Aggressive mode."
       ],
-      "why": "New versions show up as soon as they're published."
+      "why": "A disk cleaner should never take something you can't get back."
     },
     "pt-BR": {
-      "title": "A busca por atualizações sempre recebe o anúncio mais novo",
+      "title": "As limpezas não apagam mais de vez os seus arquivos",
       "changes": [
-        "Logo depois de uma release, Procurar Atualizações não diz mais que você está em dia por causa de uma resposta guardada em cache.",
-        "Segundo teste da atualização automática: se você está lendo isto no MAC-LIMPO, está funcionando."
+        "Limpar Tudo não mexe mais no Lixo, então o que vai para lá pode mesmo ser restaurado. Esvaziar o Lixo é um passo à parte, que avisa que é definitivo.",
+        "Downloads antigos, /tmp, restos de apps e o estado de projetos do VS Code/Cursor vão para o Lixo, e só depois de muito tempo parados.",
+        "Archives do Xcode, pastas build/dist de JavaScript e snapshots locais do Time Machine ficam — os snapshots só saem no modo agressivo."
       ],
-      "why": "As versões novas aparecem assim que são publicadas."
+      "why": "Um limpador de disco nunca deve levar algo que você não consegue recuperar."
     }
   }
 }

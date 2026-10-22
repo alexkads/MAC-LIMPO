@@ -809,12 +809,12 @@
 
 
 <h1 id="seguranca">Segurança<a class="headerlink" href="#seguranca" title="Permanent link">&para;</a></h1>
-<p>O MAC-LIMPO remove <strong>caches, saídas de compilação, logs e arquivos temporários</strong> que as próprias ferramentas recriam. Ele nunca mira seus documentos, fotos, o código-fonte dos seus projetos ou os ajustes dos apps.</p>
+<p>O MAC-LIMPO remove <strong>caches, saídas de compilação, logs e arquivos temporários</strong> que as próprias ferramentas recriam. Seus próprios arquivos nunca são apagados de vez: as categorias que mexem neles — <em>Downloads Antigos</em> e <em>Restos de Apps</em> — só movem para a Lixeira o que ficou muito tempo parado.</p>
 <h2 id="como-uma-limpeza-funciona">Como uma limpeza funciona<a class="headerlink" href="#como-uma-limpeza-funciona" title="Permanent link">&para;</a></h2>
 <ol>
 <li><strong>Escaneia antes.</strong> Cada categoria mede o que removeria; nada é apagado durante o escaneamento.</li>
 <li><strong>Confirma.</strong> Limpar uma categoria ou o <em>Clean All</em> pede confirmação (dá para dispensar durante a sessão).</li>
-<li><strong>Lixeira, quando possível.</strong> As limpezas por caminho movem os itens para a <strong>Lixeira</strong>, e dá para restaurar enquanto ela não for esvaziada.</li>
+<li><strong>Lixeira, quando possível.</strong> As limpezas por caminho movem os itens para a <strong>Lixeira</strong>, e dá para restaurar enquanto ela não for esvaziada. O <em>Clean All</em> nunca a esvazia — só a categoria <em>Lixo</em> faz isso, e a confirmação dela avisa que é definitivo.</li>
 <li><strong>Relata.</strong> Você vê quanto foi liberado e o que não pôde ser removido.</li>
 </ol>
 <div class="admonition warning">
@@ -822,7 +822,7 @@
 <p>As categorias que delegam à ferramenta dona dos dados — <code>docker … prune</code>, <code>brew cleanup</code>, <code>xcrun simctl</code> —
 e algumas áreas do sistema removem direto, porque não existe Lixeira nesse caminho. A descrição delas avisa,
 e as maiores ou mais arriscadas (modelos de IA locais, todas as imagens do Docker sem uso, runtimes antigos de
-simulador) só rodam no modo <strong>Aggressive cleaning</strong>.</p>
+simulador, snapshots locais do Time Machine) só rodam no modo <strong>Aggressive cleaning</strong>.</p>
 </div>
 <h2 id="o-que-ele-nunca-faz">O que ele nunca faz<a class="headerlink" href="#o-que-ele-nunca-faz" title="Permanent link">&para;</a></h2>
 <ul>
@@ -832,12 +832,20 @@ simulador) só rodam no modo <strong>Aggressive cleaning</strong>.</p>
 <li>Remover as toolchains que você usa: ficam a padrão do rustup, as de <code>rustup override</code> e as de canal
   (stable/beta/nightly), o alias <code>default</code> do nvm e o Node mais novo de cada versão principal.</li>
 <li>Remover um <code>target/</code> do Cargo enquanto um build está rodando.</li>
+<li>Apagar os <strong>Archives</strong> do Xcode (os dSYMs das versões que você publicou) ou a configuração do SwiftPM.</li>
+<li>Levar uma pasta <code>build/</code> ou <code>dist/</code> sem prova de que uma ferramenta de build a criou: projeto Gradle ou
+  Flutter para <code>build/</code>, pacote Python para <code>dist/</code>. As <code>build/</code> e <code>dist/</code> de JavaScript ficam.</li>
+<li>Levar do <code>/tmp</code> o que um programa aberto ainda pode usar — sockets, pipes, o que mudou nos últimos 7 dias —
+  ou o que é de outro usuário.</li>
+<li>Dar um app como desinstalado só porque ele não está em /Applications: ele é procurado pelo bundle id no Mac
+  inteiro, e os dados precisam estar parados há 90 dias. O estado de projeto do VS Code e do Cursor só sai
+  quando o projeto não existe mais.</li>
 <li>Enviar qualquer coisa para fora do seu Mac. Não há telemetria; as recomendações do Apple Intelligence rodam no próprio Mac.</li>
 </ul>
 <h2 id="permissoes">Permissões<a class="headerlink" href="#permissoes" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Acesso Total ao Disco</strong> — para medir e limpar caches protegidos (Mail, Messages, Safari, contêineres de apps). Sem ele essas áreas são puladas, nunca forçadas.</li>
-<li><strong>Senha de administrador</strong> — pedida só para caches do sistema (por exemplo SDKs antigos do .NET) e só nas categorias que precisam.</li>
+<li><strong>Senha de administrador</strong> — pedida só para caches do sistema (por exemplo SDKs antigos do .NET) e para os snapshots locais do Time Machine no modo agressivo, e só nas categorias que precisam.</li>
 </ul>
 <h2 id="disk-x-ray">Disk X-Ray<a class="headerlink" href="#disk-x-ray" title="Permanent link">&para;</a></h2>
 <p>O Disk X-Ray só lê. <em>Mover para a Lixeira</em> age em um item por vez, depois de confirmação, e recusa a sua pasta pessoal e as pastas de primeiro nível dela (Documentos, Mesa, Biblioteca…).</p>
