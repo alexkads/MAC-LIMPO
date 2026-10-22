@@ -74,6 +74,7 @@ let package = Package(
                 "Services/CleaningService.swift",
                 "Services/CleaningServiceRegistry.swift",
                 "Services/UpdateChecker.swift",
+                "Services/UpdateInstaller.swift",
                 "Services/AppleIntelligenceService.swift",
                 "Services/PathBasedCleaningService.swift",
                 "Services/DockerCleaningService.swift",

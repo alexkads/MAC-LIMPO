@@ -23,7 +23,7 @@ description: Frequently asked questions about MAC-LIMPO.
     You don't have to. MAC-LIMPO checks for new versions by itself and, if your Mac has the Command Line Tools or
     Xcode, builds the new one in the background while you keep working — nothing closes. When it's ready, a dot on
     the menu bar icon and a notification tell you; it takes effect the next time the app opens, or click
-    **Reopen Now**. Installed from the `.pkg` without build tools? The banner links to the download instead.
+    **Reopen Now**. Installed from the `.pkg`? That copy belongs to root, so the banner links to the new `.pkg` instead.
     **Check for Updates…** in Settings checks right away.
 
 ??? question "Will it delete my files?"

@@ -13,7 +13,7 @@ curl -fsSL https://alexkads.github.io/MAC-LIMPO/install.sh | sh
 O que ele faz, nesta ordem:
 
 1. Confere o Mac: macOS 26.6+, as Command Line Tools (ou o Xcode) com Swift 6.4 e ~2 GB livres.
-2. Baixa o código da [última versão](https://github.com/alexkads/MAC-LIMPO/releases/latest) (ou da `main`, se ainda não houver nenhuma).
+2. Baixa o código da [última versão](https://github.com/alexkads/MAC-LIMPO/releases/latest), perguntando ao GitHub e, de reserva, ao site — nunca compila a `main` sem você pedir.
 3. Compila o app com o `Scripts/bundle-app.sh` — de 2 a 5 minutos na primeira vez; as atualizações reaproveitam o cache em `~/Library/Caches/MAC-LIMPO-build`.
 4. Instala o `MAC-LIMPO.app` em `/Applications` (ou em `~/Applications`, se não houver permissão) e abre. Um balão de boas-vindas aponta para o ícone de lixeira na barra de menus — o MAC-LIMPO não tem ícone no Dock nem janela principal, ele mora ali.
 

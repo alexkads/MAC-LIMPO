@@ -3342,6 +3342,16 @@
         }
       }
     },
+    "The installer stopped before finishing." : {
+      "localizations" : {
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O instalador parou antes de terminar."
+          }
+        }
+      }
+    },
     "The installer stopped with an error." : {
       "localizations" : {
         "pt-BR" : {

@@ -99,7 +99,7 @@ struct UpdateBanner: View {
                 .padding(.leading, 30)
             }
 
-            Text(UpdateChecker.canBuildFromSource
+            Text(UpdateChecker.canUpdateInPlace
                 ? String(localized: "Builds on this Mac in the background (2–5 minutes) while you keep working.")
                 : String(localized: "Opens the download page for the new version."))
                 .font(.caption)

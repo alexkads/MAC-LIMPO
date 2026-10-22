@@ -18,7 +18,7 @@ description: Perguntas frequentes sobre o MAC-LIMPO.
     Não precisa. O MAC-LIMPO procura versões novas sozinho e, se o seu Mac tem as Command Line Tools ou o Xcode,
     compila a nova em segundo plano enquanto você continua usando — nada fecha. Quando fica pronta, um ponto no
     ícone da barra de menus e uma notificação avisam; ela entra na próxima abertura do app, ou clique em
-    **Reabrir Agora**. Instalou pelo `.pkg` sem ferramentas de compilação? A faixa aponta para o download.
+    **Reabrir Agora**. Instalou pelo `.pkg`? Essa cópia é do root, então a faixa aponta para o `.pkg` novo.
     **Procurar Atualizações…** nos Ajustes confere na hora.
 
 ??? question "Em quais idiomas ele funciona?"

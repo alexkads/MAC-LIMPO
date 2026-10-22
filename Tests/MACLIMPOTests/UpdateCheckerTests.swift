@@ -85,6 +85,145 @@ final class UpdateRetryTests: XCTestCase {
     }
 }
 
+/// "Procurar Atualizações" depois de uma instalação em segundo plano: a versão
+/// já está no disco, só falta reabrir — nada de recompilar.
+final class UpdateOutcomeTests: XCTestCase {
+    func testComparesWithTheVersionOnDisk() {
+        XCTAssertEqual(UpdateChecker.outcome(announced: "1.3.29", running: "1.3.28", onDisk: "1.3.28"), .available)
+        XCTAssertEqual(UpdateChecker.outcome(announced: "1.3.29", running: "1.3.28", onDisk: "1.3.29"), .installedPendingReopen)
+        XCTAssertEqual(UpdateChecker.outcome(announced: "1.3.29", running: "1.3.28", onDisk: nil), .available)
+        XCTAssertEqual(UpdateChecker.outcome(announced: "1.3.28", running: "1.3.28", onDisk: "1.3.28"), .upToDate)
+    }
+}
+
+/// A atualização em segundo plano não pede senha: só roda onde dá para trocar
+/// o bundle sem ela. A cópia do .pkg é do root.
+final class UpdateInPlaceTests: XCTestCase {
+    private var apps: URL!
+    private let fm = FileManager.default
+
+    override func setUpWithError() throws {
+        apps = fm.temporaryDirectory.appendingPathComponent("maclimpo-apps-\(UUID().uuidString)")
+        try fm.createDirectory(at: apps.appendingPathComponent("MAC-LIMPO.app/Contents"), withIntermediateDirectories: true)
+        try Data("<plist/>".utf8).write(to: apps.appendingPathComponent("MAC-LIMPO.app/Contents/Info.plist"))
+    }
+
+    override func tearDownWithError() throws {
+        try? fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: apps.path)
+        try? fm.removeItem(at: apps)
+    }
+
+    func testOwnBundleInWritableFolderIsReplaceable() {
+        XCTAssertTrue(UpdateChecker.isReplaceable(bundle: apps.appendingPathComponent("MAC-LIMPO.app")))
+    }
+
+    func testBundleOfAnotherUserIsNot() {
+        XCTAssertFalse(UpdateChecker.isReplaceable(bundle: apps.appendingPathComponent("MAC-LIMPO.app"), user: getuid() &+ 1))
+    }
+
+    func testReadOnlyFolderIsNot() throws {
+        try fm.setAttributes([.posixPermissions: 0o555], ofItemAtPath: apps.path)
+        XCTAssertFalse(UpdateChecker.isReplaceable(bundle: apps.appendingPathComponent("MAC-LIMPO.app")))
+    }
+}
+
+/// Trava do instalador: só conta como "instalando" com o processo vivo. Um
+/// logout ou reinício mata o instalador sem deixar status.
+final class InstallerLockTests: XCTestCase {
+    private var folder: URL!
+    private let fm = FileManager.default
+    private var shell: Process?
+
+    private var lock: URL { folder.appendingPathComponent("install.lock") }
+    private var status: URL { folder.appendingPathComponent("install.status") }
+    private var pid: URL { folder.appendingPathComponent("install.pid") }
+
+    override func setUpWithError() throws {
+        folder = fm.temporaryDirectory.appendingPathComponent("maclimpo-lock-\(UUID().uuidString)")
+        try fm.createDirectory(at: folder, withIntermediateDirectories: true)
+        try Data("{}".utf8).write(to: lock)
+    }
+
+    override func tearDownWithError() throws {
+        shell?.terminate()
+        try? fm.removeItem(at: folder)
+    }
+
+    /// Um sh vivo, como o subshell que roda o install.sh, e o PID dele no arquivo.
+    private func startShell() throws -> pid_t {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/sh")
+        process.arguments = ["-c", "sleep 30; true"]
+        try process.run()
+        shell = process
+        try "\(process.processIdentifier)\n".write(to: pid, atomically: true, encoding: .utf8)
+        return process.processIdentifier
+    }
+
+    private func running(now: Date = Date()) -> Bool {
+        UpdateChecker.installerIsRunning(lock: lock, status: status, pid: pid, now: now)
+    }
+
+    func testLiveInstallerIsRunning() throws {
+        _ = try startShell()
+        XCTAssertTrue(running())
+    }
+
+    func testKilledInstallerIsNot() throws {
+        _ = try startShell()
+        shell?.terminate()
+        shell?.waitUntilExit()
+        XCTAssertFalse(running(), "logout ou reinício no meio do build")
+    }
+
+    func testLockWithoutProcessIsNot() {
+        XCTAssertFalse(running(), "trava de uma versão antiga, sem install.pid")
+    }
+
+    func testFinishedOrExpiredIsNot() throws {
+        _ = try startShell()
+        XCTAssertFalse(running(now: Date().addingTimeInterval(4 * 60 * 60)), "trava vencida")
+        try Data("0\n".utf8).write(to: status)
+        XCTAssertFalse(running(), "status gravado = terminou")
+    }
+
+    /// Depois de um reinício o mesmo PID pode ser de outro processo, que
+    /// começou depois de o arquivo ser gravado.
+    func testReusedPIDIsNotTheInstaller() throws {
+        _ = try startShell()
+        try fm.setAttributes([.modificationDate: Date().addingTimeInterval(-3600)], ofItemAtPath: pid.path)
+        XCTAssertFalse(UpdateChecker.installerProcessIsAlive(pidFile: pid))
+    }
+}
+
+/// O install.sh publicado é o que os apps instalados rodam para se atualizar.
+final class InstallScriptSafetyTests: XCTestCase {
+    private let script: String = {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        return (try? String(contentsOf: root.appendingPathComponent("docs/install.sh"), encoding: .utf8)) ?? ""
+    }()
+
+    /// Sem a API do GitHub, compilava a `main` em silêncio.
+    func testNeverFallsBackToMain() {
+        XCTAssertFalse(script.contains(#"REF="main""#))
+        XCTAssertTrue(script.contains("releases/latest"))
+    }
+
+    /// Copia ao lado e troca por renomeação: uma cópia que falha não apaga o app.
+    func testSwapsAfterCopyingAside() throws {
+        let copy = try XCTUnwrap(script.range(of: #"run ditto "$BUILT" "$STAGED""#))
+        let swap = try XCTUnwrap(script.range(of: #"run mv "$STAGED" "$TARGET""#))
+        XCTAssertLessThan(copy.lowerBound, swap.lowerBound)
+    }
+
+    /// Em segundo plano não há como pedir senha: para antes de compilar.
+    func testBackgroundUpdateStopsEarlyWithoutPermission() throws {
+        let check = try XCTUnwrap(script.range(of: #"[ "$IN_BACKGROUND" -eq 1 ] && ! can_remove"#))
+        let build = try XCTUnwrap(script.range(of: "./Scripts/bundle-app.sh) >"))
+        XCTAssertLessThan(check.lowerBound, build.lowerBound)
+    }
+}
+
 /// Logo depois de uma release a CDN ainda guarda o manifesto anterior; o
 /// pedido do app precisa furar esse cache.
 final class UpdateFreshRequestTests: XCTestCase {
