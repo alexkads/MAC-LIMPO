@@ -56,9 +56,13 @@ run()  { if [ "$DRY" -eq 1 ]; then echo "   [dry-run] $*"; else "$@"; fi; }
 
 # A copy installed by the .pkg belongs to root: /Applications is writable by an
 # admin, but the bundle inside it is not — so check the bundle, not its folder.
+can_remove() {
+  [ ! -e "$1" ] || { [ -w "$(dirname "$1")" ] && [ -z "$(find "$1" ! -user "$(id -un)" -print -quit 2>/dev/null)" ]; }
+}
+
 remove_app() {
   [ -e "$1" ] || return 0
-  if [ -w "$(dirname "$1")" ] && [ -z "$(find "$1" ! -user "$(id -un)" -print -quit 2>/dev/null)" ]; then
+  if can_remove "$1"; then
     run rm -rf "$1"
   else
     warn "$1 belongs to another user (installed by the .pkg?) — sudo will ask for your password"
@@ -199,11 +203,39 @@ case "$FREE_GB" in
      ok "${FREE_GB} GB free" ;;
 esac
 
+# ── Where ────────────────────────────────────────────────────────────────────
+if [ -z "$DEST" ]; then
+  if [ -w /Applications ]; then DEST="/Applications"; else DEST="$HOME/Applications"; fi
+fi
+# The app's automatic update can't type a password: a copy only an administrator
+# can replace (the .pkg's belongs to root) stops here, not after a 5-minute build.
+if [ "$IN_BACKGROUND" -eq 1 ] && ! can_remove "$DEST/$APP_NAME.app"; then
+  fail "only an administrator can replace $DEST/$APP_NAME.app (installed by the .pkg?) — install the new .pkg, or run this installer in Terminal."
+  exit 1
+fi
+
 # ── Which version ────────────────────────────────────────────────────────────
+# The latest release — never `main` behind your back. The API first (60 requests
+# an hour per IP, easy to use up on a shared network), then where the release
+# page redirects, then the version the site announces to installed apps.
 if [ -z "$REF" ]; then
   REF="$(curl -fsSL "https://api.github.com/repos/$OWNER/$REPO/releases/latest" 2>/dev/null |
          sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -1)"
-  [ -n "$REF" ] || REF="main"
+fi
+if [ -z "$REF" ]; then
+  LATEST_URL="$(curl -fsSIL -o /dev/null -w '%{url_effective}' "https://github.com/$OWNER/$REPO/releases/latest" 2>/dev/null)" ||
+    LATEST_URL=""
+  case "$LATEST_URL" in */releases/tag/v[0-9]*) REF="${LATEST_URL##*/}" ;; esac
+fi
+if [ -z "$REF" ]; then
+  ANNOUNCED="$(curl -fsSL "${SITE}updates.json" 2>/dev/null | sed -n 's/.*"version": *"\([0-9][0-9.]*\)".*/\1/p' | head -1)"
+  [ -z "$ANNOUNCED" ] || REF="v$ANNOUNCED"
+fi
+if [ -z "$REF" ]; then
+  fail "couldn't find the latest release — neither GitHub nor the site answered."
+  echo "   Check the internet connection and run this again, or pick a release from"
+  echo "   https://github.com/$OWNER/$REPO/releases with --version <tag>."
+  exit 1
 fi
 ok "version: $REF"
 
@@ -239,17 +271,36 @@ BUILT="$SOURCE/build/app/$APP_NAME.app"
 ok "built $APP_NAME.app"
 
 # ── Install ──────────────────────────────────────────────────────────────────
-if [ -z "$DEST" ]; then
-  if [ -w /Applications ]; then DEST="/Applications"; else DEST="$HOME/Applications"; fi
-fi
 step "installing into $DEST"
 [ "$IN_BACKGROUND" -eq 1 ] || quit_running_app
 run mkdir -p "$DEST"
-remove_app "$DEST/$APP_NAME.app"
-run ditto "$BUILT" "$DEST/$APP_NAME.app"
+# Copy next to the installed app first, then swap with renames: a copy that
+# fails halfway (a full disk — the very reason to run a disk cleaner) leaves the
+# installed app untouched. The .new/.old names aren't bundles to Launch Services.
+TARGET="$DEST/$APP_NAME.app"
+STAGED="$DEST/.$APP_NAME.app.new"
+PREVIOUS="$DEST/.$APP_NAME.app.old"
+remove_app "$STAGED"
+remove_app "$PREVIOUS"
+run ditto "$BUILT" "$STAGED" || {
+  run rm -rf "$STAGED"
+  fail "couldn't copy the app into $DEST (full disk? no permission?) — the installed one was kept."
+  exit 1
+}
 # Built here, so there is no quarantine flag — removing it is just belt and braces.
-run xattr -dr com.apple.quarantine "$DEST/$APP_NAME.app" 2>/dev/null || true
-ok "installed $DEST/$APP_NAME.app"
+run xattr -dr com.apple.quarantine "$STAGED" 2>/dev/null || true
+if [ -e "$TARGET" ] && can_remove "$TARGET"; then
+  run mv "$TARGET" "$PREVIOUS"
+else
+  remove_app "$TARGET"  # the .pkg's copy belongs to root: sudo, in Terminal
+fi
+run mv "$STAGED" "$TARGET" || {
+  [ ! -e "$PREVIOUS" ] || run mv "$PREVIOUS" "$TARGET"
+  fail "couldn't put the new app in place — the previous one was kept."
+  exit 1
+}
+remove_app "$PREVIOUS"
+ok "installed $TARGET"
 
 if [ "$OPEN_AFTER" -eq 1 ]; then
   # --welcome: the app points at its own menu bar icon (it has no Dock icon or window).
