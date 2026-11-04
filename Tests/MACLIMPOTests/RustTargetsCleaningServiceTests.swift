@@ -35,6 +35,87 @@ final class RustTargetsCleaningServiceTests: XCTestCase {
         XCTAssertTrue(RustTargetsCleaningService.hostMountPoints(fromInspect: output).isEmpty)
     }
 
+    // MARK: - hiddenCargoTargets
+
+    private func makeHome() throws -> URL {
+        let home = FileManager.default.temporaryDirectory.appendingPathComponent("rust-home-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: home, withIntermediateDirectories: true)
+        addTeardownBlock { try? FileManager.default.removeItem(at: home) }
+        return home
+    }
+
+    private func makeFolder(_ relativePath: String, in home: URL, tag: String? = nil, rustcInfo: Bool = false) throws {
+        let folder = home.appendingPathComponent(relativePath)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        if let tag { try Data(tag.utf8).write(to: folder.appendingPathComponent("CACHEDIR.TAG")) }
+        if rustcInfo { try Data("{}".utf8).write(to: folder.appendingPathComponent(".rustc_info.json")) }
+    }
+
+    private let cargoTag = "Signature: 8a477f597d28d172789f06886806bc55\n# This file is a cache directory tag created by cargo.\n"
+
+    /// O caso real: `CARGO_TARGET_DIR` de instalador, com nome livre e sem `Cargo.toml`.
+    func testFindsCargoTargetsInHiddenHomeFolders() throws {
+        let home = try makeHome()
+        try makeFolder(".vintagelightbox/target-gpui", in: home, tag: cargoTag, rustcInfo: true)
+        try makeFolder(".vintagelightbox/fonte-gpui", in: home)
+        try makeFolder(".direto", in: home, tag: cargoTag, rustcInfo: true)
+
+        let found = RustTargetsCleaningService.hiddenCargoTargets(inHome: home.path)
+
+        XCTAssertEqual(
+            Set(found.map(\.displayName)),
+            [".vintagelightbox/target-gpui", ".direto"]
+        )
+    }
+
+    func testIgnoresWhatIsNotACargoTargetInHiddenFolders() throws {
+        let home = try makeHome()
+        // Tem a tag do cargo, mas é o cache de registry (categoria Cargo/Rust).
+        try makeFolder(".cargo/registry", in: home, tag: cargoTag)
+        // Tag de outra ferramenta.
+        try makeFolder(".gradle/daemon", in: home, tag: "Signature: 8a477f597d28d172789f06886806bc55\n", rustcInfo: true)
+        // Já está na Lixeira.
+        try makeFolder(".Trash/target", in: home, tag: cargoTag, rustcInfo: true)
+        // Pasta visível: não é o que esta busca rasa cobre.
+        try makeFolder("Documentos/target", in: home, tag: cargoTag, rustcInfo: true)
+        // Fundo demais.
+        try makeFolder(".app/a/target", in: home, tag: cargoTag, rustcInfo: true)
+
+        XCTAssertTrue(RustTargetsCleaningService.hiddenCargoTargets(inHome: home.path).isEmpty)
+    }
+
+    func testDoesNotFollowSymlinksOutOfHiddenFolders() throws {
+        let home = try makeHome()
+        let elsewhere = try makeHome()
+        try makeFolder("target", in: elsewhere, tag: cargoTag, rustcInfo: true)
+        try makeFolder(".app", in: home)
+        try FileManager.default.createSymbolicLink(
+            at: home.appendingPathComponent(".app/target"),
+            withDestinationURL: elsewhere.appendingPathComponent("target")
+        )
+
+        XCTAssertTrue(RustTargetsCleaningService.hiddenCargoTargets(inHome: home.path).isEmpty)
+    }
+
+    // MARK: - isBuildInProgress
+
+    /// `cargo check` recente segura só o `.cargo-build-lock`.
+    func testBuildLockCountsAsBuildInProgress() throws {
+        let home = try makeHome()
+        try makeFolder("target/instalador", in: home)
+        let target = home.appendingPathComponent("target")
+        let lock = target.appendingPathComponent("instalador/.cargo-build-lock")
+        try Data().write(to: lock)
+
+        let service = RustTargetsCleaningService(useTrash: false)
+        XCTAssertFalse(service.isBuildInProgress(targetPath: target.path))
+
+        let descriptor = open(lock.path, O_RDONLY)
+        defer { close(descriptor) }
+        XCTAssertEqual(flock(descriptor, LOCK_EX), 0)
+        XCTAssertTrue(service.isBuildInProgress(targetPath: target.path))
+    }
+
     // MARK: - emptyDirectory
 
     func testEmptyDirectoryKeepsFolderAndRemovesEverythingInside() throws {

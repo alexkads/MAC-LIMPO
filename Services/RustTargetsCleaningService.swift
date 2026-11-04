@@ -6,6 +6,10 @@ import Foundation
 /// maior pasta do disco inteiro (dezenas de GB) e ficava diluído no total de
 /// "Project Builds", sem indicar de onde vinha o peso. Tudo aqui é reconstruível
 /// com `cargo build` — o próprio cargo marca o diretório com `CACHEDIR.TAG`.
+///
+/// Além de `~/Projects`, cobre os `CARGO_TARGET_DIR` que instaladores guardam em
+/// pastas ocultas da home (`~/.vintagelightbox/target-gpui`, 11 GB), sem manifesto
+/// ao lado e nem sempre chamados "target".
 final class RustTargetsCleaningService: BaseCleaningService, CleaningService, @unchecked Sendable {
     let category: CleaningCategory = .rustTargets
 
@@ -92,21 +96,72 @@ final class RustTargetsCleaningService: BaseCleaningService, CleaningService, @u
             found.append((url.path, "\(parent.lastPathComponent)/target"))
         }
 
+        return found + Self.hiddenCargoTargets(inHome: NSHomeDirectory())
+    }
+
+    /// `target/` do cargo em pastas ocultas da home: `~/.algo` ou `~/.algo/qualquer`.
+    /// Sem `Cargo.toml` ao lado nem nome fixo, a identificação vem do que o cargo
+    /// grava: `CACHEDIR.TAG` dele + `.rustc_info.json`. Só a tag não basta, porque
+    /// `~/.cargo/registry` também a tem e é outro cache (categoria Cargo/Rust).
+    static func hiddenCargoTargets(inHome home: String) -> [(path: String, displayName: String)] {
+        let fileManager = FileManager.default
+
+        func subdirectories(of path: String) -> [String] {
+            ((try? fileManager.contentsOfDirectory(atPath: path)) ?? []).compactMap { name in
+                let child = (path as NSString).appendingPathComponent(name)
+                // Sem seguir symlinks: o alvo pode estar em qualquer lugar do disco.
+                let type = try? fileManager.attributesOfItem(atPath: child)[.type] as? FileAttributeType
+                return type == .typeDirectory ? child : nil
+            }
+        }
+
+        // `.Trash` guarda o que o próprio app já mandou para a Lixeira.
+        let hiddenFolders = subdirectories(of: home).filter {
+            let name = ($0 as NSString).lastPathComponent
+            return name.hasPrefix(".") && name != ".Trash"
+        }
+
+        var found: [(path: String, displayName: String)] = []
+        for folder in hiddenFolders {
+            let folderName = (folder as NSString).lastPathComponent
+            if isCargoTargetDirectory(folder) {
+                found.append((folder, folderName))
+                continue
+            }
+            for child in subdirectories(of: folder) where isCargoTargetDirectory(child) {
+                found.append((child, "\(folderName)/\((child as NSString).lastPathComponent)"))
+            }
+        }
         return found
     }
 
-    /// O cargo protege o diretório de build com um `flock(2)` em
+    private static func isCargoTargetDirectory(_ path: String) -> Bool {
+        let fileManager = FileManager.default
+        let directory = path as NSString
+        guard fileManager.fileExists(atPath: directory.appendingPathComponent(".rustc_info.json")),
+              let tag = try? String(contentsOfFile: directory.appendingPathComponent("CACHEDIR.TAG"), encoding: .utf8)
+        else { return false }
+        return tag.contains("created by cargo")
+    }
+
+    /// O cargo protege o diretório de build com `flock(2)` em
     /// `target/<perfil>/.cargo-lock` — é o lock que produz o "Blocking waiting
-    /// for file lock" dele. Se não conseguimos tomar esse lock, há um
+    /// for file lock" dele — e, nas versões recentes, também em
+    /// `.cargo-build-lock` (o único que um `cargo check` toma) e
+    /// `.cargo-artifact-lock`. Se não conseguimos tomar algum deles, há um
     /// `cargo build/test` rodando e apagar o diretório agora corromperia o build
     /// em curso.
-    private func isBuildInProgress(targetPath: String) -> Bool {
+    func isBuildInProgress(targetPath: String) -> Bool {
         let fileManager = FileManager.default
         let profiles = (try? fileManager.contentsOfDirectory(atPath: targetPath)) ?? []
 
-        for profile in profiles {
-            let lockPath = ((targetPath as NSString).appendingPathComponent(profile) as NSString)
-                .appendingPathComponent(".cargo-lock")
+        let lockPaths = profiles.flatMap { profile in
+            [".cargo-lock", ".cargo-build-lock", ".cargo-artifact-lock"].map { lock in
+                ((targetPath as NSString).appendingPathComponent(profile) as NSString).appendingPathComponent(lock)
+            }
+        }
+
+        for lockPath in lockPaths {
             guard fileManager.fileExists(atPath: lockPath) else { continue }
 
             let descriptor = open(lockPath, O_RDONLY)
