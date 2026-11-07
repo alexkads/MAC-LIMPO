@@ -35,6 +35,8 @@ class ProjectCleaningService: BaseCleaningService, CleaningService, @unchecked S
         )
         var folders: [String] = []
         while let url = enumerator?.nextObject() as? URL {
+            // Scan cancelado (prazo estourado): para de percorrer ~/Projects.
+            if Task.isCancelled { break }
             guard let markers = artifactMarkers[url.lastPathComponent],
                   (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
             else { continue }
@@ -50,7 +52,10 @@ class ProjectCleaningService: BaseCleaningService, CleaningService, @unchecked S
     private func candidates(progress: (@Sendable (String) -> Void)? = nil) async -> [(path: String, size: Int64)] {
         let folders = Self.artifactFolders(under: fileHelper.expandPath(projectRoot))
         progress?(String(localized: "Measuring \(folders.count) paths…"))
-        let sizes = await fileHelper.sizesOfDirectoriesAsync(atPaths: folders)
+        // Reaproveita a medição de pastas que não mudaram desde o último scan:
+        // são centenas de `node_modules`, e remedi-las todas a cada refresh
+        // mantinha o SSD ocupado sem necessidade.
+        let sizes = await fileHelper.sizesOfDirectoriesAsync(atPaths: folders, reuseUnchanged: true)
         return folders.compactMap { path in
             let size = sizes[path] ?? 0
             return size > Self.minimumSize ? (path, size) : nil
@@ -62,7 +67,8 @@ class ProjectCleaningService: BaseCleaningService, CleaningService, @unchecked S
 
         let expandedRoot = fileHelper.expandPath(projectRoot)
         let found = await candidates(progress: progress)
-        let items = found.map { "\($0.path.replacingOccurrences(of: expandedRoot, with: "")) (\(fileHelper.formatBytes($0.size)))" }
+        let items = found
+            .map { "\($0.path.replacingOccurrences(of: expandedRoot, with: "")) (\(fileHelper.formatBytes($0.size)))" }
 
         return ScanResult(
             category: category,

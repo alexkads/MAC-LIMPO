@@ -154,6 +154,8 @@ let package = Package(
                 "Utilities/NSAlert+MenuBar.swift",
                 "Utilities/AsyncSemaphore.swift",
                 "Utilities/Deadline.swift",
+                "Utilities/CancellationFlag.swift",
+                "Utilities/DirectorySizeCache.swift",
                 "Utilities/TreemapRenderer.swift",
                 "Utilities/TreemapMetal.swift",
                 "Utilities/TreemapFlags.swift",

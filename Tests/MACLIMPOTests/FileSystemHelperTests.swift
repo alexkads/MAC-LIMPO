@@ -146,6 +146,66 @@ final class FileSystemHelperTests: XCTestCase {
         XCTAssertTrue(FileSystemHelper.shared.sizesOfDirectories(atPaths: []).isEmpty)
     }
 
+    func testSizesOfDirectoriesStopsWhenCancelled() {
+        let flag = CancellationFlag()
+        flag.cancel()
+        let sizes = FileSystemHelper.shared.sizesOfDirectories(
+            atPaths: [FileManager.default.temporaryDirectory.path], cancellation: flag
+        )
+        XCTAssertTrue(sizes.isEmpty)
+    }
+
+    /// O `du` roda com prioridade baixa de CPU e disco quando há `taskpolicy`.
+    func testDuRunsWithLowPriority() {
+        let du = FileSystemHelper.duInvocation(["-sk", "/tmp"])
+        if FileManager.default.isExecutableFile(atPath: "/usr/sbin/taskpolicy") {
+            XCTAssertEqual(du.launchPath, "/usr/sbin/taskpolicy")
+            XCTAssertEqual(du.arguments, ["-c", "utility", "-d", "utility", "/usr/bin/du", "-sk", "/tmp"])
+        } else {
+            XCTAssertEqual(du.launchPath, "/usr/bin/du")
+        }
+    }
+
+    /// Pasta que não mudou não passa pelo `du` de novo; mexer na raiz invalida.
+    func testReuseUnchangedSkipsRemeasuringUntilTheFolderChanges() async throws {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("du-cache-\(UUID().uuidString)/node_modules")
+        defer { try? FileManager.default.removeItem(at: dir.deletingLastPathComponent()) }
+        let nested = dir.appendingPathComponent("pkg")
+        try FileManager.default.createDirectory(at: nested, withIntermediateDirectories: true)
+        try Data(repeating: 1, count: 64 * 1024).write(to: nested.appendingPathComponent("a"))
+
+        let helper = FileSystemHelper.shared
+        let firstSizes = await helper.sizesOfDirectoriesAsync(atPaths: [dir.path], reuseUnchanged: true)
+        let first = try XCTUnwrap(firstSizes[dir.path])
+
+        // Arquivo novo numa subpasta não muda a data da raiz: a medição antiga vale.
+        try Data(repeating: 2, count: 512 * 1024).write(to: nested.appendingPathComponent("b"))
+        let cached = await helper.sizesOfDirectoriesAsync(atPaths: [dir.path], reuseUnchanged: true)[dir.path]
+        XCTAssertEqual(cached, first)
+
+        // Instalar pacotes regrava um arquivo na raiz (ex.: .package-lock.json).
+        try Data("{}".utf8).write(to: dir.appendingPathComponent(".package-lock.json"))
+        let later = Date().addingTimeInterval(5)
+        try FileManager.default.setAttributes([.modificationDate: later], ofItemAtPath: dir.path)
+        let laterSizes = await helper.sizesOfDirectoriesAsync(atPaths: [dir.path], reuseUnchanged: true)
+        let remeasured = try XCTUnwrap(laterSizes[dir.path])
+        XCTAssertGreaterThan(remeasured, first)
+    }
+
+    func testDirectorySizeCacheExpires() {
+        final class Clock: @unchecked Sendable { var now = Date() }
+        let clock = Clock()
+        let cache = DirectorySizeCache(lifetime: 60, now: { clock.now })
+        let stamp = Date(timeIntervalSince1970: 1000)
+        cache.store(42, for: "/x", modifiedAt: stamp)
+
+        XCTAssertEqual(cache.size(for: "/x", modifiedAt: stamp), 42)
+        XCTAssertNil(cache.size(for: "/x", modifiedAt: stamp.addingTimeInterval(1)), "data diferente invalida")
+        clock.now = clock.now.addingTimeInterval(61)
+        XCTAssertNil(cache.size(for: "/x", modifiedAt: stamp), "expira depois do tempo de vida")
+    }
+
     // MARK: - hasModifications / dateAdded
 
     /// Base de quem só apaga o que está parado: olha a árvore inteira, não só o topo.
@@ -169,7 +229,10 @@ final class FileSystemHelperTests: XCTestCase {
 
     /// Sem conseguir ler, não dá para provar que está parado.
     func testHasModificationsIsTrueWhenUnknown() {
-        XCTAssertTrue(FileSystemHelper.shared.hasModifications(since: Date(), atPath: "/nonexistent/\(UUID().uuidString)"))
+        XCTAssertTrue(FileSystemHelper.shared.hasModifications(
+            since: Date(),
+            atPath: "/nonexistent/\(UUID().uuidString)"
+        ))
     }
 
     func testDateAddedOfNewFileIsNow() throws {

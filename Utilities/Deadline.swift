@@ -20,20 +20,26 @@ private final class OnceGate: @unchecked Sendable {
 /// Não usa `withTaskGroup` de propósito: o grupo só retorna quando *todos* os
 /// filhos terminam, e um scan preso em `du` bloqueante não coopera com o
 /// cancelamento — o prazo nunca valeria. Aqui o chamador é liberado no prazo e a
-/// operação, se ainda estiver rodando, termina sozinha em segundo plano.
+/// operação é **cancelada**: quem mede com `du` (via `CancellationFlag`) encerra
+/// o processo e para. Antes ela só era abandonada e seguia lendo o disco em
+/// segundo plano; cada refresh depois de um prazo estourado somava mais uma
+/// varredura completa às que ainda rodavam.
 func withDeadline<T: Sendable>(
     _ seconds: TimeInterval,
     _ operation: @escaping @Sendable () async -> T
 ) async -> T? {
     await withCheckedContinuation { (continuation: CheckedContinuation<T?, Never>) in
         let gate = OnceGate()
-        Task {
+        let work = Task {
             let value = await operation()
             if gate.claim() { continuation.resume(returning: value) }
         }
         Task {
             try? await Task.sleep(for: .seconds(seconds))
-            if gate.claim() { continuation.resume(returning: nil) }
+            if gate.claim() {
+                work.cancel()
+                continuation.resume(returning: nil)
+            }
         }
     }
 }

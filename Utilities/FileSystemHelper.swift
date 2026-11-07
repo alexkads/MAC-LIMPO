@@ -13,16 +13,22 @@ final class FileSystemHelper: @unchecked Sendable {
     static let sizeMeasurementTimeout: TimeInterval = 120
 
     /// Calcula o tamanho de um diretório usando du (muito mais rápido)
-    func sizeOfDirectory(atPath path: String) -> Int64 {
+    func sizeOfDirectory(atPath path: String, cancellation: CancellationFlag? = nil) -> Int64 {
         guard fileManager.fileExists(atPath: path) else { return 0 }
 
         // Usa `du` por performance. Passa o path como argumento (sem shell) para
         // não quebrar em paths com aspas/espaços. parseDuKilobytes ignora a coluna
         // do path na saída "1234\t/path".
-        let result = ShellExecutor.shared.run("/usr/bin/du", ["-sk", path], timeout: Self.sizeMeasurementTimeout)
+        let du = Self.duInvocation(["-sk", path])
+        let result = ShellExecutor.shared.run(
+            du.launchPath, du.arguments, timeout: Self.sizeMeasurementTimeout, cancellation: cancellation
+        )
         if let bytes = Self.parseDuKilobytes(result.output) {
             return bytes
         }
+
+        // Cancelado: o scan foi abandonado, não há a quem entregar a medição.
+        if cancellation?.isCancelled == true { return 0 }
 
         // Timeout do `du` NÃO cai no fallback: o enumerador é mais lento que o
         // `du` e não tem teto, então repetia a varredura que já estourou 120s
@@ -35,6 +41,24 @@ final class FileSystemHelper: @unchecked Sendable {
 
         // Fallback para método lento se du falhar (com prazo).
         return sizeOfDirectoryFallback(atPath: path)
+    }
+
+    /// Onde está o `taskpolicy` do sistema (nil se não existir).
+    private static let taskpolicyPath: String? = {
+        let path = "/usr/sbin/taskpolicy"
+        return FileManager.default.isExecutableFile(atPath: path) ? path : nil
+    }()
+
+    /// Monta a chamada do `du` com prioridade baixa de CPU e de disco.
+    ///
+    /// Medir milhares de `node_modules` lê os metadados de milhões de arquivos
+    /// pequenos; com prioridade normal isso disputava o SSD de igual para igual
+    /// com builds e com o resto do sistema. Com `taskpolicy -c utility -d utility`
+    /// o `du` cede o disco a quem tem prioridade maior e anda quando ele está
+    /// livre. Sem o `taskpolicy`, roda o `du` direto.
+    static func duInvocation(_ arguments: [String]) -> (launchPath: String, arguments: [String]) {
+        guard let taskpolicy = taskpolicyPath else { return ("/usr/bin/du", arguments) }
+        return (taskpolicy, ["-c", "utility", "-d", "utility", "/usr/bin/du"] + arguments)
     }
 
     /// `ShellExecutor` sinaliza timeout com exitCode -1 e esta mensagem.
@@ -66,17 +90,29 @@ final class FileSystemHelper: @unchecked Sendable {
     ///
     /// Paths ilegíveis não aparecem na saída (o `du` reclama em stderr); eles
     /// simplesmente ficam de fora do dicionário retornado.
-    func sizesOfDirectories(atPaths paths: [String], batchSize: Int = 48) -> [String: Int64] {
+    func sizesOfDirectories(
+        atPaths paths: [String],
+        batchSize: Int = 48,
+        cancellation: CancellationFlag? = nil
+    ) -> [String: Int64] {
         guard !paths.isEmpty else { return [:] }
         var sizes: [String: Int64] = [:]
 
         for batch in stride(from: 0, to: paths.count, by: batchSize).map({
             Array(paths[$0 ..< min($0 + batchSize, paths.count)])
         }) {
+            // Scan abandonado: para entre lotes em vez de medir o resto.
+            if cancellation?.isCancelled == true { break }
             // Orçamento proporcional ao lote: um `du` por path tinha 120s cada,
             // então um lote de 48 não pode herdar o mesmo teto de um path só.
             let timeout = min(Self.batchMeasurementCeiling, 30 + Double(batch.count) * 4)
-            let result = ShellExecutor.shared.run("/usr/bin/du", ["-sk"] + batch, timeout: timeout)
+            let du = Self.duInvocation(["-sk"] + batch)
+            let result = ShellExecutor.shared.run(
+                du.launchPath,
+                du.arguments,
+                timeout: timeout,
+                cancellation: cancellation
+            )
             if Self.isTimeout(result) {
                 // O lote inteiro se perde (saída parcial é descartada no timeout).
                 Logger.shared.log("du em lote excedeu \(Int(timeout))s (\(batch.count) paths)", level: .warning)
@@ -120,27 +156,71 @@ final class FileSystemHelper: @unchecked Sendable {
     /// concorrente do GCD, mas passa por `duGate` primeiro, de modo que no
     /// máximo `duGate` medições rodam ao mesmo tempo por todo o app — não importa
     /// quantas tarefas de scan chamem isto em paralelo.
+    ///
+    /// Cancelar a `Task` encerra o `du` em andamento (ver `CancellationFlag`).
     func sizeOfDirectoryAsync(atPath path: String) async -> Int64 {
         await Self.duGate.acquire()
         defer { Self.duGate.release() }
-        return await withCheckedContinuation { continuation in
-            DispatchQueue.global(qos: .utility).async {
-                continuation.resume(returning: self.sizeOfDirectory(atPath: path))
-            }
+        // Cancelada enquanto esperava a vez: não começa a medir.
+        if Task.isCancelled { return 0 }
+        return await runBlockingCancellable { flag in
+            self.sizeOfDirectory(atPath: path, cancellation: flag)
         }
     }
 
     /// Versão assíncrona de `sizesOfDirectories`, fora do pool cooperativo e
     /// atrás do mesmo `duGate` — um lote ocupa um único slot, não um por path.
-    func sizesOfDirectoriesAsync(atPaths paths: [String], batchSize: Int = 48) async -> [String: Int64] {
+    ///
+    /// Com `reuseUnchanged`, pastas cuja data de modificação não mudou desde a
+    /// última medição (e medidas há menos de `sizeCacheLifetime`) não passam
+    /// pelo `du` de novo — ver `DirectorySizeCache`.
+    func sizesOfDirectoriesAsync(
+        atPaths paths: [String],
+        batchSize: Int = 48,
+        reuseUnchanged: Bool = false
+    ) async -> [String: Int64] {
         guard !paths.isEmpty else { return [:] }
+
+        var sizes: [String: Int64] = [:]
+        var toMeasure = paths
+        var stamps: [String: Date] = [:]
+        if reuseUnchanged {
+            toMeasure = []
+            for path in paths {
+                guard let stamp = Self.modificationDate(ofPath: path) else { continue }
+                if let cached = Self.sizeCache.size(for: path, modifiedAt: stamp) {
+                    sizes[path] = cached
+                } else {
+                    stamps[path] = stamp
+                    toMeasure.append(path)
+                }
+            }
+            guard !toMeasure.isEmpty else { return sizes }
+        }
+
         await Self.duGate.acquire()
         defer { Self.duGate.release() }
-        return await withCheckedContinuation { continuation in
-            DispatchQueue.global(qos: .utility).async {
-                continuation.resume(returning: self.sizesOfDirectories(atPaths: paths, batchSize: batchSize))
+        if Task.isCancelled { return sizes }
+        let pending = toMeasure
+        let measured = await runBlockingCancellable { flag in
+            self.sizesOfDirectories(atPaths: pending, batchSize: batchSize, cancellation: flag)
+        }
+        for (path, size) in measured {
+            sizes[path] = size
+            if let stamp = stamps[path] {
+                Self.sizeCache.store(size, for: path, modifiedAt: stamp)
             }
         }
+        return sizes
+    }
+
+    /// Medições reaproveitadas entre scans (`sizesOfDirectoriesAsync(reuseUnchanged:)`).
+    static let sizeCache = DirectorySizeCache()
+
+    /// Data de modificação do próprio diretório (nil se não existir).
+    static func modificationDate(ofPath path: String) -> Date? {
+        let values = try? URL(fileURLWithPath: path).resourceValues(forKeys: [.contentModificationDateKey])
+        return values?.contentModificationDate
     }
 
     /// Soma dos tamanhos de `paths` medidos em lote. Conveniência para os
@@ -238,7 +318,10 @@ final class FileSystemHelper: @unchecked Sendable {
     /// Quando o item entrou na pasta onde está (a "Data de Adição" do Finder);
     /// sem esse atributo, a data de criação.
     func dateAdded(atPath path: String) -> Date? {
-        let values = try? URL(fileURLWithPath: path).resourceValues(forKeys: [.addedToDirectoryDateKey, .creationDateKey])
+        let values = try? URL(fileURLWithPath: path).resourceValues(forKeys: [
+            .addedToDirectoryDateKey,
+            .creationDateKey
+        ])
         return values?.addedToDirectoryDate ?? values?.creationDate
     }
 
@@ -269,7 +352,8 @@ final class FileSystemHelper: @unchecked Sendable {
     func availableDiskSpace() -> Int64 {
         let homeURL = URL(fileURLWithPath: NSHomeDirectory())
         if let values = try? homeURL.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]),
-           let importantAvailable = values.volumeAvailableCapacityForImportantUsage {
+           let importantAvailable = values.volumeAvailableCapacityForImportantUsage
+        {
             return importantAvailable
         }
         do {

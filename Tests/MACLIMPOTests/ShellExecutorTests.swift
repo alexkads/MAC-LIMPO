@@ -41,6 +41,26 @@ final class ShellExecutorTests: XCTestCase {
         )
     }
 
+    /// Cancelar encerra o processo logo, sem esperar o timeout (que no `du`
+    /// chega a minutos).
+    func testCancellationTerminatesBeforeTimeout() {
+        let flag = CancellationFlag()
+        DispatchQueue.global().asyncAfter(deadline: .now() + 0.3) { flag.cancel() }
+        let started = Date()
+        let r = shell.run("/bin/sleep", ["20"], timeout: 60, cancellation: flag)
+        XCTAssertEqual(r.exitCode, -1)
+        XCTAssertEqual(r.error, ShellExecutor.cancelledMessage)
+        XCTAssertLessThan(Date().timeIntervalSince(started), 5)
+    }
+
+    func testAlreadyCancelledDoesNotLaunch() {
+        let flag = CancellationFlag()
+        flag.cancel()
+        let r = shell.run("/bin/echo", ["hello"], cancellation: flag)
+        XCTAssertEqual(r.exitCode, -1)
+        XCTAssertEqual(r.output, "")
+    }
+
     func testCheckCommandExists() {
         XCTAssertTrue(shell.checkCommandExists("ls"))
         XCTAssertFalse(shell.checkCommandExists("definitely-not-a-real-command-xyz"))

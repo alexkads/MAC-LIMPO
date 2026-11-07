@@ -11,6 +11,12 @@ class ShellExecutor: @unchecked Sendable {
     /// timeout, antes do SIGKILL e, por fim, de abandonarmos a espera.
     static let terminateGrace: TimeInterval = 2
 
+    /// De quanto em quanto tempo a espera confere o cancelamento.
+    static let cancellationPollInterval: TimeInterval = 0.25
+
+    /// Mensagem de erro quando o processo é encerrado por cancelamento.
+    static let cancelledMessage = "Command cancelled"
+
     /// Executa um comando via `zsh -c`. Conveniente para pipelines, mas NÃO
     /// interpole paths do usuário aqui (aspas/espaços quebram); use `run(_:_:)`.
     @discardableResult
@@ -28,8 +34,12 @@ class ShellExecutor: @unchecked Sendable {
     func run(
         _ launchPath: String,
         _ arguments: [String],
-        timeout: TimeInterval = 60
+        timeout: TimeInterval = 60,
+        cancellation: CancellationFlag? = nil
     ) -> (output: String, error: String, exitCode: Int32) {
+        if cancellation?.isCancelled == true {
+            return ("", Self.cancelledMessage, -1)
+        }
         let task = Process()
         let outputPipe = Pipe()
         let errorPipe = Pipe()
@@ -77,8 +87,25 @@ class ShellExecutor: @unchecked Sendable {
             return ("", error.localizedDescription, -1)
         }
 
-        // Espera o término respeitando o timeout.
-        if exitSemaphore.wait(timeout: .now() + timeout) == .timedOut {
+        // Espera o término respeitando o timeout e, se houver, o cancelamento —
+        // em fatias curtas, para um scan cancelado não deixar o `du` rodando
+        // até o fim do timeout (que chega a minutos).
+        let deadline = DispatchTime.now() + timeout
+        var stopReason: String?
+        while true {
+            let slice = min(deadline, .now() + Self.cancellationPollInterval)
+            if exitSemaphore.wait(timeout: slice) == .success { break }
+            if cancellation?.isCancelled == true {
+                stopReason = Self.cancelledMessage
+                break
+            }
+            if DispatchTime.now() >= deadline {
+                stopReason = "Command timed out after \(timeout) seconds"
+                break
+            }
+        }
+
+        if let stopReason {
             task.terminate()
             // Os pipes normalmente fecham no terminate. Se o processo ignorar o
             // SIGTERM (ou um filho herdar o pipe), um `ioGroup.wait()` sem prazo
@@ -89,7 +116,7 @@ class ShellExecutor: @unchecked Sendable {
                 // leituras em vez de bloquear o chamador.
                 _ = ioGroup.wait(timeout: .now() + Self.terminateGrace)
             }
-            return ("", "Command timed out after \(timeout) seconds", -1)
+            return ("", stopReason, -1)
         }
 
         ioGroup.wait() // garante leitura completa da saída antes de retornar
