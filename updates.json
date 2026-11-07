@@ -1,24 +1,26 @@
 {
-  "version": "1.3.30",
-  "date": "2026-11-04",
-  "important": false,
-  "url": "https://github.com/alexkads/MAC-LIMPO/releases/tag/v1.3.30",
+  "version": "1.3.31",
+  "date": "2026-11-07",
+  "important": true,
+  "url": "https://github.com/alexkads/MAC-LIMPO/releases/tag/v1.3.31",
   "notes": {
     "en": {
-      "title": "Rust Targets finds hidden build caches",
+      "title": "Scans no longer keep the disk busy",
       "changes": [
-        "Rust build caches kept in hidden folders of your home, like the ones app installers create, now show up in Rust Targets.",
-        "A running Cargo build is detected more reliably, so its folder is skipped."
+        "A scan that runs past its time limit is now stopped for real, instead of measuring folders in the background.",
+        "Folder sizes are measured with low disk priority, so builds and the rest of the Mac go first.",
+        "node_modules folders that didn't change since the last scan aren't measured again."
       ],
-      "why": "These caches can reach several GB and no category was counting them."
+      "why": "With hundreds of node_modules, each refresh could pile up another full scan and keep the SSD busy for days."
     },
     "pt-BR": {
-      "title": "Rust Targets encontra caches de build ocultos",
+      "title": "O escaneamento não deixa mais o disco ocupado",
       "changes": [
-        "Caches de build do Rust em pastas ocultas da sua home, como os criados por instaladores de apps, agora aparecem em Rust Targets.",
-        "Um build do Cargo em andamento é detectado com mais segurança, e a pasta dele fica de fora da limpeza."
+        "Um escaneamento que passa do prazo agora é parado de verdade, em vez de seguir medindo pastas em segundo plano.",
+        "O tamanho das pastas é medido com prioridade baixa de disco, e os builds e o resto do Mac passam na frente.",
+        "Pastas node_modules que não mudaram desde o último escaneamento não são medidas de novo."
       ],
-      "why": "Esses caches chegam a vários GB e nenhuma categoria os contava."
+      "why": "Com centenas de node_modules, cada atualização podia empilhar mais uma varredura completa e deixar o SSD ocupado por dias."
     }
   }
 }
