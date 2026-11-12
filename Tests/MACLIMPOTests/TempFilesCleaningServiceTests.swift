@@ -55,4 +55,30 @@ final class TempFilesCleaningServiceTests: XCTestCase {
 
         XCTAssertEqual(staleNames(owner: getuid() &+ 1), [])
     }
+
+    /// Scratchpads do Claude Code: uma sessão viva não segura as paradas.
+    func testSessionFoldersAreJudgedPerSession() throws {
+        let sessions = "claude-\(getuid())"
+        try make("\(sessions)/projA/old-session/scratchpad/target/big.rlib")
+        try make("\(sessions)/projA/live-session/scratchpad/log", modified: later.addingTimeInterval(-3600))
+        try make("\(sessions)/projB/old-session/notes.txt")
+        try make("\(sessions)/loose.txt")
+        try makeFIFO("\(sessions)/projB/socket-session/pipe")
+
+        let stale = TempFilesCleaningService.staleTemporaryItems(in: root.path, now: later)
+            .map { String($0.dropFirst(root.path.count + 1)) }
+        XCTAssertEqual(stale, [
+            "\(sessions)/loose.txt",
+            "\(sessions)/projA/old-session",
+            "\(sessions)/projB/old-session"
+        ])
+    }
+
+    /// Só a pasta do próprio uid é de sessões; a de outro uid é um item comum.
+    func testOtherUsersSessionFolderIsAWholeItem() throws {
+        try make("claude-\(getuid() &+ 1)/proj/session/file")
+        try make("claude-\(getuid())/proj/live/file", modified: later.addingTimeInterval(-3600))
+
+        XCTAssertEqual(staleNames(), ["claude-\(getuid() &+ 1)"])
+    }
 }

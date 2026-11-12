@@ -131,7 +131,7 @@ class TempFilesCleaningService: BaseCleaningService, CleaningService, @unchecked
     /// arquivos ou pastas comuns, sem nada modificado dentro há mais de 7 dias e
     /// sem socket ou FIFO — é por eles que processos vivos conversam (ssh-agent,
     /// tmux, IDEs), e tirá-los derruba essas sessões. Ocultos e `com.apple.*`
-    /// ficam.
+    /// ficam. Nas pastas de sessões (`sessionDepth`) a idade conta por sessão.
     static func staleTemporaryItems(
         in folder: String = "/tmp",
         olderThanDays days: Int = tmpMaxAgeDays,
@@ -140,9 +140,7 @@ class TempFilesCleaningService: BaseCleaningService, CleaningService, @unchecked
     ) -> [String] {
         let helper = FileSystemHelper.shared
         let cutoff = now.addingTimeInterval(-Double(days) * 86400)
-        return helper.contentsOfDirectory(atPath: folder)
-            .filter { !$0.hasPrefix(".") && !$0.hasPrefix("com.apple.") }
-            .map { (folder as NSString).appendingPathComponent($0) }
+        return candidates(in: folder, owner: owner)
             .filter { path in
                 guard let attributes = try? FileManager.default.attributesOfItem(atPath: path),
                       (attributes[.ownerAccountID] as? NSNumber)?.uint32Value == owner,
@@ -153,6 +151,43 @@ class TempFilesCleaningService: BaseCleaningService, CleaningService, @unchecked
                     && !(type == .typeDirectory && containsSocketOrPipe(atPath: path))
             }
             .sorted()
+    }
+
+    /// Pastas do /tmp que juntam várias sessões e quase nunca ficam paradas
+    /// por inteiro — e quantos níveis abaixo está cada sessão. O Claude Code
+    /// guarda scratchpads em `claude-<uid>/<projeto>/<sessão>`, onde um
+    /// `CARGO_TARGET_DIR` abandonado passa de 10 GB; como sempre há alguma
+    /// sessão escrevendo ali, julgar a pasta inteira nunca levava nada.
+    static func sessionDepth(ofTopLevel name: String, owner: uid_t) -> Int {
+        name == "claude-\(owner)" ? 2 : 0
+    }
+
+    /// Os itens julgados um a um: o primeiro nível de `folder`, trocando cada
+    /// pasta de sessões pelas suas sessões (arquivos soltos no caminho contam
+    /// sozinhos). Só desce em pastas do próprio usuário, sem seguir links.
+    private static func candidates(in folder: String, owner: uid_t) -> [String] {
+        children(of: folder).filter { !$0.name.hasPrefix("com.apple.") }.flatMap { top -> [String] in
+            let depth = sessionDepth(ofTopLevel: top.name, owner: owner)
+            var level = [top.path]
+            for _ in 0 ..< depth {
+                level = level.flatMap { path in
+                    isOwnedDirectory(path, owner: owner) ? children(of: path).map(\.path) : [path]
+                }
+            }
+            return level
+        }
+    }
+
+    private static func children(of folder: String) -> [(name: String, path: String)] {
+        FileSystemHelper.shared.contentsOfDirectory(atPath: folder)
+            .filter { !$0.hasPrefix(".") }
+            .map { ($0, (folder as NSString).appendingPathComponent($0)) }
+    }
+
+    private static func isOwnedDirectory(_ path: String, owner: uid_t) -> Bool {
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: path) else { return false }
+        return attributes[.type] as? FileAttributeType == .typeDirectory
+            && (attributes[.ownerAccountID] as? NSNumber)?.uint32Value == owner
     }
 
     /// Há socket ou FIFO dentro da pasta `path`? Na dúvida (pasta ilegível), sim.
