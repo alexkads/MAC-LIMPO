@@ -1,26 +1,24 @@
 {
-  "version": "1.3.31",
-  "date": "2026-11-07",
-  "important": true,
-  "url": "https://github.com/alexkads/MAC-LIMPO/releases/tag/v1.3.31",
+  "version": "1.3.32",
+  "date": "2026-11-12",
+  "important": false,
+  "url": "https://github.com/alexkads/MAC-LIMPO/releases/tag/v1.3.32",
   "notes": {
     "en": {
-      "title": "Scans no longer keep the disk busy",
+      "title": "Temp Files cleans idle sessions inside /tmp",
       "changes": [
-        "A scan that runs past its time limit is now stopped for real, instead of measuring folders in the background.",
-        "Folder sizes are measured with low disk priority, so builds and the rest of the Mac go first.",
-        "node_modules folders that didn't change since the last scan aren't measured again."
+        "Each session folder in /tmp/claude-<uid> is now judged by its own age, so an idle one goes to the Trash even while another session is active.",
+        "The same safety rules still apply: only your own files, untouched for 7 days and without sockets or pipes."
       ],
-      "why": "With hundreds of node_modules, each refresh could pile up another full scan and keep the SSD busy for days."
+      "why": "A shared /tmp folder always had some session writing to it, so build caches left behind there (10 GB or more) were never cleaned."
     },
     "pt-BR": {
-      "title": "O escaneamento não deixa mais o disco ocupado",
+      "title": "Temp Files limpa sessões paradas dentro do /tmp",
       "changes": [
-        "Um escaneamento que passa do prazo agora é parado de verdade, em vez de seguir medindo pastas em segundo plano.",
-        "O tamanho das pastas é medido com prioridade baixa de disco, e os builds e o resto do Mac passam na frente.",
-        "Pastas node_modules que não mudaram desde o último escaneamento não são medidas de novo."
+        "Cada pasta de sessão em /tmp/claude-<uid> agora é julgada pela própria idade, e uma parada vai para o Lixo mesmo com outra sessão ativa.",
+        "As mesmas regras de segurança continuam: só arquivos seus, sem mudança há 7 dias e sem sockets nem pipes."
       ],
-      "why": "Com centenas de node_modules, cada atualização podia empilhar mais uma varredura completa e deixar o SSD ocupado por dias."
+      "why": "Uma pasta compartilhada do /tmp sempre tinha alguma sessão escrevendo, e os caches de build deixados ali (10 GB ou mais) nunca eram limpos."
     }
   }
 }
